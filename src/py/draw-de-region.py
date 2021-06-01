@@ -87,8 +87,8 @@ colors = [
 
 # %% read counts
 count_path = Path.joinpath(
-    Path.home(), f"workspace/mouse-brain-full/logcpm/scale_df/full-logcpm-inter.csv"
-)
+    Path.home(),
+    f"workspace/mouse-brain-full/logcpm/scale_df/full-logcpm-inter.csv")
 count_full_df = pd.read_csv(
     count_path,
     index_col=0,
@@ -97,8 +97,7 @@ count_full_df = pd.read_csv(
 
 # %% read cluster result
 cluster_path = Path.joinpath(
-    Path.home(), f"workspace/mouse-brain-full/SCT/SC3/full-{ncs}-SC3.csv"
-)
+    Path.home(), f"workspace/mouse-brain-full/SCT/SC3/full-{ncs}-SC3.csv")
 cluster_df = pd.read_csv(
     cluster_path,
     index_col=0,
@@ -175,7 +174,8 @@ regions = dict(
 regions_label = dict(cortex=0, hippocampus=1, thalamus=2, hypothalamus=3)
 in_regions = [j for i in regions.values() for j in i]
 others = [
-    i for i in list(set(cluster_df[f"sc3_{ncs}_clusters"])) if i not in in_regions
+    i for i in list(set(cluster_df[f"sc3_{ncs}_clusters"]))
+    if i not in in_regions
 ]
 
 # %% draw 1vsa
@@ -192,9 +192,8 @@ for region in regions:
     de_df.to_csv(
         Path.joinpath(
             Path.home(),
-            f"workspace/mouse-brain-full/logcpm/DE/region-specific/UP-{ncs}-{region}.csv",
-        )
-    )
+            f"workspace/mouse-brain-full/logcpm/DE/region-specific/UP-{ncs}-{region}.csv"
+        ))
     for j in de_df.index:
         if j not in genes:
             genes.append(j)
@@ -220,7 +219,7 @@ for c in others:
     # flag += 1
 for c, i in zip(regions, range(len(regions))):
     c_len = draw_cluster[draw_cluster == c].shape[0]
-    region_ticks.append(c_len / 2 + sum(length[: i + 1]))
+    region_ticks.append(c_len / 2 + sum(length[:i + 1]))
     length.append(c_len)
     draw_cluster.replace(c, regions_label[c], inplace=True)
 draw_cluster.sort_values(inplace=True)
@@ -252,7 +251,7 @@ ax_heatmap.set_xticklabels(gene_tick_labels)
 ax_heatmap.xaxis.set_label_position("top")
 ax_cluster.pcolor(
     draw_cluster.to_numpy().reshape([len(draw_cluster), 1]),
-    cmap=ListedColormap(colors[: len(regions) + len(others)]),
+    cmap=ListedColormap(colors[:len(regions) + len(others)]),
 )
 ax_cluster.set_xticks([])
 ax_cluster.set_yticks(region_ticks)
