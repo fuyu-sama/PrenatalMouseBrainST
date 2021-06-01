@@ -31,7 +31,6 @@
 # %% envoronment config
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 import session_info
 from matplotlib import pyplot as plt
