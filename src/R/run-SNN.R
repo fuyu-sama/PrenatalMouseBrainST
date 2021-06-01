@@ -41,22 +41,27 @@ count_df <- read.csv(
     paste0(
         HOME, "/workspace/mouse-brain-full/spaceranger/", idx,
         "/outs/filtered_feature_bc_matrix/", idx, ".csv"
-    ),
+        ),
     check.names = FALSE, row.names = 1
 )
 seurat_obj <- CreateSeuratObject(count_df, min.cells = 3)
 
 # %% SCTransform
+seurat_obj <- PercentageFeatureSet(
+    seurat_obj, pattern = "^mt-", col.name = "percent.mt")
+
 seurat_obj <- SCTransform(
     seurat_obj,
-    return.only.var.genes = FALSE, verbose = FALSE
+    return.only.var.genes = FALSE,
+    vars.to.regress = "percent.mt",
+    verbose = FALSE
 )
 
 # %% dimension redunction and cluster
-seurat_obj <- RunPCA(seurat_obj)
+seurat_obj <- RunICA(seurat_obj)
 seurat_obj <- FindNeighbors(seurat_obj, dims = 1:30)
 seurat_obj <- FindClusters(seurat_obj)
 write.csv(
     Idents(seurat_obj),
-    paste0(HOME, "/mouse-brain-full/SCT/SNN/",idx, ".csv")
+    paste0(HOME, "/workspace/mouse-brain-full/SCT/SNN/pattern/", idx, ".csv")
 )
