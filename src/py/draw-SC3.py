@@ -89,13 +89,11 @@ colors = [
     "#D2691E",
 ]
 
-# %% read from SCTransform
+# %% read data
 he_path = Path.joinpath(
-    Path.home(), f"workspace/mouse-brain-full/Data/HE/{idx_full[idx]}.tif"
-)
+    Path.home(), f"workspace/mouse-brain-full/Data/HE/{idx_full[idx]}.tif")
 sc3_path = Path.joinpath(
-    Path.home(), f"workspace/mouse-brain-full/SCT/SC3/pattern/{idx}_SC3.csv"
-)
+    Path.home(), f"workspace/mouse-brain-full/SCT/SC3/pattern/{idx}_SC3.csv")
 coor_path = Path.joinpath(
     Path.home(),
     f"workspace/mouse-brain-full/spaceranger/{idx}/outs/spatial/coor-{idx}.csv",
@@ -124,8 +122,8 @@ for k, j in zip(range(5, 29), ax.flatten()):
         alpha=0.7,
     )
 fig.savefig(
-    Path.joinpath(Path.home(), f"workspace/mouse-brain-full/SCT/SC3/cluster/{idx}.jpg")
-)
+    Path.joinpath(Path.home(),
+                  f"workspace/mouse-brain-full/SCT/SC3/cluster/{idx}.jpg"))
 plt.close(fig)
 
 # %% draw separate
@@ -146,6 +144,5 @@ for ncs in range(5, 29):
         Path.joinpath(
             Path.home(),
             f"workspace/mouse-brain-full/SCT/SC3/cluster/{idx}-{ncs}.pdf",
-        )
-    )
+        ))
     plt.close(fig)
