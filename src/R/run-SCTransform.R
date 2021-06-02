@@ -45,7 +45,7 @@ count_path <- paste0(
     "/outs/filtered_feature_bc_matrix/", idx, ".csv"
 )
 save_path <- paste0(
-    HOME, "/workspace/mouse-brain-full/SCT/scale_data/",
+    HOME, "/workspace/mouse-brain-full/SCT/scale_df/",
     idx, "_SCTransform.csv"
 )
 
