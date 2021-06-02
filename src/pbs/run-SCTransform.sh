@@ -12,6 +12,6 @@ do
         cd $HOME/workspace/mouse-brain-full/SCT
 
         source hdf5-1.12.0.sh
-        Rscript $HOME/workspace/mouse-brain-full/src/R/run-SCT.R ${idx}
+        Rscript $HOME/workspace/mouse-brain-full/src/R/run-SCTransform.R ${idx}
 EOF
 done
