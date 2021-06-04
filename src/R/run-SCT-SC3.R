@@ -49,14 +49,18 @@ save_path <- paste0(
     idx, "_SC3.csv"
 )
 
-#genes <- rownames(read.csv(paste0(HOME, "/workspace/mouse-brain-full/logcpm/scale_df/", idx, "-logcpm-inter.csv"),
-#check.names = FALSE, row.names = 1))
 count_df <- read.csv(count_path, check.names = FALSE, row.names = 1)
-#count_df <- count_df[genes, ]
 seurat_obj <- CreateSeuratObject(count_df)
 
 # %% SCTransform
-seurat_obj <- SCTransform(seurat_obj, return.only.var.genes = FALSE, verbose = FALSE)
+seurat_obj <- SCTransform(
+    seurat_obj, return.only.var.genes = FALSE, verbose = FALSE)
+write.csv(
+    seurat_obj[["SCT"]]@scale.data,
+    paste0(
+        HOME, "/workspace/mouse-brain-full/SCT/scale_df/",
+        idx, "-SCTransform.csv")
+)
 
 # %% create SingleCellExperiment object and SC3
 sce <- SingleCellExperiment(
@@ -77,4 +81,3 @@ sce <- sc3(
 col_data <- colData(sce)
 col_data <- data.frame(col_data[, grep("sc3_", colnames(col_data))])
 write.csv(col_data, save_path)
-
