@@ -41,12 +41,12 @@ sessionInfo()
 
 # %% read data and create Seurat object
 count_path <- paste0(
-    HOME, "/workspace/mouse-brain-full/spaceranger/", idx,
-    "/outs/filtered_feature_bc_matrix/", idx, ".csv"
+    HOME, "/workspace/mouse-brain-full/scale_df/raw_count/", 
+    idx, "-raw.csv"
 )
 save_path <- paste0(
-    HOME, "/workspace/mouse-brain-full/SCT/scale_df/",
-    idx, "_SCTransform.csv"
+    HOME, "/workspace/mouse-brain-full/scale_df/SCTransform/", 
+    idx, "-SCTransform.csv"
 )
 
 count_df <- read.csv(count_path, check.names = FALSE, row.names = 1)

@@ -93,24 +93,23 @@ colors = [
 he_path = Path.joinpath(
     Path.home(), f"workspace/mouse-brain-full/Data/HE/{idx_full[idx]}.tif")
 sc3_path = Path.joinpath(
-    Path.home(), f"workspace/mouse-brain-full/SCT/SC3/pattern/{idx}_SC3.csv")
+    Path.home(),
+    f"workspace/mouse-brain-full/results/cluster/SCT-SC3/pattern/{idx}-SC3.csv")
 coor_path = Path.joinpath(
     Path.home(),
-    f"workspace/mouse-brain-full/spaceranger/{idx}/outs/spatial/coor-{idx}.csv",
+    f"workspace/mouse-brain-full/coor_df/{idx}-coor.csv",
 )
 
 he_image = Image.open(he_path)
 cluster_df = pd.read_csv(sc3_path, index_col=0, header=0)
 coor_df = pd.read_csv(coor_path, index_col=0, header=0)
-cluster_df.index = [f"{idx}_{i}" for i in cluster_df.index]
-coor_df.index = [f"{idx}_{i}" for i in coor_df.index]
 assert all(cluster_df.index == coor_df.index)
 
 # %% draw together
 fig, ax = plt.subplots(6, 4, figsize=(40, 60))
 for k, j in zip(range(5, 29), ax.flatten()):
     j.imshow(he_image)
-    j.set_title(f"SC3 ncs={k}")
+    j.set_title(f"{idx} ncs {k}")
     j.set_xticks([])
     j.set_yticks([])
     j.scatter(
@@ -122,8 +121,10 @@ for k, j in zip(range(5, 29), ax.flatten()):
         alpha=0.7,
     )
 fig.savefig(
-    Path.joinpath(Path.home(),
-                  f"workspace/mouse-brain-full/SCT/SC3/cluster/{idx}.jpg"))
+    Path.joinpath(
+        Path.home(),
+        f"workspace/mouse-brain-full/results/cluster/SCT-SC3/together/{idx}-SC3.pdf"
+    ))
 plt.close(fig)
 
 # %% draw separate
@@ -139,10 +140,10 @@ for ncs in range(5, 29):
         [axis.set_visible(False) for axis in ax.spines.values()]
         ax.imshow(he_image)
         ax.scatter(draw_coor["X"], draw_coor["Y"], s=16)
-        ax.set_title(f"{idx} SC3 cluster {n}")
+        ax.set_title(f"{idx} ncs {ncs} cluster {n}")
     fig.savefig(
         Path.joinpath(
             Path.home(),
-            f"workspace/mouse-brain-full/SCT/SC3/cluster/{idx}-{ncs}.pdf",
+            f"workspace/mouse-brain-full/results/cluster/SCT-SC3/separate/{idx}-{ncs}-SC3.pdf"
         ))
     plt.close(fig)

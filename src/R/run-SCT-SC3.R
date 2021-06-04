@@ -31,7 +31,6 @@
 HOME <- Sys.getenv("HOME")
 renv::activate(paste0(HOME, "/workspace/mouse-brain-full"))
 library(SC3)
-library(Seurat)
 library(SingleCellExperiment)
 
 args <- commandArgs(trailingOnly = TRUE)
@@ -39,37 +38,32 @@ idx <- args[1]
 set.seed(42)
 sessionInfo()
 
-# %% read data and create Seurat object
-count_path <- paste0(
-    HOME, "/workspace/mouse-brain-full/spaceranger/", idx,
-    "/outs/filtered_feature_bc_matrix/", idx, ".csv"
+# %% read data and create sce
+count_path = paste0(
+    HOME, "/workspace/mouse-brain-full/scale_df/raw_count/",
+    idx, "-raw.csv"
+) 
+sct_path <- paste0(
+    HOME, "/workspace/mouse-brain-full/scale_df/SCTransform/",
+    idx, "-SCTransform.csv"
 )
 save_path <- paste0(
-    HOME, "/workspace/mouse-brain-full/SCT/SC3/pattern/",
-    idx, "_SC3.csv"
+    HOME, "/workspace/mouse-brain-full/results/cluster/SCT-SC3/pattern/",
+    idx, "-SC3.csv"
 )
-
 count_df <- read.csv(count_path, check.names = FALSE, row.names = 1)
-seurat_obj <- CreateSeuratObject(count_df)
-
-# %% SCTransform
-seurat_obj <- SCTransform(
-    seurat_obj, return.only.var.genes = FALSE, verbose = FALSE)
-write.csv(
-    seurat_obj[["SCT"]]@scale.data,
-    paste0(
-        HOME, "/workspace/mouse-brain-full/SCT/scale_df/",
-        idx, "-SCTransform.csv")
-)
-
-# %% create SingleCellExperiment object and SC3
+sct_df <- read.csv(sct_path, check.names = FALSE, row.names = 1)
+count_df <- count_df[rownames(sct_df), ]
 sce <- SingleCellExperiment(
     assays = list(
-        counts = as.matrix(seurat_obj[["SCT"]]@counts),
-        logcounts = as.matrix(seurat_obj[["SCT"]]@scale.data)
+        counts = as.matrix(count_df),
+        logcounts = as.matrix(sct_df)
     )
 )
 rowData(sce)$feature_symbol <- rownames(sce)
+sce <- sce[!duplicated(rowData(sce)$feature_symbol), ]
+
+# %% sc3
 sce <- sc3(
     sce,
     ks = 5:28,
