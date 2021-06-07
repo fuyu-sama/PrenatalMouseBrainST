@@ -29,7 +29,6 @@
 #
 
 # %% environment config
-import math
 from pathlib import Path
 
 import numpy as np
@@ -37,6 +36,8 @@ import pandas as pd
 import session_info
 from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
+from scipy.stats import ranksums
+from statsmodels.stat import multitest
 
 session_info.show()
 plt.rcParams.update({"font.size": 24})
@@ -96,7 +97,8 @@ timepoints = {
 
 # %% helper func
 def quantile_normalization(df: pd.DataFrame) -> pd.DataFrame:
-    rank_mean = df.stack().groupby(df.rank(method="first").stack().astype(int)).mean()
+    rank_mean = df.stack().groupby(
+        df.rank(method="first").stack().astype(int)).mean()
     return df.rank(method="min").stack().astype(int).map(rank_mean).unstack()
 
 
@@ -104,8 +106,8 @@ def quantile_normalization(df: pd.DataFrame) -> pd.DataFrame:
 count_full_df = pd.DataFrame()
 for idx in idx_full:
     count_path = Path.joinpath(
-        Path.home(), f"workspace/mouse-brain-full/logcpm/scale_df/{idx}-logcpm.csv"
-    )
+        Path.home(),
+        f"workspace/mouse-brain-full/logcpm/scale_df/logcpm/{idx}-logcpm.csv")
     count_df = pd.read_csv(count_path, index_col=0, header=0).T
     print(f"{idx}:\t{count_df.shape}")
     count_full_df = pd.concat(
@@ -118,15 +120,16 @@ print(f"Full:\t{count_full_df.shape}")
 for idx in idx_full:
     count_path = Path.joinpath(
         Path.home(),
-        f"workspace/mouse-brain-full/logcpm/scale_df/{idx}-logcpm-inter.csv",
+        f"workspace/mouse-brain-full/logcpm/scale_df/logcpm/{idx}-logcpm-inter.csv",
     )
-    count_df = count_full_df.reindex(index=[i for i in count_full_df.index if idx in i])
+    count_df = count_full_df.reindex(
+        index=[i for i in count_full_df.index if idx in i])
     count_df.T.to_csv(count_path)
 count_full_df.T.to_csv(
     Path.joinpath(
-        Path.home(), "workspace/mouse-brain-full/logcpm/scale_df/full-logcpm-inter.csv"
-    )
-)
+        Path.home(),
+        "workspace/mouse-brain-full/logcpm/scale_df/logcpm/full-logcpm-inter.csv"
+    ))
 # count_full_df = quantile_normalization(count_full_df.T).T
 
 # %% draw
@@ -136,19 +139,17 @@ count_e175 = pd.DataFrame()
 for timepoint in timepoints:
     idx = timepoints[timepoint]
     count_sub_0 = count_full_df.reindex(
-        index=[i for i in count_full_df.index if i.split("_")[0] in idx[0]]
-    )
+        index=[i for i in count_full_df.index if i.split("_")[0] in idx[0]])
     count_sub_1 = count_full_df.reindex(
-        index=[i for i in count_full_df.index if i.split("_")[0] in idx[1]]
-    )
+        index=[i for i in count_full_df.index if i.split("_")[0] in idx[1]])
     count_mean_0 = count_sub_0.mean()
     count_mean_1 = count_sub_1.mean()
 
     # subset by distance
-    d = abs((count_mean_1 - count_mean_0) / (math.sqrt(2)))
-    c = d.where(d <= d.quantile(q), np.nan)
-    c = c.where(np.isnan(c), 1)
-    c = c.replace(np.nan, 0)
+    # d = abs((count_mean_1 - count_mean_0) / (math.sqrt(2)))
+    # c = d.where(d <= d.quantile(q), np.nan)
+    # c = c.where(np.isnan(c), 1)
+    # c = c.replace(np.nan, 0)
 
     # subset by n_sigma
     # d = abs((count_mean_1 - count_mean_0) / (math.sqrt(2)))
@@ -158,12 +159,12 @@ for timepoint in timepoints:
     # c = c.replace(np.nan, 0)
 
     # subset by statistic test
-    # d = pd.Series(dtype=np.float64)
-    # for gene in count_sub_0.columns:
-    #     d[gene] = ttest_ind(count_sub_0[gene], count_sub_1[gene])[1]
-    # d = multitest.fdrcorrection(d, alpha=1e-8)[0]
-    # c = np.where(d, 0, 1)
-    # c = pd.Series(c, index=count_sub_0.columns)
+    d = pd.Series(dtype=np.float64)
+    for gene in count_sub_0.columns:
+        d[gene] = ranksums(count_sub_0[gene], count_sub_1[gene])[1]
+    d = multitest.fdrcorrection(d, alpha=1e-8)[0]
+    c = np.where(d, 0, 1)
+    c = pd.Series(c, index=count_sub_0.columns)
 
     fig, ax_plot = plt.subplots(1, figsize=(10, 10))
     ax_plot.scatter(
@@ -188,55 +189,9 @@ for timepoint in timepoints:
     ax_plot.text(0, 4.4, f"Number of selected genes: {int(c.sum())}")
     ax_plot.plot(range(6), range(6), "--r")
     ax_plot.text(4.7, 5, "y = x", c="r")
-    ax_plot.set_title("logcpm distance")
+    ax_plot.set_title("logcpm ranksums")
     fig.savefig(
         Path.joinpath(
             Path.home(),
-            f"workspace/mouse-brain-full/logcpm/scale_df/{timepoint}-correlation-distance.jpg",
-        )
-    )
-
-    count_sub_0 = count_sub_0.reindex(columns=c[c > 0].index)
-    count_sub_1 = count_sub_1.reindex(columns=c[c > 0].index)
-    count_full_sub = pd.concat(
-        [count_full_sub, count_sub_0],
-        axis=0,
-        verify_integrity=True,
-    )
-    count_full_sub = pd.concat(
-        [count_full_sub, count_sub_1],
-        axis=0,
-        verify_integrity=True,
-    )
-
-    if timepoint == "E175":
-        count_e175 = count_sub_0
-count_full_sub = count_full_sub.dropna(axis=1)
-
-# %% write csv
-for idx in ["P0B"]:
-    count_sub = count_full_df.reindex(
-        index=[i for i in count_full_df.index if idx in i]
-    )
-    count_full_sub = pd.concat(
-        [count_full_sub, count_sub],
-        axis=0,
-        verify_integrity=True,
-    )
-count_full_sub = count_full_sub.dropna(axis=1)
-count_full_sub.T.to_csv(
-    Path.joinpath(
-        Path.home(), "workspace/mouse-brain-full/logcpm/scale_df/full-sub.csv"
-    )
-)
-
-for idx in idx_full:
-    count_sub = count_full_df.reindex(
-        index=[i for i in count_full_df.index if idx in i]
-    )
-    print(f"{idx}:\t{count_sub.shape}")
-    count_sub.T.to_csv(
-        Path.joinpath(
-            Path.home(), f"workspace/mouse-brain-full/logcpm/scale_df/{idx}-sub.csv"
-        )
-    )
+            f"workspace/mouse-brain-full/results/correlation/{timepoint}-correlation.jpg",
+        ))
