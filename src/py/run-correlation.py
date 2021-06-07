@@ -37,7 +37,7 @@ import session_info
 from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
 from scipy.stats import ranksums
-from statsmodels.stat import multitest
+from statsmodels.stats import multitest
 
 session_info.show()
 plt.rcParams.update({"font.size": 24})
