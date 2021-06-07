@@ -107,7 +107,7 @@ count_full_df = pd.DataFrame()
 for idx in idx_full:
     count_path = Path.joinpath(
         Path.home(),
-        f"workspace/mouse-brain-full/logcpm/scale_df/logcpm/{idx}-logcpm.csv")
+        f"workspace/mouse-brain-full/scale_df/logcpm/{idx}-logcpm.csv")
     count_df = pd.read_csv(count_path, index_col=0, header=0).T
     print(f"{idx}:\t{count_df.shape}")
     count_full_df = pd.concat(
@@ -120,7 +120,7 @@ print(f"Full:\t{count_full_df.shape}")
 for idx in idx_full:
     count_path = Path.joinpath(
         Path.home(),
-        f"workspace/mouse-brain-full/logcpm/scale_df/logcpm/{idx}-logcpm-inter.csv",
+        f"workspace/mouse-brain-full/scale_df/logcpm/{idx}-logcpm-inter.csv",
     )
     count_df = count_full_df.reindex(
         index=[i for i in count_full_df.index if idx in i])
@@ -128,7 +128,7 @@ for idx in idx_full:
 count_full_df.T.to_csv(
     Path.joinpath(
         Path.home(),
-        "workspace/mouse-brain-full/logcpm/scale_df/logcpm/full-logcpm-inter.csv"
+        "workspace/mouse-brain-full/scale_df/logcpm/full-logcpm-inter.csv"
     ))
 # count_full_df = quantile_normalization(count_full_df.T).T
 
