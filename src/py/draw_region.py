@@ -96,8 +96,8 @@ for idx in idx_full:
             fig, ax = plt.subplots(figsize=(10, 10))
             ax.imshow(he_image)
             ax.scatter(draw_df['X'], draw_df['Y'], s=16, alpha=0.7)
-            ax.set_xticks()
-            ax.set_yticks()
+            ax.set_xticks([])
+            ax.set_yticks([])
             ax.set_title(f'{idx} {region}')
             [axis.set_visible(False) for axis in ax.spines.values()]
             fig.savefig(
