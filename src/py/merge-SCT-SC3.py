@@ -65,6 +65,7 @@ ncs_full = {
 
 # %% read data
 cluster_full_df = pd.DataFrame(columns=["sc3_clusters"])
+coor_full_df = pd.DataFrame()
 for idx in idx_full:
     cluster_path = Path.joinpath(
         Path.home(),
@@ -78,8 +79,17 @@ for idx in idx_full:
     )
     cluster_df.columns = ["sc3_clusters"]
     cluster_full_df = pd.concat([cluster_full_df, cluster_df])
+
+    coor_path = Path.joinpath(
+        Path.home(), f"workspace/mouse-brain-full/coor_df/{idx}-coor.csv")
+    coor_df = pd.read_csv(coor_path, index_col=0, header=0)
+    coor_full_df = pd.concat([coor_full_df, coor_df])
+
 cluster_full_df.to_csv(
     Path.joinpath(
         Path.home(),
         f"workspace/mouse-brain-full/results/cluster/SCT-SC3/pattern/full-SC3.csv"
     ))
+coor_full_df.to_csv(
+    Path.joinpath(Path.home(),
+                  "workspace/mouse-brain-full/coor_df/full-coor.csv"))
