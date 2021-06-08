@@ -71,7 +71,8 @@ for idx in idx_full:
         f"workspace/mouse-brain-full/results/cluster/SCT-SC3/pattern/{idx}-SC3.csv"
     )
     cluster_df = pd.read_csv(cluster_path, index_col=0, header=0)
-    cluster_df = pd.DataFrame(cluster_df[f'sc3_{ncs_full[idx]}_clusters'])
+    cluster_df = cluster_df[f'sc3_{ncs_full[idx]}_clusters']
+    cluster_df = pd.DataFrame([f"{idx}_{i}" for i in cluster_df])
     cluster_df.columns = ["sc3_clusters"]
     cluster_full_df = pd.concat([cluster_full_df, cluster_df])
 cluster_full_df.to_csv(
