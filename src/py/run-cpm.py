@@ -36,6 +36,7 @@ import numpy as np
 import pandas as pd
 import session_info
 
+WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 session_info.show()
 random_state = 42
 
@@ -57,12 +58,10 @@ idx_full = {
 # %% read raw count table
 idx = sys.argv[1]
 count_path = Path.joinpath(
-    Path.home(),
-    f"workspace/mouse-brain-full/spaceranger/{idx}/outs/filtered_feature_bc_matrix/{idx}.csv",
-)
+    WORKDIR, f"spaceranger/{idx}/outs/filtered_feature_bc_matrix/{idx}.csv")
 coor_path = Path.joinpath(
-    Path.home(),
-    f"workspace/mouse-brain-full/spaceranger/{idx}/outs/spatial/coor-{idx}.csv",
+    WORKDIR,
+    f"spaceranger/{idx}/outs/spatial/coor-{idx}.csv",
 )
 
 count_df = pd.read_csv(count_path, index_col=0, header=0).T
@@ -80,14 +79,6 @@ count_df.drop(columns=drop_gene, inplace=True)
 
 # %% scale data
 scale_df = np.log(count_df.T * 10000 / count_df.T.sum() + 1)
-scale_df.to_csv(
-    Path.joinpath(
-        Path.home(),
-        f"workspace/mouse-brain-full/scale_df/logcpm/{idx}-logcpm.csv"))
-coor_df.to_csv(
-    Path.joinpath(Path.home(),
-                  f"workspace/mouse-brain-full/coor_df/{idx}-coor.csv"))
-count_df.T.to_csv(
-    Path.joinpath(
-        Path.home(),
-        f"workspace/mouse-brain-full/scale_df/raw_count/{idx}-raw.csv"))
+scale_df.to_csv(Path.joinpath(WORKDIR, f"scale_df/logcpm/{idx}-logcpm.csv"))
+coor_df.to_csv(Path.joinpath(WORKDIR, f"coor_df/{idx}-coor.csv"))
+count_df.T.to_csv(Path.joinpath(WORKDIR, f"scale_df/raw_count/{idx}-raw.csv"))

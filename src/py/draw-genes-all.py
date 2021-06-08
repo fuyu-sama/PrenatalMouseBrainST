@@ -37,8 +37,9 @@ import session_info
 from matplotlib import pyplot as plt
 from PIL import Image
 
-plt.rcParams.update({"font.size": 24})
+WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 session_info.show()
+plt.rcParams.update({"font.size": 24})
 
 idx_full = {
     "E135A": "V10M17-100-E135A",
@@ -56,34 +57,11 @@ idx_full = {
 }
 
 colors = [
-    "#FAEBD7",
-    "#00FFFF",
-    "#FFD700",
-    "#0000FF",
-    "#FF8C00",
-    "#EE82EE",
-    "#9ACD32",
-    "#5F9EA0",
-    "#7FFF00",
-    "#7FFFD4",
-    "#6495ED",
-    "#008B8B",
-    "#B8860B",
-    "#C0C0C0",
-    "#000080",
-    "#D8BFD8",
-    "#00CED1",
-    "#9400D3",
-    "#8E804B",
-    "#0089A7",
-    "#CB1B45",
-    "#FFB6C1",
-    "#00FF00",
-    "#800000",
-    "#376B6D",
-    "#D8BFD8",
-    "#F5F5F5",
-    "#D2691E",
+    "#FAEBD7", "#00FFFF", "#FFD700", "#0000FF", "#FF8C00", "#EE82EE",
+    "#9ACD32", "#5F9EA0", "#7FFF00", "#7FFFD4", "#6495ED", "#008B8B",
+    "#B8860B", "#C0C0C0", "#000080", "#D8BFD8", "#00CED1", "#9400D3",
+    "#8E804B", "#0089A7", "#CB1B45", "#FFB6C1", "#00FF00", "#800000",
+    "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
 ]
 
 idx_group = [
@@ -108,16 +86,14 @@ he_dict = {}
 
 for idx in idx_group:
     count_path = Path.joinpath(
-        Path.home(),
-        f"workspace/mouse-brain-full/spaceranger/{idx}/outs/filtered_feature_bc_matrix/{idx}.csv",
+        WORKDIR,
+        f"spaceranger/{idx}/outs/filtered_feature_bc_matrix/{idx}.csv",
     )
     coor_path = Path.joinpath(
-        Path.home(),
-        f"workspace/mouse-brain-full/spaceranger/{idx}/outs/spatial/coor-{idx}.csv",
+        WORKDIR,
+        f"spaceranger/{idx}/outs/spatial/coor-{idx}.csv",
     )
-    he_path = Path.joinpath(
-        Path.home(), f"workspace/mouse-brain-full/Data/HE/{idx_full[idx]}.tif"
-    )
+    he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
 
     count_df = pd.read_csv(count_path, index_col=0, header=0).T
     coor_df = pd.read_csv(coor_path, index_col=0, header=0)
@@ -141,8 +117,7 @@ def draw_genes(range_list: list) -> None:
         [ax.set_xticks([]) for ax in axes.flatten()]
         [ax.set_yticks([]) for ax in axes.flatten()]
         [
-            axis.set_visible(False)
-            for ax in axes.flatten()
+            axis.set_visible(False) for ax in axes.flatten()
             for axis in ax.spines.values()
         ]
         for idx, ax in zip(idx_group, axes.flatten()):
@@ -161,11 +136,7 @@ def draw_genes(range_list: list) -> None:
                 vmin=0,
             )
             fig.colorbar(sc, ax=ax)
-        fig.savefig(
-            Path.joinpath(
-                Path.home(), f"workspace/mouse-brain-full/draw_genes/all/{gene}.jpg"
-            )
-        )
+        fig.savefig(Path.joinpath(WORKDIR, f"draw_genes/all/{gene}.jpg"))
         plt.close(fig)
 
 

@@ -36,6 +36,7 @@ import session_info
 from matplotlib import pyplot as plt
 from PIL import Image
 
+WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 session_info.show()
 plt.rcParams.update({"font.size": 24})
 
@@ -73,18 +74,15 @@ regions = dict(
 )
 
 # %% read data
-coor_path = Path.joinpath(Path.home(),
-                          "workspace/mouse-brain-full/coor_df/full-coor.csv")
-cluster_path = Path.joinpath(
-    Path.home(),
-    "workspace/mouse-brain-full/results/cluster/SCT-SC3/pattern/full-SC3.csv")
+coor_path = Path.joinpath(WORKDIR, "coor_df/full-coor.csv")
+cluster_path = Path.joinpath(WORKDIR,
+                             "results/cluster/SCT-SC3/pattern/full-SC3.csv")
 coor_df = pd.read_csv(coor_path, index_col=0, header=0)
 cluster_df = pd.read_csv(cluster_path, index_col=0, header=0)
 
 # %% draw
 for idx in idx_full:
-    he_path = Path.joinpath(
-        Path.home(), f"workspace/mouse-brain-full/Data/HE/{idx_full[idx]}.tif")
+    he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
     with Image.open(he_path) as he_image:
         for region in regions:
             region_index = [
@@ -102,7 +100,7 @@ for idx in idx_full:
             [axis.set_visible(False) for axis in ax.spines.values()]
             fig.savefig(
                 Path.joinpath(
-                    Path.home(),
-                    f"workspace/mouse-brain-full/results/cluster/SCT-SC3/region/{idx}_{region}.pdf"
+                    WORKDIR,
+                    f"results/cluster/SCT-SC3/region/{idx}_{region}.jpg",
                 ))
             plt.close(fig)

@@ -39,6 +39,7 @@ from matplotlib.colors import ListedColormap
 from scipy.stats import ranksums
 from statsmodels.stats import multitest
 
+WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 session_info.show()
 plt.rcParams.update({"font.size": 24})
 
@@ -57,34 +58,11 @@ idx_full = {
     "P0A2": "V10M17-101-P0A2",
 }
 colors = [
-    "#FAEBD7",
-    "#00FFFF",
-    "#FFD700",
-    "#0000FF",
-    "#FF8C00",
-    "#EE82EE",
-    "#9ACD32",
-    "#5F9EA0",
-    "#7FFF00",
-    "#7FFFD4",
-    "#6495ED",
-    "#008B8B",
-    "#B8860B",
-    "#C0C0C0",
-    "#000080",
-    "#D8BFD8",
-    "#00CED1",
-    "#9400D3",
-    "#8E804B",
-    "#0089A7",
-    "#CB1B45",
-    "#FFB6C1",
-    "#00FF00",
-    "#800000",
-    "#376B6D",
-    "#D8BFD8",
-    "#F5F5F5",
-    "#D2691E",
+    "#FAEBD7", "#00FFFF", "#FFD700", "#0000FF", "#FF8C00", "#EE82EE",
+    "#9ACD32", "#5F9EA0", "#7FFF00", "#7FFFD4", "#6495ED", "#008B8B",
+    "#B8860B", "#C0C0C0", "#000080", "#D8BFD8", "#00CED1", "#9400D3",
+    "#8E804B", "#0089A7", "#CB1B45", "#FFB6C1", "#00FF00", "#800000",
+    "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
 ]
 timepoints = {
     "E135": [["E135A"], ["E135B"]],
@@ -105,9 +83,7 @@ def quantile_normalization(df: pd.DataFrame) -> pd.DataFrame:
 # %% read data
 count_full_df = pd.DataFrame()
 for idx in idx_full:
-    count_path = Path.joinpath(
-        Path.home(),
-        f"workspace/mouse-brain-full/scale_df/logcpm/{idx}-logcpm.csv")
+    count_path = Path.joinpath(WORKDIR, f"scale_df/logcpm/{idx}-logcpm.csv")
     count_df = pd.read_csv(count_path, index_col=0, header=0).T
     print(f"{idx}:\t{count_df.shape}")
     count_full_df = pd.concat(
@@ -118,24 +94,18 @@ for idx in idx_full:
 count_full_df = count_full_df.dropna(axis=1)
 print(f"Full:\t{count_full_df.shape}")
 for idx in idx_full:
-    count_path = Path.joinpath(
-        Path.home(),
-        f"workspace/mouse-brain-full/scale_df/logcpm/{idx}-logcpm-inter.csv",
-    )
+    count_path = Path.joinpath(WORKDIR,
+                               f"scale_df/logcpm/{idx}-logcpm-inter.csv")
     count_df = count_full_df.reindex(
         index=[i for i in count_full_df.index if idx in i])
     count_df.T.to_csv(count_path)
 count_full_df.T.to_csv(
-    Path.joinpath(
-        Path.home(),
-        "workspace/mouse-brain-full/scale_df/logcpm/full-logcpm-inter.csv"
-    ))
+    Path.joinpath(WORKDIR, "scale_df/logcpm/full-logcpm-inter.csv"))
 # count_full_df = quantile_normalization(count_full_df.T).T
 
 # %% draw
 q = 0.9
 count_full_sub = pd.DataFrame()
-count_e175 = pd.DataFrame()
 for timepoint in timepoints:
     idx = timepoints[timepoint]
     count_sub_0 = count_full_df.reindex(
@@ -192,6 +162,6 @@ for timepoint in timepoints:
     ax_plot.set_title("logcpm ranksums")
     fig.savefig(
         Path.joinpath(
-            Path.home(),
-            f"workspace/mouse-brain-full/results/correlation/{timepoint}-correlation.jpg",
+            WORKDIR,
+            f"results/correlation/{timepoint}-correlation.jpg",
         ))

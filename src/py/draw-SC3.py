@@ -39,6 +39,7 @@ from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
 from PIL import Image
 
+WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 session_info.show()
 plt.rcParams.update({"font.size": 24})
 Image.MAX_IMAGE_PIXELS = None
@@ -90,15 +91,12 @@ colors = [
 ]
 
 # %% read data
-he_path = Path.joinpath(
-    Path.home(), f"workspace/mouse-brain-full/Data/HE/{idx_full[idx]}.tif")
+he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
 sc3_path = Path.joinpath(
-    Path.home(),
-    f"workspace/mouse-brain-full/results/cluster/SCT-SC3/pattern/{idx}-SC3.csv")
-coor_path = Path.joinpath(
-    Path.home(),
-    f"workspace/mouse-brain-full/coor_df/{idx}-coor.csv",
+    WORKDIR,
+    f"results/cluster/SCT-SC3/pattern/{idx}-SC3.csv",
 )
+coor_path = Path.joinpath(WORKDIR, f"coor_df/{idx}-coor.csv")
 
 he_image = Image.open(he_path)
 cluster_df = pd.read_csv(sc3_path, index_col=0, header=0)
@@ -121,10 +119,7 @@ for k, j in zip(range(5, 29), ax.flatten()):
         alpha=0.7,
     )
 fig.savefig(
-    Path.joinpath(
-        Path.home(),
-        f"workspace/mouse-brain-full/results/cluster/SCT-SC3/together/{idx}-SC3.pdf"
-    ))
+    Path.joinpath(WORKDIR, f"results/cluster/SCT-SC3/together/{idx}-SC3.pdf"))
 plt.close(fig)
 
 # %% draw separate
@@ -143,7 +138,7 @@ for ncs in range(5, 29):
         ax.set_title(f"{idx} ncs {ncs} cluster {n}")
     fig.savefig(
         Path.joinpath(
-            Path.home(),
-            f"workspace/mouse-brain-full/results/cluster/SCT-SC3/separate/{idx}-{ncs}-SC3.pdf"
+            WORKDIR,
+            f"results/cluster/SCT-SC3/separate/{idx}-{ncs}-SC3.pdf",
         ))
     plt.close(fig)

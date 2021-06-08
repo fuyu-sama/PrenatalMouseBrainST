@@ -28,8 +28,8 @@
 #
 
 # %% environment config
-HOME <- Sys.getenv("HOME")
-renv::activate(paste0(HOME, "/workspace/mouse-brain-full"))
+WORKDIR <- paste0(Sys.getenv("HOME"), "/workspace/mouse-brain-full/")
+renv::activate(WORKDIR)
 library(SC3)
 library(Seurat)
 library(SingleCellExperiment)
@@ -40,14 +40,8 @@ set.seed(42)
 sessionInfo()
 
 # %% read data and create Seurat object
-count_path <- paste0(
-    HOME, "/workspace/mouse-brain-full/scale_df/raw_count/", 
-    idx, "-raw.csv"
-)
-save_path <- paste0(
-    HOME, "/workspace/mouse-brain-full/scale_df/SCTransform/", 
-    idx, "-SCTransform.csv"
-)
+count_path <- paste0(WORKDIR, "scale_df/raw_count/", idx, "-raw.csv")
+save_path <- paste0(WORKDIR, "scale_df/SCTransform/", idx, "-SCTransform.csv")
 
 count_df <- read.csv(count_path, check.names = FALSE, row.names = 1)
 seurat_obj <- CreateSeuratObject(count_df)

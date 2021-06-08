@@ -28,8 +28,8 @@
 #
 
 # %% environment config
-HOME <- Sys.getenv("HOME")
-renv::activate(paste0(HOME, "/workspace/mouse-brain-full"))
+WORKDIR <- paste0(Sys.getenv("HOME"), "/workspace/mouse-brain-full/")
+renv::activate(WORKDIR)
 library(Seurat)
 library(dplyr)
 library(ggplot2)
@@ -39,16 +39,11 @@ sessionInfo()
 
 # %% read data and create Seurat object
 read_df <- read.csv(
-    paste0(
-        HOME, "/workspace/mouse-brain-full/",
-        "/scale_df/logcpm/full-logcpm-inter.csv"
-        ),
+    paste0(WORKDIR, "scale_df/logcpm/full-logcpm-inter.csv"),
     check.names = F, row.names = 1
 )
 cluster_df <- read.csv(
-    paste0(
-        HOME, "/workspace/mouse-brain-full/",
-        "results/cluster/SCT-SC3/pattern/full-SC3.csv"),
+    paste0(WORKDIR, "results/cluster/SCT-SC3/pattern/full-SC3.csv"),
     check.names = F, row.names = 1
 )
 read_df <- read_df[, rownames(cluster_df)]
@@ -105,9 +100,6 @@ for (region in names(regions)) {
     )
     write.csv(
         de_1va_list[[region]],
-        paste0(
-            HOME, "/workspace/mouse-brain-full/",
-            "logcpm/DE/region-specific/DE-10-", region, ".csv"
-        )
+        paste0(WORKDIR, "results/DE/region-specific/DE-10-", region, ".csv")
     )
 }
