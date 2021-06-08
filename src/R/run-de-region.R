@@ -41,12 +41,12 @@ sessionInfo()
 read_df <- read.csv(
     paste0(
         HOME, "/workspace/mouse-brain-full/",
-        "logcpm/scale_df/full-logcpm-inter.csv"
+        "/scale_df/logcpm/full-logcpm-inter.csv"
         ),
     check.names = F, row.names = 1
 )
 cluster_df <- read.csv(
-    paste0(HOME, "/workspace/mouse-brain-full/SCT/SC3/full-12-SC3.csv"),
+    paste0(HOME, "/workspace/mouse-brain-full/results/SCT-SC3/full-12-SC3.csv"),
     check.names = F, row.names = 1
 )
 read_df <- read_df[, rownames(cluster_df)]
