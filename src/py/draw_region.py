@@ -74,9 +74,11 @@ regions = dict(
 )
 
 # %% read data
-coor_path = Path.joinpath(WORKDIR, "coor_df/full-coor.csv")
-cluster_path = Path.joinpath(WORKDIR,
-                             "results/cluster/SCT-SC3/pattern/full-SC3.csv")
+coor_path = Path.joinpath(WORKDIR, "Data/coor_df/full-coor.csv")
+cluster_path = Path.joinpath(
+    WORKDIR,
+    "results/cluster/SCT-SC3/pattern/full-SC3.csv",
+)
 coor_df = pd.read_csv(coor_path, index_col=0, header=0)
 cluster_df = pd.read_csv(cluster_path, index_col=0, header=0)
 

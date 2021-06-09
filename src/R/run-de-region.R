@@ -39,7 +39,7 @@ sessionInfo()
 
 # %% read data and create Seurat object
 read_df <- read.csv(
-    paste0(WORKDIR, "scale_df/logcpm/full-logcpm-inter.csv"),
+    paste0(WORKDIR, "Data/scale_df/logcpm/full-logcpm-inter.csv"),
     check.names = F, row.names = 1
 )
 cluster_df <- read.csv(

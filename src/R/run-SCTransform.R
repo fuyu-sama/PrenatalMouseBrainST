@@ -40,8 +40,8 @@ set.seed(42)
 sessionInfo()
 
 # %% read data and create Seurat object
-count_path <- paste0(WORKDIR, "scale_df/raw_count/", idx, "-raw.csv")
-save_path <- paste0(WORKDIR, "scale_df/SCTransform/", idx, "-SCTransform.csv")
+count_path <- paste0(WORKDIR, "Data/scale_df/raw_count/", idx, "-raw.csv")
+save_path <- paste0(WORKDIR, "Data/scale_df/SCTransform/", idx, "-SCTransform.csv")
 
 count_df <- read.csv(count_path, check.names = FALSE, row.names = 1)
 seurat_obj <- CreateSeuratObject(count_df)

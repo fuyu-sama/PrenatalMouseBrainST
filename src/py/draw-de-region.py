@@ -63,7 +63,10 @@ colors = [
 ]
 
 # %% read counts
-count_path = Path.joinpath(WORKDIR, f"scale_df/logcpm/full-logcpm-inter.csv")
+count_path = Path.joinpath(
+    WORKDIR,
+    f"Data/scale_df/logcpm/full-logcpm-inter.csv",
+)
 count_full_df = pd.read_csv(
     count_path,
     index_col=0,

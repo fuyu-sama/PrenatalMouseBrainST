@@ -83,7 +83,10 @@ def quantile_normalization(df: pd.DataFrame) -> pd.DataFrame:
 # %% read data
 count_full_df = pd.DataFrame()
 for idx in idx_full:
-    count_path = Path.joinpath(WORKDIR, f"scale_df/logcpm/{idx}-logcpm.csv")
+    count_path = Path.joinpath(
+        WORKDIR,
+        f"Data/scale_df/logcpm/{idx}-logcpm.csv",
+    )
     count_df = pd.read_csv(count_path, index_col=0, header=0).T
     print(f"{idx}:\t{count_df.shape}")
     count_full_df = pd.concat(
@@ -94,13 +97,15 @@ for idx in idx_full:
 count_full_df = count_full_df.dropna(axis=1)
 print(f"Full:\t{count_full_df.shape}")
 for idx in idx_full:
-    count_path = Path.joinpath(WORKDIR,
-                               f"scale_df/logcpm/{idx}-logcpm-inter.csv")
+    count_path = Path.joinpath(
+        WORKDIR,
+        f"Data/scale_df/logcpm/{idx}-logcpm-inter.csv",
+    )
     count_df = count_full_df.reindex(
         index=[i for i in count_full_df.index if idx in i])
     count_df.T.to_csv(count_path)
 count_full_df.T.to_csv(
-    Path.joinpath(WORKDIR, "scale_df/logcpm/full-logcpm-inter.csv"))
+    Path.joinpath(WORKDIR, "Data/scale_df/logcpm/full-logcpm-inter.csv"))
 # count_full_df = quantile_normalization(count_full_df.T).T
 
 # %% draw

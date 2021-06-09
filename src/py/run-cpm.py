@@ -79,6 +79,8 @@ count_df.drop(columns=drop_gene, inplace=True)
 
 # %% scale data
 scale_df = np.log(count_df.T * 10000 / count_df.T.sum() + 1)
-scale_df.to_csv(Path.joinpath(WORKDIR, f"scale_df/logcpm/{idx}-logcpm.csv"))
+scale_df.to_csv(
+    Path.joinpath(WORKDIR, f"Data/scale_df/logcpm/{idx}-logcpm.csv"))
 coor_df.to_csv(Path.joinpath(WORKDIR, f"coor_df/{idx}-coor.csv"))
-count_df.T.to_csv(Path.joinpath(WORKDIR, f"scale_df/raw_count/{idx}-raw.csv"))
+count_df.T.to_csv(
+    Path.joinpath(WORKDIR, f"Data/scale_df/raw_count/{idx}-raw.csv"))
