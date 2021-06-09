@@ -74,7 +74,10 @@ count_full_df = pd.read_csv(
 ).T
 
 # %% read cluster result
-cluster_path = Path.joinpath(WORKDIR, f"results/cluster/SCT-SC3/full-SC3.csv")
+cluster_path = Path.joinpath(
+    WORKDIR,
+    f"results/cluster/SCT-SC3/pattern/full-SC3.csv",
+)
 cluster_df = pd.read_csv(
     cluster_path,
     index_col=0,
