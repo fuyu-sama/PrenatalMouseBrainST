@@ -100,6 +100,6 @@ for (region in names(regions)) {
     )
     write.csv(
         de_1va_list[[region]],
-        paste0(WORKDIR, "results/DE/region-specific/DE-10-", region, ".csv")
+        paste0(WORKDIR, "results/DE/region-specific/DE-", region, ".csv")
     )
 }
