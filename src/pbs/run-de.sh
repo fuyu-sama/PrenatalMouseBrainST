@@ -7,8 +7,8 @@ qsub << EOF
 
     cd $HOME/workspace/mouse-brain-full
 
-    #Rscript src/R/run-de-region.R
-    #${PYTHON_PATH} src/py/draw-de-region.py
+    Rscript src/R/run-de-region.R
+    ${PYTHON_PATH} src/py/draw-de-region.py
     for region in cortex hypothalamus thalamus olfactory
     do
         ${PYTHON_PATH} src/py/run-id-transfer.py \
