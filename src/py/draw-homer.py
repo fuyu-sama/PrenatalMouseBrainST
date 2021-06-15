@@ -38,7 +38,6 @@ from matplotlib import pyplot as plt
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 session_info.show()
 plt.rcParams.update({"font.size": 24})
-ncs = 12
 
 idx_full = {
     "E135A": "V10M17-100-E135A",
@@ -101,7 +100,10 @@ count_path = Path.joinpath(
     WORKDIR,
     "Data/scale_df/logcpm/full-logcpm-inter.csv",
 )
-cluster_path = Path.joinpath(WORKDIR, "results/cluster/SCT-SC3/full-SC3.csv")
+cluster_path = Path.joinpath(
+    WORKDIR,
+    "results/cluster/SCT-SC3/pattern/full-SC3.csv",
+)
 count_df = pd.read_csv(count_path, index_col=0, header=0).T
 cluster_df = pd.read_csv(cluster_path, index_col=0, header=0)
 
