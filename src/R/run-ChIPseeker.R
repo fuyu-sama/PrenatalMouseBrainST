@@ -34,7 +34,7 @@ library(dplyr)
 library(ChIPseeker)
 
 sessionInfo()
-regions <- c("cortex", "thalamus", "hypothalamus", "olfactory")
+regions <- c("cortex", "thalamus", "hypothalamus", "olfactory", "hippocampus")
 
 # %% read data
 spompe <- GenomicFeatures::makeTxDbFromGFF(

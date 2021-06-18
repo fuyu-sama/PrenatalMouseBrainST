@@ -71,6 +71,8 @@ regions = dict(
                "E155B_11", "E165A_10", "E165A_11", "E165B_7", "E165B_10",
                "E175A1_5", "E175A2_7", "E175A2_9", "E175B_1", "E175B_9",
                "P0A1_10", "P0A2_7", "P0B_5", "P0B_6"),
+    hippocampus=("E155A_2", "E165A_2", "E165B_6", "E175A2_14", "E175A2_15",
+                 "E175B_11", "P0A1_8", "P0A2_2", "P0B_1"),
 )
 
 # %% read data
@@ -92,6 +94,8 @@ for idx in idx_full:
                 if cluster_df.loc[i, "sc3_clusters"] in
                 [p for p in regions[region] if idx in p]
             ]
+            if len(region_index) == 0:
+                continue
             draw_df = coor_df.reindex(index=region_index)
             fig, ax = plt.subplots(figsize=(10, 10))
             ax.imshow(he_image)

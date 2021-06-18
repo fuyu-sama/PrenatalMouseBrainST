@@ -1,6 +1,6 @@
 PYTHON_PATH=$HOME/workspace/mouse-brain-full/venv/bin/python
 
-for region in cortex hypothalamus thalamus olfactory
+for region in cortex hypothalamus thalamus olfactory hippocampus
 do
     sleep 1
     cd $HOME/workspace/mouse-brain-full/log
