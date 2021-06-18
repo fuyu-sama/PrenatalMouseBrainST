@@ -104,7 +104,11 @@ regions = dict(
     hippocampus=("E155A_2", "E165A_2", "E165B_6", "E175A2_14", "E175A2_15",
                  "E175B_11", "P0A1_8", "P0A2_2", "P0B_1"),
 )
-regions_label = dict(cortex=0, thalamus=1, hypothalamus=2, olfactory=3)
+regions_label = dict(cortex=0,
+                     thalamus=1,
+                     hypothalamus=2,
+                     olfactory=3,
+                     hippocampus=4)
 in_regions = [j for i in regions.values() for j in i]
 others = [
     i for i in list(set(cluster_df[f"sc3_clusters"])) if i not in in_regions
