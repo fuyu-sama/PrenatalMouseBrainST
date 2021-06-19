@@ -89,7 +89,7 @@ regions <- list(
         ),
     hippocampus = c(
         "E155A_2", "E165A_2", "E165B_6", "E175A2_14", "E175A2_15",
-        "E175B_11", "P0A1_8", "P0A2_2", "P0B_1")
+        "E175B_11", "P0A1_8", "P0A2_2", "P0B_4")
 )
 
 de_1va_list <- list()
