@@ -154,7 +154,8 @@ for region, c in zip(regions, ["red", "green", "blue", "yellow", "orange"]):
         s=2,
     )
 ax.legend(loc="best", fontsize=16, markerscale=10)
-fig.savefig(Path.joinpath(WORKDIR, "results/dimension_reduction/umap-1.jpg"))
+ax.set_title("UMAP logcpm")
+fig.savefig(Path.joinpath(WORKDIR, "results/dimension_reduction/umap-logcpm-1.jpg"))
 plt.close(fig)
 
 # %% color by sample
@@ -171,7 +172,8 @@ for tp, c in zip(idx_full.keys(), colors):
         s=2,
     )
 ax.legend(loc="best", fontsize=16, markerscale=10, ncol=2)
-fig.savefig(Path.joinpath(WORKDIR, "results/dimension_reduction/umap-2.jpg"))
+ax.set_title("UMAP logcpm")
+fig.savefig(Path.joinpath(WORKDIR, "results/dimension_reduction/umap-logcpm-2.jpg"))
 plt.close(fig)
 
 # %% densmap
@@ -209,7 +211,8 @@ for region, c in zip(regions, ["red", "green", "blue", "yellow", "orange"]):
         s=2,
     )
 ax.legend(loc="best", fontsize=16, markerscale=10)
-fig.savefig(Path.joinpath(WORKDIR, "results/dimension_reduction/densmap-1.jpg"))
+ax.set_title("densmap logcpm")
+fig.savefig(Path.joinpath(WORKDIR, "results/dimension_reduction/densmap-logcpm-1.jpg"))
 plt.close(fig)
 
 # %% color by sample
@@ -226,7 +229,8 @@ for tp, c in zip(idx_full.keys(), colors):
         s=2,
     )
 ax.legend(loc="best", fontsize=16, markerscale=10, ncol=2)
-fig.savefig(Path.joinpath(WORKDIR, "results/dimension_reduction/densmap-2.jpg"))
+ax.set_title("densmap logcpm")
+fig.savefig(Path.joinpath(WORKDIR, "results/dimension_reduction/densmap-logcpm-2.jpg"))
 plt.close(fig)
 
 # %% tsne
@@ -264,7 +268,8 @@ for region, c in zip(regions, ["red", "green", "blue", "yellow", "orange"]):
         s=2,
     )
 ax.legend(loc="best", fontsize=16, markerscale=10)
-fig.savefig(Path.joinpath(WORKDIR, "results/dimension_reduction/tsne-1.jpg"))
+ax.set_title("tSNE logcpm")
+fig.savefig(Path.joinpath(WORKDIR, "results/dimension_reduction/tsne-logcpm-1.jpg"))
 plt.close(fig)
 
 # %% color by sample
@@ -281,7 +286,8 @@ for tp, c in zip(idx_full.keys(), colors):
         s=2,
     )
 ax.legend(loc="best", fontsize=16, markerscale=10, ncol=2)
-fig.savefig(Path.joinpath(WORKDIR, "results/dimension_reduction/tsne-2.jpg"))
+ax.set_title("tSNE logcpm")
+fig.savefig(Path.joinpath(WORKDIR, "results/dimension_reduction/tsne-logcpm-2.jpg"))
 plt.close(fig)
 
 # %% densne
@@ -317,7 +323,8 @@ for region, c in zip(regions, ["red", "green", "blue", "yellow", "orange"]):
         s=2,
     )
 ax.legend(loc="best", fontsize=16, markerscale=10)
-fig.savefig(Path.joinpath(WORKDIR, "results/dimension_reduction/densne-1.jpg"))
+ax.set_title("densne logcpm")
+fig.savefig(Path.joinpath(WORKDIR, "results/dimension_reduction/densne-logcpm-1.jpg"))
 plt.close(fig)
 
 # %% color by sample
@@ -334,6 +341,7 @@ for tp, c in zip(idx_full.keys(), colors):
         s=2,
     )
 ax.legend(loc="best", fontsize=16, markerscale=10, ncol=2)
-fig.savefig(Path.joinpath(WORKDIR, "results/dimension_reduction/densne-2.jpg"))
+ax.set_title("densne logcpm")
+fig.savefig(Path.joinpath(WORKDIR, "results/dimension_reduction/densne-logcpm-2.jpg"))
 plt.close(fig)
 
