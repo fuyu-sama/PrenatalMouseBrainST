@@ -35,6 +35,23 @@ from pathlib import Path
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 
+
+# %% helper func
+def hamming_distance(str1: str, str2: str) -> int:
+    return(sum(c1 != c2 for c1, c2 in zip(str1, str2)))
+
+
+# %% read 10X barcodes
+bc_list = []
+with open(
+        Path.joinpath(
+            Path.home(),
+            ".local/prefix/spaceranger/1.2.2/lib/python/cellranger/barcodes/visium-v1_coordinates.txt"
+        )) as f:
+    for line in f:
+        line = line.strip()
+        bc_list.append(line.split("\t")[0])
+
 # %% work
 idx = "E165A"
 
@@ -48,6 +65,7 @@ r1_fin = gzip.open(r1_path, "rt")
 r2_fin = gzip.open(r2_path, "rt")
 
 os.mkdir(Path.joinpath(WORKDIR, f"Data/{idx}/separate"))
+os.mkdir(Path.joinpath(WORKDIR, f"Data/{idx}/separate/mismatched"))
 bc_dict = {}
 name_list = ["", ""]
 seq_list = ["", ""]
@@ -73,7 +91,10 @@ while 1:
     elif flag == 4:
         bc = seq_list[0][0:16]
         umi = seq_list[0][16:29]
-        write_dir = Path.joinpath(WORKDIR, f"Data/{idx}/separate/{bc}")
+        if bc in bc_list:
+            write_dir = Path.joinpath(WORKDIR, f"Data/{idx}/separate/{bc}")
+        else:
+            write_dir = Path.joinpath(WORKDIR, f"Data/{idx}/separate/mismatched/{bc}")
         if bc not in bc_dict:
             bc_dict[bc] = {}
             os.mkdir(write_dir)
