@@ -78,13 +78,11 @@ scvi_df = pd.read_csv(
 
 pearson_df = pd.DataFrame(index=scvi_df.index, columns=scvi_df.index)
 for i in range(pearson_df.shape[0]):
-    for j in range(i, pearson_df.shape[0]):
-        pearson_df.iloc[i, j] = np.corrcoef(raw_df.iloc[i], scvi_df.iloc[j])[1, 0]
+    pearson_df.iloc[i, i] = np.corrcoef(raw_df.iloc[i], scvi_df.iloc[i])[1, 0]
 
 spearman_df = pd.DataFrame(index=scvi_df.index, columns=scvi_df.index)
 for i in range(spearman_df.shape[0]):
-    for j in range(i, spearman_df.shape[0]):
-        spearman_df.iloc[i, j] = stats.spearmanr(raw_df.iloc[i], scvi_df.iloc[j])[1]
+    spearman_df.iloc[i, i] = stats.spearmanr(raw_df.iloc[i], scvi_df.iloc[i])[1]
 
 fig, ax = plt.subplots(1, 2, figsize=(10, 20))
 ax[0].imshow(pearson_df, cmap="bwr")
@@ -93,4 +91,4 @@ ax[1].imshow(spearman_df, cmap="bwr")
 ax[1].set_title(f"{idx} Spearman")
 [i.set_xticks([]) for i in ax]
 [i.set_yticks([])for y in ax]
-fig.savefig(Path.joinpath(WORKDIR, f"Data/scale_df/scvi/{idx}.jpg"))
+fig.savefig(Path.joinpath(WORKDIR, f"results/scvi/{idx}.jpg"))

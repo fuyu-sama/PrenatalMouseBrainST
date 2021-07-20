@@ -64,8 +64,8 @@ r2_path = Path.joinpath(WORKDIR, f"Data/{idx}/{idx}_S1_L001_R2_001.fastq.gz")
 r1_fin = gzip.open(r1_path, "rt")
 r2_fin = gzip.open(r2_path, "rt")
 
-os.mkdir(Path.joinpath(WORKDIR, f"Data/{idx}/separate"))
-os.mkdir(Path.joinpath(WORKDIR, f"Data/{idx}/separate/mismatched"))
+write_dir = Path.joinpath(WORKDIR, f"Data/{idx}/separate")
+os.mkdir(write_dir) if os.path.exists(write_dir) else None
 bc_dict = {}
 name_list = ["", ""]
 seq_list = ["", ""]
@@ -90,28 +90,25 @@ while 1:
         flag += 1
     elif flag == 4:
         bc = seq_list[0][0:16]
-        umi = seq_list[0][16:29]
-        if bc in bc_list:
-            write_dir = Path.joinpath(WORKDIR, f"Data/{idx}/separate/{bc}")
-        else:
-            write_dir = Path.joinpath(WORKDIR, f"Data/{idx}/separate/mismatched/{bc}")
-        if bc not in bc_dict:
-            bc_dict[bc] = {}
-            os.mkdir(write_dir)
-        if umi not in bc_dict[bc]:
-            bc_dict[bc][umi] = 1
-        r1_fout = gzip.open(
-            Path.joinpath(write_dir, f"{umi}_R1.fastq.gz"),
-            "at",
-        )
-        r2_fout = gzip.open(
-            Path.joinpath(write_dir, f"{umi}_R2.fastq.gz"),
-            "at",
-        )
-        r1_fout.write(name_list[0] + seq_list[0] + id_list[0] + r1_line)
-        r2_fout.write(name_list[1] + seq_list[1] + id_list[1] + r2_line)
-        r1_fout.close()
-        r2_fout.close()
+        valid = 0
+        for i in bc_list:
+            if hamming_distance(i, bc) <= 1:
+                bc = i
+                valid = 1
+                break
+        if valid:
+            # r1_fout = gzip.open(
+            #    Path.joinpath(write_dir, f"{bc}_R1.fastq.gz"),
+            #    "at",
+            # )
+            r2_fout = gzip.open(
+                Path.joinpath(write_dir, f"{bc}_R2.fastq.gz"),
+                "at",
+            )
+            # r1_fout.write(name_list[0] + seq_list[0] + id_list[0] + r1_line)
+            r2_fout.write(name_list[1] + seq_list[1] + id_list[1] + r2_line)
+            # r1_fout.close()
+            r2_fout.close()
         # reset variables
         name_list = ["", ""]
         seq_list = ["", ""]
