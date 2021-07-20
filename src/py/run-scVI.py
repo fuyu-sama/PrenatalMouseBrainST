@@ -31,7 +31,6 @@
 # %% envoronment config
 from pathlib import Path
 
-import scanpy as sc
 import scvi
 import session_info
 
@@ -60,17 +59,12 @@ colors = [
     "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
 ]
 
-# %% read data
+# %% run
 for idx in idx_full:
     anndata = scvi.data.read_csv(
         Path.joinpath(WORKDIR, f"Data/scale_df/raw_count/{idx}-raw.csv")).T
-    sc.pp.filter_genes(anndata, min_counts=3)
-    anndata.layers["counts"] = anndata.X.copy()
-    sc.pp.normalize_total(anndata, target_sum=1e4)
-    sc.pp.log1p(anndata)
-    anndata.raw = anndata
     scvi.data.setup_anndata(anndata)
     model = scvi.model.SCVI(anndata)
     model.train()
-    model.get_normalized_expression(library_size=1e4).T.to_csv(
+    model.get_normalized_expression().T.to_csv(
         Path.joinpath(WORKDIR, f"Data/scale_df/scvi/{idx}-scvi.csv"))
