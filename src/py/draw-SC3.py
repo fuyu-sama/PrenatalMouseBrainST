@@ -91,12 +91,13 @@ colors = [
 ]
 
 # %% read data
+scale_method = sys.argv[1]
 he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
 sc3_path = Path.joinpath(
     WORKDIR,
-    f"results/cluster/SCT-SC3/pattern/{idx}-SC3.csv",
+    f"results/cluster/{scale_method}-SC3/pattern/{idx}-SC3.csv",
 )
-coor_path = Path.joinpath(WORKDIR, f"coor_df/{idx}-coor.csv")
+coor_path = Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv")
 
 he_image = Image.open(he_path)
 cluster_df = pd.read_csv(sc3_path, index_col=0, header=0)
@@ -119,7 +120,7 @@ for k, j in zip(range(5, 29), ax.flatten()):
         alpha=0.7,
     )
 fig.savefig(
-    Path.joinpath(WORKDIR, f"results/cluster/SCT-SC3/together/{idx}-SC3.pdf"))
+    Path.joinpath(WORKDIR, f"results/cluster/{scale_method}-SC3/together/{idx}-SC3.pdf"))
 plt.close(fig)
 
 # %% draw separate
@@ -139,6 +140,6 @@ for ncs in range(5, 29):
     fig.savefig(
         Path.joinpath(
             WORKDIR,
-            f"results/cluster/SCT-SC3/separate/{idx}-{ncs}-SC3.pdf",
+            f"results/cluster/{scale_method}-SC3/separate/{idx}-{ncs}-SC3.pdf",
         ))
     plt.close(fig)

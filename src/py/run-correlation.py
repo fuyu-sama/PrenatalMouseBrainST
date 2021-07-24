@@ -29,6 +29,7 @@
 #
 
 # %% environment config
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -81,11 +82,12 @@ def quantile_normalization(df: pd.DataFrame) -> pd.DataFrame:
 
 
 # %% read data
+scale_method = sys.argv[1]
 count_full_df = pd.DataFrame()
 for idx in idx_full:
     count_path = Path.joinpath(
         WORKDIR,
-        f"Data/scale_df/logcpm/{idx}-logcpm.csv",
+        f"Data/scale_df/{scale_method}/{idx}-{scale_method}.csv",
     )
     count_df = pd.read_csv(count_path, index_col=0, header=0).T
     print(f"{idx}:\t{count_df.shape}")
@@ -99,13 +101,13 @@ print(f"Full:\t{count_full_df.shape}")
 for idx in idx_full:
     count_path = Path.joinpath(
         WORKDIR,
-        f"Data/scale_df/logcpm/{idx}-logcpm-inter.csv",
+        f"Data/scale_df/{scale_method}/{idx}-{scale_method}-inter.csv",
     )
     count_df = count_full_df.reindex(
         index=[i for i in count_full_df.index if idx in i])
     count_df.T.to_csv(count_path)
 count_full_df.T.to_csv(
-    Path.joinpath(WORKDIR, "Data/scale_df/logcpm/full-logcpm-inter.csv"))
+    Path.joinpath(WORKDIR, f"Data/scale_df/{scale_method}/full-{scale_method}-inter.csv"))
 # count_full_df = quantile_normalization(count_full_df.T).T
 
 # %% draw
@@ -164,9 +166,9 @@ for timepoint in timepoints:
     ax_plot.text(0, 4.4, f"Number of selected genes: {int(c.sum())}")
     ax_plot.plot(range(6), range(6), "--r")
     ax_plot.text(4.7, 5, "y = x", c="r")
-    ax_plot.set_title("logcpm ranksums")
+    ax_plot.set_title("f{scale_method} ranksums")
     fig.savefig(
         Path.joinpath(
             WORKDIR,
-            f"results/correlation/{timepoint}-correlation.jpg",
+            f"results/correlation/{timepoint}-{scale_method}-correlation.jpg",
         ))

@@ -65,30 +65,33 @@ colors = [
 
 # %% read data
 idx = sys.argv[1]
+scale_method = "scvi"
 raw_df = pd.read_csv(
     Path.joinpath(WORKDIR, f"Data/scale_df/raw_count/{idx}-raw.csv"),
     index_col=0,
     header=0,
 )
-scvi_df = pd.read_csv(
-    Path.joinpath(WORKDIR, f"Data/scale_df/scvi/{idx}-scvi.csv"),
+scale_df = pd.read_csv(
+    Path.joinpath(WORKDIR,
+                  f"Data/scale_df/{scale_method}/{idx}-{scale_method}.csv"),
     index_col=0,
     header=0,
 )
 
 pearson_list = []
 for i in raw_df.index:
-    pearson_list.append(np.corrcoef(raw_df.loc[i], scvi_df.loc[i])[1, 0])
+    pearson_list.append(np.corrcoef(raw_df.loc[i], scale_df.loc[i])[1, 0])
 
 spearman_list = []
 for i in raw_df.index:
-    spearman_list.append(stats.spearmanr(raw_df.loc[i], scvi_df.loc[i])[0])
+    spearman_list.append(stats.spearmanr(raw_df.loc[i], scale_df.loc[i])[0])
 
-fig, ax = plt.subplots(1, 2, figsize=(10, 20))
-ax[0].hist(pearson_list)
+fig, ax = plt.subplots(1, 2, figsize=(20, 10))
+ax[0].hist(pearson_list, bins=100)
 ax[0].set_title(f"{idx} Pearson")
-ax[1].hist(spearman_list)
+ax[1].hist(spearman_list, bins=100)
 ax[1].set_title(f"{idx} Spearman")
-[i.set_xticks([]) for i in ax]
 [i.set_yticks([]) for i in ax]
-fig.savefig(Path.joinpath(WORKDIR, f"results/scvi/{idx}.jpg"))
+fig.savefig(
+    Path.joinpath(WORKDIR,
+                  f"results/correlation-hist/{scale_method}/{idx}.jpg"))

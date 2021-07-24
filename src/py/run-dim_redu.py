@@ -29,6 +29,7 @@
 #
 
 # %% environment config
+import sys
 from pathlib import Path
 
 import pandas as pd
@@ -66,9 +67,10 @@ colors = [
 ]
 
 # %% read counts
+scale_method = sys.argv[1]
 count_path = Path.joinpath(
     WORKDIR,
-    f"Data/scale_df/logcpm/full-logcpm-inter.csv",
+    f"Data/scale_df/{scale_method}/full-{scale_method}-inter.csv",
 )
 count_full_df = pd.read_csv(
     count_path,
@@ -154,8 +156,12 @@ for region, c in zip(regions, ["red", "green", "blue", "yellow", "orange"]):
         s=2,
     )
 ax.legend(loc="best", fontsize=16, markerscale=10)
-ax.set_title("UMAP logcpm")
-fig.savefig(Path.joinpath(WORKDIR, "results/dimension_reduction/umap-logcpm-1.jpg"))
+ax.set_title("UMAP {scale_method}")
+fig.savefig(
+    Path.joinpath(
+        WORKDIR,
+        "results/dimension_reduction/{scale_method}/umap-{scale_method}-1.jpg")
+)
 plt.close(fig)
 
 # %% color by sample
@@ -172,8 +178,12 @@ for tp, c in zip(idx_full.keys(), colors):
         s=2,
     )
 ax.legend(loc="best", fontsize=16, markerscale=10, ncol=2)
-ax.set_title("UMAP logcpm")
-fig.savefig(Path.joinpath(WORKDIR, "results/dimension_reduction/umap-logcpm-2.jpg"))
+ax.set_title("UMAP {scale_method}")
+fig.savefig(
+    Path.joinpath(
+        WORKDIR,
+        "results/dimension_reduction/{scale_method}/umap-{scale_method}-2.jpg")
+)
 plt.close(fig)
 
 # %% densmap
@@ -211,8 +221,12 @@ for region, c in zip(regions, ["red", "green", "blue", "yellow", "orange"]):
         s=2,
     )
 ax.legend(loc="best", fontsize=16, markerscale=10)
-ax.set_title("densmap logcpm")
-fig.savefig(Path.joinpath(WORKDIR, "results/dimension_reduction/densmap-logcpm-1.jpg"))
+ax.set_title("densmap {scale_method}")
+fig.savefig(
+    Path.joinpath(
+        WORKDIR,
+        "results/dimension_reduction/{scale_method}/densmap-{scale_method}-1.jpg"
+    ))
 plt.close(fig)
 
 # %% color by sample
@@ -220,7 +234,8 @@ fig, ax = plt.subplots(figsize=(20, 20))
 ax.set_xticks([])
 ax.set_yticks([])
 for tp, c in zip(idx_full.keys(), colors):
-    draw_df = densmap_df.reindex(index=[i for i in densmap_df.index if tp in i])
+    draw_df = densmap_df.reindex(
+        index=[i for i in densmap_df.index if tp in i])
     ax.scatter(
         draw_df["X"],
         draw_df["Y"],
@@ -229,8 +244,12 @@ for tp, c in zip(idx_full.keys(), colors):
         s=2,
     )
 ax.legend(loc="best", fontsize=16, markerscale=10, ncol=2)
-ax.set_title("densmap logcpm")
-fig.savefig(Path.joinpath(WORKDIR, "results/dimension_reduction/densmap-logcpm-2.jpg"))
+ax.set_title("densmap {scale_method}")
+fig.savefig(
+    Path.joinpath(
+        WORKDIR,
+        "results/dimension_reduction/{scale_method}/densmap-{scale_method}-2.jpg"
+    ))
 plt.close(fig)
 
 # %% tsne
@@ -268,8 +287,12 @@ for region, c in zip(regions, ["red", "green", "blue", "yellow", "orange"]):
         s=2,
     )
 ax.legend(loc="best", fontsize=16, markerscale=10)
-ax.set_title("tSNE logcpm")
-fig.savefig(Path.joinpath(WORKDIR, "results/dimension_reduction/tsne-logcpm-1.jpg"))
+ax.set_title("tSNE {scale_method}")
+fig.savefig(
+    Path.joinpath(
+        WORKDIR,
+        "results/dimension_reduction/{scale_method}/tsne-{scale_method}-1.jpg")
+)
 plt.close(fig)
 
 # %% color by sample
@@ -286,15 +309,19 @@ for tp, c in zip(idx_full.keys(), colors):
         s=2,
     )
 ax.legend(loc="best", fontsize=16, markerscale=10, ncol=2)
-ax.set_title("tSNE logcpm")
-fig.savefig(Path.joinpath(WORKDIR, "results/dimension_reduction/tsne-logcpm-2.jpg"))
+ax.set_title("tSNE {scale_method}")
+fig.savefig(
+    Path.joinpath(
+        WORKDIR,
+        "results/dimension_reduction/{scale_method}/tsne-{scale_method}-2.jpg")
+)
 plt.close(fig)
 
 # %% densne
 result_densne = densne.run_densne(count_full_df)[0]
-densne_df = pd.DataFrame(
-    result_densne, index=count_full_df.index, columns=["X", "Y"]
-)
+densne_df = pd.DataFrame(result_densne,
+                         index=count_full_df.index,
+                         columns=["X", "Y"])
 
 # %% color by region
 fig, ax = plt.subplots(figsize=(20, 20))
@@ -323,8 +350,12 @@ for region, c in zip(regions, ["red", "green", "blue", "yellow", "orange"]):
         s=2,
     )
 ax.legend(loc="best", fontsize=16, markerscale=10)
-ax.set_title("densne logcpm")
-fig.savefig(Path.joinpath(WORKDIR, "results/dimension_reduction/densne-logcpm-1.jpg"))
+ax.set_title("densne {scale_method}")
+fig.savefig(
+    Path.joinpath(
+        WORKDIR,
+        "results/dimension_reduction/{scale_method}/densne-{scale_method}-1.jpg"
+    ))
 plt.close(fig)
 
 # %% color by sample
@@ -341,7 +372,10 @@ for tp, c in zip(idx_full.keys(), colors):
         s=2,
     )
 ax.legend(loc="best", fontsize=16, markerscale=10, ncol=2)
-ax.set_title("densne logcpm")
-fig.savefig(Path.joinpath(WORKDIR, "results/dimension_reduction/densne-logcpm-2.jpg"))
+ax.set_title("densne {scale_method}")
+fig.savefig(
+    Path.joinpath(
+        WORKDIR,
+        "results/dimension_reduction/{scale_method}/densne-{scale_method}-2.jpg"
+    ))
 plt.close(fig)
-

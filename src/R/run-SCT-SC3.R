@@ -35,13 +35,14 @@ library(SingleCellExperiment)
 
 args <- commandArgs(trailingOnly = TRUE)
 idx <- args[1]
+scale_method <- args[2]
 set.seed(42)
 sessionInfo()
 
 # %% read data and create sce
 count_path <- paste0(WORKDIR, "Data/scale_df/raw_count/", idx, "-raw.csv")
-sct_path <- paste0(WORKDIR, "Data/scale_df/SCTransform/", idx, "-SCTransform.csv")
-save_path <- paste0(WORKDIR, "results/cluster/SCT-SC3/pattern/", idx, "-SC3.csv")
+sct_path <- paste0(WORKDIR, "Data/scale_df/", scale_method, "/", idx, "-", scale_method, ".csv")
+save_path <- paste0(WORKDIR, "results/cluster/", scale_method, "-SC3/pattern/", idx, "-SC3.csv")
 count_df <- read.csv(count_path, check.names = FALSE, row.names = 1)
 sct_df <- read.csv(sct_path, check.names = FALSE, row.names = 1)
 count_df <- count_df[rownames(sct_df), ]
