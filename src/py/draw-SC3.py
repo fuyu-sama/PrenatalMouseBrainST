@@ -91,7 +91,7 @@ colors = [
 ]
 
 # %% read data
-scale_method = sys.argv[1]
+scale_method = sys.argv[2]
 he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
 sc3_path = Path.joinpath(
     WORKDIR,

@@ -156,11 +156,11 @@ for region, c in zip(regions, ["red", "green", "blue", "yellow", "orange"]):
         s=2,
     )
 ax.legend(loc="best", fontsize=16, markerscale=10)
-ax.set_title("UMAP {scale_method}")
+ax.set_title(f"UMAP {scale_method}")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        "results/dimension_reduction/{scale_method}/umap-{scale_method}-1.jpg")
+        f"results/dimension_reduction/{scale_method}/umap-{scale_method}-1.jpg")
 )
 plt.close(fig)
 
@@ -178,11 +178,11 @@ for tp, c in zip(idx_full.keys(), colors):
         s=2,
     )
 ax.legend(loc="best", fontsize=16, markerscale=10, ncol=2)
-ax.set_title("UMAP {scale_method}")
+ax.set_title(f"UMAP {scale_method}")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        "results/dimension_reduction/{scale_method}/umap-{scale_method}-2.jpg")
+        f"results/dimension_reduction/{scale_method}/umap-{scale_method}-2.jpg")
 )
 plt.close(fig)
 
@@ -221,11 +221,11 @@ for region, c in zip(regions, ["red", "green", "blue", "yellow", "orange"]):
         s=2,
     )
 ax.legend(loc="best", fontsize=16, markerscale=10)
-ax.set_title("densmap {scale_method}")
+ax.set_title(f"densmap {scale_method}")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        "results/dimension_reduction/{scale_method}/densmap-{scale_method}-1.jpg"
+        f"results/dimension_reduction/{scale_method}/densmap-{scale_method}-1.jpg"
     ))
 plt.close(fig)
 
@@ -244,11 +244,11 @@ for tp, c in zip(idx_full.keys(), colors):
         s=2,
     )
 ax.legend(loc="best", fontsize=16, markerscale=10, ncol=2)
-ax.set_title("densmap {scale_method}")
+ax.set_title(f"densmap {scale_method}")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        "results/dimension_reduction/{scale_method}/densmap-{scale_method}-2.jpg"
+        f"results/dimension_reduction/{scale_method}/densmap-{scale_method}-2.jpg"
     ))
 plt.close(fig)
 
@@ -287,11 +287,11 @@ for region, c in zip(regions, ["red", "green", "blue", "yellow", "orange"]):
         s=2,
     )
 ax.legend(loc="best", fontsize=16, markerscale=10)
-ax.set_title("tSNE {scale_method}")
+ax.set_title(f"tSNE {scale_method}")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        "results/dimension_reduction/{scale_method}/tsne-{scale_method}-1.jpg")
+        f"results/dimension_reduction/{scale_method}/tsne-{scale_method}-1.jpg")
 )
 plt.close(fig)
 
@@ -309,11 +309,11 @@ for tp, c in zip(idx_full.keys(), colors):
         s=2,
     )
 ax.legend(loc="best", fontsize=16, markerscale=10, ncol=2)
-ax.set_title("tSNE {scale_method}")
+ax.set_title(f"tSNE {scale_method}")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        "results/dimension_reduction/{scale_method}/tsne-{scale_method}-2.jpg")
+        f"results/dimension_reduction/{scale_method}/tsne-{scale_method}-2.jpg")
 )
 plt.close(fig)
 
@@ -350,11 +350,11 @@ for region, c in zip(regions, ["red", "green", "blue", "yellow", "orange"]):
         s=2,
     )
 ax.legend(loc="best", fontsize=16, markerscale=10)
-ax.set_title("densne {scale_method}")
+ax.set_title(f"densne {scale_method}")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        "results/dimension_reduction/{scale_method}/densne-{scale_method}-1.jpg"
+        f"results/dimension_reduction/{scale_method}/densne-{scale_method}-1.jpg"
     ))
 plt.close(fig)
 
@@ -372,10 +372,10 @@ for tp, c in zip(idx_full.keys(), colors):
         s=2,
     )
 ax.legend(loc="best", fontsize=16, markerscale=10, ncol=2)
-ax.set_title("densne {scale_method}")
+ax.set_title(f"densne {scale_method}")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        "results/dimension_reduction/{scale_method}/densne-{scale_method}-2.jpg"
+        f"results/dimension_reduction/{scale_method}/densne-{scale_method}-2.jpg"
     ))
 plt.close(fig)
