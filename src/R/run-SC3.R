@@ -41,7 +41,8 @@ sessionInfo()
 
 # %% read data and create sce
 count_path <- paste0(WORKDIR, "Data/scale_df/raw_count/", idx, "-raw.csv")
-sct_path <- paste0(WORKDIR, "Data/scale_df/", scale_method, "/", idx, "-", scale_method, ".csv")
+sct_path <- paste0(
+    WORKDIR, "Data/scale_df/", scale_method, "/", idx, "-", scale_method, "-inter.csv")
 save_path <- paste0(WORKDIR, "results/cluster/", scale_method, "-SC3/pattern/", idx, "-SC3.csv")
 count_df <- read.csv(count_path, check.names = FALSE, row.names = 1)
 sct_df <- read.csv(sct_path, check.names = FALSE, row.names = 1)
