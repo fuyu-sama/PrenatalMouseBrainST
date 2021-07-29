@@ -56,7 +56,7 @@ select_genes <- c()
 for (idx in names(idx_full)) {
     read_df <- read.csv(
         paste0(WORKDIR, "Data/scale_df/raw_count/", idx, "-raw.csv"),
-        check.names = F, row.names = 1
+        check.names = FALSE, row.names = 1
     )
     if (length(select_genes) == 0) {
         select_genes <- rownames(read_df)
@@ -84,8 +84,9 @@ anchors <- FindIntegrationAnchors(
     verbose = FALSE
 )
 seurat_combined <- IntegrateData(anchorset = anchors, verbose = FALSE)
+
 write.csv(
-    seurat_combined[["integrated"]]@data,
+    as.data.frame(seurat_combined[["integrated"]]@data),
     paste0(
         WORKDIR,
         "Data/scale_df/seurat_integrate/full-seurat_integrate-inter.csv"
