@@ -87,7 +87,7 @@ count_full_df = pd.DataFrame()
 for idx in idx_full:
     count_path = Path.joinpath(
         WORKDIR,
-        f"Data/scale_df/{scale_method}/{idx}-{scale_method}.csv",
+        f"Data/scale_df/{scale_method}/{idx}-{scale_method}-inter.csv",
     )
     count_df = pd.read_csv(count_path, index_col=0, header=0).T
     print(f"{idx}:\t{count_df.shape}")
@@ -108,7 +108,7 @@ for idx in idx_full:
     count_df.T.to_csv(count_path)
 count_full_df.T.to_csv(
     Path.joinpath(WORKDIR, f"Data/scale_df/{scale_method}/full-{scale_method}-inter.csv"))
-# count_full_df = quantile_normalization(count_full_df.T).T
+count_full_df = quantile_normalization(count_full_df.T).T
 
 # %% draw
 q = 0.9
@@ -144,6 +144,7 @@ for timepoint in timepoints:
     c = pd.Series(c, index=count_sub_0.columns)
 
     fig, ax_plot = plt.subplots(1, figsize=(10, 10))
+    anchor = max(count_mean_0.max(), count_mean_1.max())
     ax_plot.scatter(
         count_mean_0,
         count_mean_1,
@@ -157,18 +158,11 @@ for timepoint in timepoints:
         count_mean_0,
         count_mean_1,
     )[0, 1]
-    r_part = np.corrcoef(
-        count_mean_0[c > 0],
-        count_mean_1[c > 0],
-    )[0, 1]
-    ax_plot.text(0, 5, f"Pearson for all genes: {r_all:.3f}")
-    ax_plot.text(0, 4.7, f"Pearson for selected genes: {r_part:.3f}")
-    ax_plot.text(0, 4.4, f"Number of selected genes: {int(c.sum())}")
-    ax_plot.plot(range(6), range(6), "--r")
-    ax_plot.text(4.7, 5, "y = x", c="r")
+    ax_plot.text(0, anchor, f"Pearson for all genes: {r_all:.3f}")
+    ax_plot.plot(range(int(anchor)), range(int(anchor)), "--r")
     ax_plot.set_title("f{scale_method} ranksums")
     fig.savefig(
         Path.joinpath(
             WORKDIR,
-            f"results/correlation/{timepoint}-{scale_method}-correlation.jpg",
+            f"results/correlation/{scale_method}/{timepoint}-{scale_method}-correlation.jpg",
         ))
