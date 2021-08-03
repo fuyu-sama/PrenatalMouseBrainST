@@ -55,8 +55,9 @@ idx_full = {
     "P0A2": "V10M17-101-P0A2",
 }
 
-# %% read raw count table
 idx = sys.argv[1]
+
+# %% read raw count table
 count_path = Path.joinpath(
     WORKDIR, f"spaceranger/{idx}/outs/filtered_feature_bc_matrix/{idx}.csv")
 coor_path = Path.joinpath(

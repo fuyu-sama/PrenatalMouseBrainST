@@ -73,16 +73,9 @@ timepoints = {
     "P0": [["P0A1"], ["P0A2"]],
 }
 
-
-# %% helper func
-def quantile_normalization(df: pd.DataFrame) -> pd.DataFrame:
-    rank_mean = df.stack().groupby(
-        df.rank(method="first").stack().astype(int)).mean()
-    return df.rank(method="min").stack().astype(int).map(rank_mean).unstack()
-
+scale_method = sys.argv[1]
 
 # %% read data
-scale_method = sys.argv[1]
 count_full_df = pd.DataFrame()
 for idx in idx_full:
     count_path = Path.joinpath(
@@ -107,8 +100,9 @@ for idx in idx_full:
         index=[i for i in count_full_df.index if idx in i])
     count_df.T.to_csv(count_path)
 count_full_df.T.to_csv(
-    Path.joinpath(WORKDIR, f"Data/scale_df/{scale_method}/full-{scale_method}-inter.csv"))
-count_full_df = quantile_normalization(count_full_df.T).T
+    Path.joinpath(
+        WORKDIR,
+        f"Data/scale_df/{scale_method}/full-{scale_method}-inter.csv"))
 
 # %% draw
 q = 0.9

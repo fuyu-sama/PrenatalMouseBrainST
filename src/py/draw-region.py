@@ -29,6 +29,7 @@
 #
 
 # %% environment config
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -55,34 +56,20 @@ idx_full = {
     "P0A2": "V10M17-101-P0A2",
 }
 
-regions = dict(
-    cortex=("E135A_1", "E135B_3", "E135B_9", "E155A_4", "E155B_5", "E155B_6",
-            "E165A_1", "E165B_4", "E175A1_8", "E175A2_5", "E175A2_6",
-            "E175B_6", "P0A1_5", "P0A2_1", "P0B_3"),
-    thalamus=("E135A_2", "E135B_6", "E135B_7", "E155A_5", "E155A_7", "E155A_8",
-              "E155B_7", "E165A_3", "E165A_5", "E165B_3", "E175A1_2",
-              "E175A1_7", "E175A2_10", "E175A2_11", "E175A2_12", "E175B_2",
-              "E175B_4", "E175B_5", "P0A1_6", "P0A1_7", "P0A1_12", "P0A2_6",
-              "P0B_1", "P0B_7", "P0B_8"),
-    hypothalamus=("E135A_3", "E135A_6", "E135B_5", "E135B_12", "E155A_6",
-                  "E155B_1", "E165A_6", "E165B_1", "E175A1_1", "E175A2_1",
-                  "E175B_3", "P0A1_1", "P0A2_4", "P0B_12"),
-    olfactory=("E135A_5", "E135A_7", "E135B_4", "E155A_11", "E155B_2",
-               "E155B_11", "E165A_10", "E165A_11", "E165B_7", "E165B_10",
-               "E175A1_5", "E175A2_7", "E175A2_9", "E175B_1", "E175B_9",
-               "P0A1_10", "P0A2_7", "P0B_5", "P0B_6"),
-    hippocampus=("E155A_2", "E165A_2", "E165B_6", "E175A2_14", "E175A2_15",
-                 "E175B_11", "P0A1_8", "P0A2_2", "P0B_4"),
-)
+scale_method = "combat"
 
 # %% read data
 coor_path = Path.joinpath(WORKDIR, "Data/coor_df/full-coor.csv")
 cluster_path = Path.joinpath(
     WORKDIR,
-    "results/cluster/SCT-SC3/pattern/full-SC3.csv",
+    f"results/cluster/{scale_method}-SC3/pattern/full-SC3.csv",
 )
 coor_df = pd.read_csv(coor_path, index_col=0, header=0)
 cluster_df = pd.read_csv(cluster_path, index_col=0, header=0)
+
+regions_path = Path.joinpath(WORKDIR, f"results/cluster/{scale_method}-SC3/regions.json")
+with open(regions_path) as f:
+    regions = json.load(f)["regions"]
 
 # %% draw
 for idx in idx_full:
@@ -107,6 +94,6 @@ for idx in idx_full:
             fig.savefig(
                 Path.joinpath(
                     WORKDIR,
-                    f"results/cluster/SCT-SC3/region/{idx}_{region}.jpg",
+                    f"results/cluster/{scale_method}-SC3/region/{idx}_{region}.jpg",
                 ))
             plt.close(fig)

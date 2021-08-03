@@ -35,8 +35,8 @@ fin_path = sys.argv[1]
 
 gene_names = {}
 gtf_path = Path.joinpath(
-    Path.home(), "refgenome/spaceranger/refdata-gex-mm10-2020-A/genes/genes.gtf"
-)
+    Path.home(),
+    "refgenome/spaceranger/refdata-gex-mm10-2020-A/genes/genes.gtf")
 with open(gtf_path) as f:
     for line in f:
         if line[0] == "#":

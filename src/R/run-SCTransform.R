@@ -35,9 +35,10 @@ library(Seurat)
 library(SingleCellExperiment)
 
 args <- commandArgs(trailingOnly = TRUE)
-idx <- args[1]
 set.seed(42)
 sessionInfo()
+
+idx <- args[1]
 
 # %% read data and create Seurat object
 count_path <- paste0(WORKDIR, "Data/scale_df/raw_count/", idx, "-raw.csv")

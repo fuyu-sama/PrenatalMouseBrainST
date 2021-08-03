@@ -63,17 +63,20 @@ colors = [
     "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
 ]
 
-# %% read data
 idx = sys.argv[1]
-scale_method = "scvi"
+scale_method = sys.argv[2]
+
+# %% read data
 raw_df = pd.read_csv(
     Path.joinpath(WORKDIR, f"Data/scale_df/raw_count/{idx}-raw.csv"),
     index_col=0,
     header=0,
 )
 scale_df = pd.read_csv(
-    Path.joinpath(WORKDIR,
-                  f"Data/scale_df/{scale_method}/{idx}-{scale_method}.csv"),
+    Path.joinpath(
+        WORKDIR,
+        f"Data/scale_df/{scale_method}/{idx}-{scale_method}.csv",
+    ),
     index_col=0,
     header=0,
 )
@@ -93,5 +96,7 @@ ax[1].hist(spearman_list, bins=100)
 ax[1].set_title(f"{idx} Spearman")
 [i.set_yticks([]) for i in ax]
 fig.savefig(
-    Path.joinpath(WORKDIR,
-                  f"results/correlation-hist/{scale_method}/{idx}.jpg"))
+    Path.joinpath(
+        WORKDIR,
+        f"results/correlation-hist/{scale_method}/{idx}.jpg",
+    ))

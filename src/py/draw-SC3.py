@@ -43,7 +43,6 @@ WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 session_info.show()
 plt.rcParams.update({"font.size": 24})
 Image.MAX_IMAGE_PIXELS = None
-idx = sys.argv[1]
 
 idx_full = {
     "E135A": "V10M17-100-E135A",
@@ -60,38 +59,17 @@ idx_full = {
     "P0A2": "V10M17-101-P0A2",
 }
 colors = [
-    "#FAEBD7",
-    "#00FFFF",
-    "#FFD700",
-    "#0000FF",
-    "#FF8C00",
-    "#EE82EE",
-    "#9ACD32",
-    "#5F9EA0",
-    "#7FFF00",
-    "#7FFFD4",
-    "#6495ED",
-    "#008B8B",
-    "#B8860B",
-    "#C0C0C0",
-    "#000080",
-    "#D8BFD8",
-    "#00CED1",
-    "#9400D3",
-    "#8E804B",
-    "#0089A7",
-    "#CB1B45",
-    "#FFB6C1",
-    "#00FF00",
-    "#800000",
-    "#376B6D",
-    "#D8BFD8",
-    "#F5F5F5",
-    "#D2691E",
+    "#FAEBD7", "#00FFFF", "#FFD700", "#0000FF", "#FF8C00", "#EE82EE",
+    "#9ACD32", "#5F9EA0", "#7FFF00", "#7FFFD4", "#6495ED", "#008B8B",
+    "#B8860B", "#C0C0C0", "#000080", "#D8BFD8", "#00CED1", "#9400D3",
+    "#8E804B", "#0089A7", "#CB1B45", "#FFB6C1", "#00FF00", "#800000",
+    "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
 ]
 
-# %% read data
+idx = sys.argv[1]
 scale_method = sys.argv[2]
+
+# %% read data
 he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
 sc3_path = Path.joinpath(
     WORKDIR,
@@ -120,7 +98,10 @@ for k, j in zip(range(5, 29), ax.flatten()):
         alpha=0.7,
     )
 fig.savefig(
-    Path.joinpath(WORKDIR, f"results/cluster/{scale_method}-SC3/together/{idx}-SC3.pdf"))
+    Path.joinpath(
+        WORKDIR,
+        f"results/cluster/{scale_method}-SC3/together/{idx}-SC3.pdf",
+    ))
 plt.close(fig)
 
 # %% draw separate

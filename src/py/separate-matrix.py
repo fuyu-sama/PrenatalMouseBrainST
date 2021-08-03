@@ -53,8 +53,9 @@ idx_full = {
     "P0A2": "V10M17-101-P0A2",
 }
 
-# %% read data
 scale_method = sys.argv[1]
+
+# %% read data
 count_path = Path.joinpath(
     WORKDIR,
     f"Data/scale_df/{scale_method}/full-{scale_method}-inter.csv",

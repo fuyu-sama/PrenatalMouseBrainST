@@ -34,10 +34,11 @@ library(SC3)
 library(SingleCellExperiment)
 
 args <- commandArgs(trailingOnly = TRUE)
-idx <- args[1]
-scale_method <- args[2]
 set.seed(42)
 sessionInfo()
+
+idx <- args[1]
+scale_method <- args[2]
 
 # %% read data and create sce
 count_path <- paste0(WORKDIR, "Data/scale_df/raw_count/", idx, "-raw.csv")

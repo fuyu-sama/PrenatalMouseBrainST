@@ -29,6 +29,7 @@
 #
 
 # %% environment config
+import json
 import sys
 from pathlib import Path
 
@@ -66,8 +67,9 @@ colors = [
     "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
 ]
 
-# %% read counts
 scale_method = sys.argv[1]
+
+# %% read counts
 count_path = Path.joinpath(
     WORKDIR,
     f"Data/scale_df/{scale_method}/full-{scale_method}-inter.csv",
@@ -90,25 +92,10 @@ cluster_df = pd.read_csv(
 )
 count_full_df = count_full_df.reindex(cluster_df.index)
 
-regions = dict(
-    cortex=("E135A_1", "E135B_3", "E135B_9", "E155A_4", "E155B_5", "E155B_6",
-            "E165A_1", "E165B_4", "E175A1_8", "E175A2_5", "E175A2_6",
-            "E175B_6", "P0A1_5", "P0A2_1", "P0B_3"),
-    thalamus=("E135A_2", "E135B_6", "E135B_7", "E155A_5", "E155A_7", "E155A_8",
-              "E155B_7", "E165A_3", "E165A_5", "E165B_3", "E175A1_2",
-              "E175A1_7", "E175A2_10", "E175A2_11", "E175A2_12", "E175B_2",
-              "E175B_4", "E175B_5", "P0A1_6", "P0A1_7", "P0A1_12", "P0A2_6",
-              "P0B_1", "P0B_7", "P0B_8"),
-    hypothalamus=("E135A_3", "E135A_6", "E135B_5", "E135B_12", "E155A_6",
-                  "E155B_1", "E165A_6", "E165B_1", "E175B_3", "E175A1_1",
-                  "E175A2_1", "P0A1_1", "P0A2_4", "P0B_12"),
-    olfactory=("E135A_5", "E135A_7", "E135B_4", "E155A_11", "E155B_2",
-               "E155B_11", "E165A_10", "E165A_11", "E165B_7", "E165B_10",
-               "E175A1_5", "E175A2_7", "E175A2_9", "E175B_1", "E175B_9",
-               "P0A1_10", "P0A2_7", "P0B_5", "P0B_6"),
-    hippocampus=("E155A_2", "E165A_2", "E165B_6", "E175A2_14", "E175A2_15",
-                 "E175B_11", "P0A1_8", "P0A2_2", "P0B_4"),
-)
+regions_path = Path.joinpath(
+    WORKDIR, f"results/cluster/SCT-SC3/regions.json")
+with open(regions_path) as f:
+    regions = json.load(f)["regions"]
 regions_label = dict(
     cortex=0,
     thalamus=1,
@@ -160,8 +147,8 @@ ax.set_title(f"UMAP {scale_method}")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        f"results/dimension_reduction/{scale_method}/umap-{scale_method}-1.jpg")
-)
+        f"results/dimension_reduction/{scale_method}/umap-{scale_method}-1.jpg"
+    ))
 plt.close(fig)
 
 # %% color by sample
@@ -182,8 +169,8 @@ ax.set_title(f"UMAP {scale_method}")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        f"results/dimension_reduction/{scale_method}/umap-{scale_method}-2.jpg")
-)
+        f"results/dimension_reduction/{scale_method}/umap-{scale_method}-2.jpg"
+    ))
 plt.close(fig)
 
 # %% densmap
@@ -291,8 +278,8 @@ ax.set_title(f"tSNE {scale_method}")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        f"results/dimension_reduction/{scale_method}/tsne-{scale_method}-1.jpg")
-)
+        f"results/dimension_reduction/{scale_method}/tsne-{scale_method}-1.jpg"
+    ))
 plt.close(fig)
 
 # %% color by sample
@@ -313,8 +300,8 @@ ax.set_title(f"tSNE {scale_method}")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        f"results/dimension_reduction/{scale_method}/tsne-{scale_method}-2.jpg")
-)
+        f"results/dimension_reduction/{scale_method}/tsne-{scale_method}-2.jpg"
+    ))
 plt.close(fig)
 
 # %% densne

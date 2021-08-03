@@ -29,6 +29,7 @@
 #
 
 # %% environment config
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -60,25 +61,6 @@ colors = [
     "#8E804B", "#0089A7", "#CB1B45", "#FFB6C1", "#00FF00", "#800000",
     "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
 ]
-regions = dict(
-    cortex=("E135A_1", "E135B_3", "E135B_9", "E155A_4", "E155B_5", "E155B_6",
-            "E165A_1", "E165B_4", "E175A1_8", "E175A2_5", "E175A2_6",
-            "E175B_6", "P0A1_5", "P0A2_1", "P0B_3"),
-    thalamus=("E135A_2", "E135B_6", "E135B_7", "E155A_5", "E155A_7", "E155A_8",
-              "E155B_7", "E165A_3", "E165A_5", "E165B_3", "E175A1_2",
-              "E175A1_7", "E175A2_10", "E175A2_11", "E175A2_12", "E175B_2",
-              "E175B_4", "E175B_5", "P0A1_6", "P0A1_7", "P0A1_12", "P0A2_6",
-              "P0B_1", "P0B_7", "P0B_8"),
-    hypothalamus=("E135A_3", "E135A_6", "E135B_5", "E135B_12", "E155A_6",
-                  "E155B_1", "E165A_6", "E165B_1", "E175B_3", "P0A1_1",
-                  "P0A2_4", "P0B_12"),
-    olfactory=("E135A_5", "E135A_7", "E135B_4", "E155A_11", "E155B_2",
-               "E155B_11", "E165A_10", "E165A_11", "E165B_7", "E165B_10",
-               "E175A1_5", "E175A2_7", "E175A2_9", "E175B_1", "E175B_9",
-               "P0A1_10", "P0A2_7", "P0B_5", "P0B_6"),
-    hippocampus=("E155A_2", "E165A_2", "E165B_6", "E175A2_14", "E175A2_15",
-                 "E175B_11", "P0A1_8", "P0A2_2", "P0B_4"),
-)
 
 alias = {
     "Scl": "Tal1",
@@ -97,29 +79,39 @@ gene_family = {
     "Runx": ["Runx1", "Runx2"],
 }
 
+scale_method = "combat"
+
 # %% read count data
 count_path = Path.joinpath(
     WORKDIR,
-    "Data/scale_df/logcpm/full-logcpm-inter.csv",
+    f"Data/scale_df/{scale_method}/full-{scale_method}-inter.csv",
 )
 cluster_path = Path.joinpath(
     WORKDIR,
-    "results/cluster/SCT-SC3/pattern/full-SC3.csv",
+    "results/cluster/{scale_method}-SC3/pattern/full-SC3.csv",
 )
 count_df = pd.read_csv(count_path, index_col=0, header=0).T
 cluster_df = pd.read_csv(cluster_path, index_col=0, header=0)
+
+regions_path = Path.joinpath(
+    WORKDIR, f"results/cluster/{scale_method}-SC3/regions.json")
+with open(regions_path) as f:
+    regions = json.load(f)["regions"]
 
 # %% read homer
 draw_pvalue = pd.DataFrame()
 for region in regions:
     known_path = Path.joinpath(
-        WORKDIR, f"results/motifResults/{region}/knownResults.txt")
+        WORKDIR,
+        f"results/motifResults/{scale_method}/{region}/knownResults.txt",
+    )
     read_df = pd.read_csv(known_path, index_col=0, header=0, sep="\t")
     read_df = read_df[read_df["P-value"] <= 0.01]
     known_df = pd.DataFrame(-read_df["Log P-value"])
     known_df.index = [i.split("/")[0].split("(")[0] for i in read_df.index]
     known_df.columns = [region]
     draw_pvalue = pd.concat([draw_pvalue, known_df], axis=1)
+
 pvalue_min = draw_pvalue.min().min()
 pvalue_max = draw_pvalue.max().max()
 draw_pvalue = draw_pvalue.fillna(0.5)
@@ -179,6 +171,9 @@ ax_legend.set_yticklabels(["", "1", "1e-2", "1e-7", ""])
 ax_legend.yaxis.tick_right()
 ax_legend.set_title("pvalue")
 fig.savefig(
-    Path.joinpath(WORKDIR, "results/motifResults/motifResults.jpg"),
+    Path.joinpath(
+        WORKDIR,
+        f"results/motifResults/{scale_method}/motifResults.jpg",
+    ),
     bbox_inches="tight",
 )

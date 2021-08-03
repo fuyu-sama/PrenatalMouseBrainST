@@ -29,6 +29,7 @@
 #
 
 # %% environment config
+import json
 from pathlib import Path
 
 import session_info
@@ -52,27 +53,18 @@ idx_full = {
     "P0A2": "V10M17-101-P0A2",
 }
 
-ncs_full = {
-    "E135A": 10,
-    "E135B": 12,
-    "E155A": 11,
-    "E155B": 11,
-    "E165A": 11,
-    "E165B": 10,
-    "E175A1": 10,
-    "E175A2": 18,
-    "E175B": 12,
-    "P0B": 12,
-    "P0A1": 14,
-    "P0A2": 10
-}
+scale_method = "combat"
 
 # %% read data
 cluster_full_df = pd.DataFrame(columns=["sc3_clusters"])
-coor_full_df = pd.DataFrame()
+regions_path = Path.joinpath(
+    WORKDIR, f"results/cluster/{scale_method}-SC3/regions.json")
+with open(regions_path) as f:
+    ncs_full = json.load(f)["ncs"]
+
 for idx in idx_full:
     cluster_path = Path.joinpath(
-        WORKDIR, f"results/cluster/SCT-SC3/pattern/{idx}-SC3.csv")
+        WORKDIR, f"results/cluster/{scale_method}-SC3/pattern/{idx}-SC3.csv")
     cluster_df = pd.read_csv(cluster_path, index_col=0, header=0)
     cluster_series = cluster_df[f'sc3_{ncs_full[idx]}_clusters']
     cluster_df = pd.DataFrame(
@@ -82,10 +74,6 @@ for idx in idx_full:
     cluster_df.columns = ["sc3_clusters"]
     cluster_full_df = pd.concat([cluster_full_df, cluster_df])
 
-    coor_path = Path.joinpath(WORKDIR, f"coor_df/{idx}-coor.csv")
-    coor_df = pd.read_csv(coor_path, index_col=0, header=0)
-    coor_full_df = pd.concat([coor_full_df, coor_df])
-
 cluster_full_df.to_csv(
-    Path.joinpath(WORKDIR, f"results/cluster/SCT-SC3/pattern/full-SC3.csv"))
-coor_full_df.to_csv(Path.joinpath(WORKDIR, "coor_df/full-coor.csv"))
+    Path.joinpath(
+        WORKDIR, f"results/cluster/{scale_method}-SC3/pattern/full-SC3.csv"), )
