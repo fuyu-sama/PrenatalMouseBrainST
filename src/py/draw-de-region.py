@@ -191,7 +191,7 @@ cb = fig.colorbar(hm, ax=ax_heatmap)
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        "results/DE/{scale_method}/region-specific/heatmap.jpg",
+        f"results/DE/{scale_method}/region-specific/heatmap.jpg",
     ),
     bbox_inches="tight",
 )
