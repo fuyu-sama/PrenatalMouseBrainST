@@ -36,6 +36,8 @@ library(ChIPseeker)
 sessionInfo()
 regions <- c("cortex", "thalamus", "hypothalamus", "olfactory", "hippocampus")
 
+scale_method = "combat"
+
 # %% read data
 spompe <- GenomicFeatures::makeTxDbFromGFF(
     paste0(
@@ -46,7 +48,10 @@ peak_path <- paste0(WORKDIR, "Data/ENCODE/forebrain.bed")
 
 de_list <- list()
 for (region in regions) {
-    de_path <- paste0(WORKDIR, "results/DE/region-specific/UP-", region, ".csv.out")
+    de_path <- paste0(
+        WORKDIR,
+        "results/DE/", scale_method, "/region-specific/UP-", region, ".csv.out"
+    )
     de_list[[region]] <- as.vector(t(read.csv(de_path, check.names = FALSE)))
 }
 
@@ -79,7 +84,11 @@ for (region in regions) {
     colnames(outs[[region]]) <- c("chr", "start", "end", "peakId", "geneId")
     write.table(
         outs[[region]],
-        paste0(WORKDIR, "results/DE/region-specific/motifInputs/", region, ".bed"),
+        paste0(
+            WORKDIR,
+            "results/DE/", scale_method,
+            "/region-specific/motifInputs/", region, ".bed"
+        ),
         quote = FALSE, sep = "\t", row.names = FALSE
     )
 }
