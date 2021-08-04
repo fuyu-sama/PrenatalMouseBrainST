@@ -72,7 +72,7 @@ for (idx in names(read_df_list)) {
     seurat_obj <- CreateSeuratObject(read_df_list[[idx]][select_genes, ])
     seurat_obj <- NormalizeData(seurat_obj, verbose = FALSE)
     seurat_obj <- FindVariableFeatures(
-        seurat_obj, selection.method = "vst", nfeatures = 4000, verbose = FALSE
+        seurat_obj, selection.method = "vst", nfeatures = 12000, verbose = FALSE
     )
     seurat_list[[idx]] <- seurat_obj
 }

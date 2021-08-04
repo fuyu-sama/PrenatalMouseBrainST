@@ -88,7 +88,7 @@ count_path = Path.joinpath(
 )
 cluster_path = Path.joinpath(
     WORKDIR,
-    "results/cluster/{scale_method}-SC3/pattern/full-SC3.csv",
+    f"results/cluster/{scale_method}-SC3/pattern/full-SC3.csv",
 )
 count_df = pd.read_csv(count_path, index_col=0, header=0).T
 cluster_df = pd.read_csv(cluster_path, index_col=0, header=0)

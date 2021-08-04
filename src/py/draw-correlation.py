@@ -76,33 +76,13 @@ timepoints = {
 scale_method = sys.argv[1]
 
 # %% read data
-count_full_df = pd.DataFrame()
-for idx in idx_full:
-    count_path = Path.joinpath(
-        WORKDIR,
-        f"Data/scale_df/{scale_method}/{idx}-{scale_method}-inter.csv",
-    )
-    count_df = pd.read_csv(count_path, index_col=0, header=0).T
-    print(f"{idx}:\t{count_df.shape}")
-    count_full_df = pd.concat(
-        [count_full_df, count_df],
-        axis=0,
-        verify_integrity=True,
-    )
-count_full_df = count_full_df.dropna(axis=1)
-print(f"Full:\t{count_full_df.shape}")
-for idx in idx_full:
-    count_path = Path.joinpath(
-        WORKDIR,
-        f"Data/scale_df/{scale_method}/{idx}-{scale_method}-inter.csv",
-    )
-    count_df = count_full_df.reindex(
-        index=[i for i in count_full_df.index if idx in i])
-    count_df.T.to_csv(count_path)
-count_full_df.T.to_csv(
+count_full_df = pd.read_csv(
     Path.joinpath(
         WORKDIR,
-        f"Data/scale_df/{scale_method}/full-{scale_method}-inter.csv"))
+        f"Data/scale_df/{scale_method}/full-{scale_method}-inter.csv"),
+    index_col=0,
+    header=0,
+).T
 
 # %% draw
 q = 0.9
@@ -138,7 +118,7 @@ for timepoint in timepoints:
     c = pd.Series(c, index=count_sub_0.columns)
 
     fig, ax_plot = plt.subplots(1, figsize=(10, 10))
-    anchor = max(count_mean_0.max(), count_mean_1.max())
+    anchor = 4.6 * count_mean_1.max() / 5
     ax_plot.scatter(
         count_mean_0,
         count_mean_1,
@@ -154,7 +134,7 @@ for timepoint in timepoints:
     )[0, 1]
     ax_plot.text(0, anchor, f"Pearson for all genes: {r_all:.3f}")
     ax_plot.plot(range(int(anchor)), range(int(anchor)), "--r")
-    ax_plot.set_title("f{scale_method} ranksums")
+    ax_plot.set_title(f"{scale_method} ranksums")
     fig.savefig(
         Path.joinpath(
             WORKDIR,
