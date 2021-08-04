@@ -63,40 +63,38 @@ colors = [
     "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
 ]
 
-idx = sys.argv[1]
-scale_method = sys.argv[2]
+scale_method = sys.argv[1]
 
-# %% read data
-raw_df = pd.read_csv(
-    Path.joinpath(WORKDIR, f"Data/scale_df/raw_count/{idx}-raw.csv"),
-    index_col=0,
-    header=0,
-)
-scale_df = pd.read_csv(
-    Path.joinpath(
-        WORKDIR,
-        f"Data/scale_df/{scale_method}/{idx}-{scale_method}.csv",
-    ),
-    index_col=0,
-    header=0,
-)
+# %% draw
+for idx in idx_full:
+    raw_df = pd.read_csv(
+        Path.joinpath(WORKDIR, f"Data/scale_df/raw_count/{idx}-raw.csv"),
+        index_col=0,
+        header=0,
+    )
+    scale_df = pd.read_csv(
+        Path.joinpath(
+            WORKDIR,
+            f"Data/scale_df/{scale_method}/{idx}-{scale_method}-inter.csv",
+        ),
+        index_col=0,
+        header=0,
+    )
 
-pearson_list = []
-for i in raw_df.index:
-    pearson_list.append(np.corrcoef(raw_df.loc[i], scale_df.loc[i])[1, 0])
+    pearson_list = []
+    spearman_list = []
+    for i in scale_df.index:
+        pearson_list.append(np.corrcoef(raw_df.loc[i], scale_df.loc[i])[1, 0])
+        spearman_list.append(stats.spearmanr(raw_df.loc[i], scale_df.loc[i])[0])
 
-spearman_list = []
-for i in raw_df.index:
-    spearman_list.append(stats.spearmanr(raw_df.loc[i], scale_df.loc[i])[0])
-
-fig, ax = plt.subplots(1, 2, figsize=(20, 10))
-ax[0].hist(pearson_list, bins=100)
-ax[0].set_title(f"{idx} Pearson")
-ax[1].hist(spearman_list, bins=100)
-ax[1].set_title(f"{idx} Spearman")
-[i.set_yticks([]) for i in ax]
-fig.savefig(
-    Path.joinpath(
-        WORKDIR,
-        f"results/correlation-hist/{scale_method}/{idx}.jpg",
-    ))
+    fig, ax = plt.subplots(1, 2, figsize=(20, 10))
+    ax[0].hist(pearson_list, bins=100)
+    ax[0].set_title(f"{idx} Pearson")
+    ax[1].hist(spearman_list, bins=100)
+    ax[1].set_title(f"{idx} Spearman")
+    [i.set_yticks([]) for i in ax]
+    fig.savefig(
+        Path.joinpath(
+            WORKDIR,
+            f"results/correlation-hist/{scale_method}/{idx}.jpg",
+        ))
