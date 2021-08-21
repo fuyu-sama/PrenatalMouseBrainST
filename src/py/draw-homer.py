@@ -30,6 +30,7 @@
 
 # %% environment config
 import json
+import sys
 from pathlib import Path
 
 import pandas as pd
@@ -79,22 +80,23 @@ gene_family = {
     "Runx": ["Runx1", "Runx2"],
 }
 
-scale_method = "combat"
+scale_method = sys.argv[1]
+cluster_method = sys.argv[2]
 
 # %% read count data
 count_path = Path.joinpath(
     WORKDIR,
-    f"Data/scale_df/{scale_method}/full-{scale_method}-inter.csv",
+    f"Data/scale_df/{scale_method}/full-{scale_method}.csv",
 )
 cluster_path = Path.joinpath(
     WORKDIR,
-    f"results/cluster/{scale_method}-SC3/pattern/full-SC3.csv",
+    f"results/cluster/{scale_method}-{cluster_method}/pattern/full-{cluster_method}.csv",
 )
 count_df = pd.read_csv(count_path, index_col=0, header=0).T
 cluster_df = pd.read_csv(cluster_path, index_col=0, header=0)
 
 regions_path = Path.joinpath(
-    WORKDIR, f"results/cluster/{scale_method}-SC3/regions.json")
+    WORKDIR, f"results/cluster/{scale_method}-{cluster_method}/regions.json")
 with open(regions_path) as f:
     regions = json.load(f)["regions"]
 
@@ -103,7 +105,7 @@ draw_pvalue = pd.DataFrame()
 for region in regions:
     known_path = Path.joinpath(
         WORKDIR,
-        f"results/motifResults/{scale_method}/{region}/knownResults.txt",
+        f"results/motifResults/{scale_method}-{cluster_method}/{region}/knownResults.txt",
     )
     read_df = pd.read_csv(known_path, index_col=0, header=0, sep="\t")
     read_df = read_df[read_df["P-value"] <= 0.01]
@@ -129,7 +131,7 @@ draw_count = pd.DataFrame(index=draw_pvalue.index, columns=draw_pvalue.columns)
 for region in regions:
     in_region = [
         i for i in cluster_df.index
-        if cluster_df.loc[i, "sc3_clusters"] in regions[region]
+        if cluster_df.loc[i, f"{cluster_method}_clusters"] in regions[region]
     ]
     count_sub = count_df.reindex(index=in_region)
     for gene in draw_pvalue.index:
@@ -173,7 +175,7 @@ ax_legend.set_title("pvalue")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        f"results/motifResults/{scale_method}/motifResults.jpg",
+        f"results/motifResults/{scale_method}-{cluster_method}/motifResults.jpg",
     ),
     bbox_inches="tight",
 )

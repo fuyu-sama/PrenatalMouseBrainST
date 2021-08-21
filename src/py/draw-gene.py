@@ -32,11 +32,12 @@
 from pathlib import Path
 
 import pandas as pd
-import scanpy as sc
 import session_info
+from matplotlib import pyplot as plt
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 session_info.show()
+plt.rcParams.update({"font.size": 24})
 
 idx_full = {
     "E135A": "V10M17-100-E135A",
@@ -48,27 +49,45 @@ idx_full = {
     "E175A1": "V10M17-101-E175A1",
     "E175A2": "V10M17-101-E175A2",
     "E175B": "V10M17-085-E175B",
-    # "P0B": "V10M17-100-P0B",
+    "P0B": "V10M17-100-P0B",
     "P0A1": "V10M17-101-P0A1",
     "P0A2": "V10M17-101-P0A2",
 }
 
-# %% read data
-adata = sc.read_csv(
-    Path.joinpath(WORKDIR, "Data/scale_df/logcpm/full-logcpm.csv")).T
-adata.obs["batch"] = [i.split("_")[0] for i in adata.obs.index]
+idx = "E165A"
+genes = [
+    "Tbr1", "Sox5", "Satb2", "Neurod1", "Fgfr1", "Sox11", "Sox2", "Otp", "Lhx9"
+]
 
-# %% combat and save
-combat_df = pd.DataFrame(
-    sc.pp.combat(adata, inplace=False),
-    index=adata.obs.index,
-    columns=adata.var.index,
+# %% read data
+count_df = pd.read_csv(
+    Path.joinpath(WORKDIR, f"Data/scale_df/raw/{idx}-raw.csv"),
+    index_col=0,
+    header=0,
+).T
+coor_df = pd.read_csv(
+    Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv"),
+    index_col=0,
+    header=0,
 )
 
-combat_df.T.to_csv(
-    Path.joinpath(WORKDIR, "Data/scale_df/combat/full-combat.csv"))
-for idx in idx_full:
-    write_df = combat_df.T.reindex(
-        columns=[i for i in combat_df.T.columns if idx in i])
-    write_df.to_csv(
-        Path.joinpath(WORKDIR, f"Data/scale_df/combat/{idx}-combat.csv"))
+# %% draw
+for gene in genes:
+    fig, ax = plt.subplots(figsize=(13, 10))
+    ax.axis("off")
+    ax.invert_yaxis()
+    ax.set_title(f"{idx} {gene}")
+    sc = ax.scatter(
+        coor_df["X"],
+        coor_df["Y"],
+        c=count_df[gene],
+        cmap='Reds',
+        s=16,
+        vmin=-4,
+        vmax=count_df[gene].quantile(0.99) + 1,
+    )
+    cb = fig.colorbar(sc, ax=ax)
+    cb.set_ticks([-4, count_df[gene].quantile(0.99) + 1])
+    cb.set_ticklabels(["Low", "High"])
+    fig.savefig(Path.joinpath(WORKDIR, f"draw_genes/bare/{idx}-{gene}.jpg"))
+    plt.close(fig)

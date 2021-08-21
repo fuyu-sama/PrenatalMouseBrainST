@@ -37,6 +37,14 @@ library(ggplot2)
 options(future.globals.maxSize = 1024 * 1024^2)
 sessionInfo()
 
+timepoints <- list(
+    E135 = c("E135A", "E135B"),
+    E155 = c("E155A", "E155B"),
+    E165 = c("E165A", "E165B"),
+    E175 = c("E175A1", "E175A2", "E175B"),
+    P0 = c("P0A1", "P0A2")
+)
+
 set.seed(42)
 args <- commandArgs(trailingOnly = TRUE)
 scale_method <- args[1]
@@ -68,24 +76,38 @@ seurat_obj <- SetIdent(seurat_obj, value = cluster_df[, 1])
 regions <- jsonlite::read_json(
     paste0(WORKDIR, "results/cluster/", scale_method, "-", cluster_method, "/regions.json"),
     simplifyVector = TRUE
-    )$regions
+)$regions
 
 # %% DGE
-de_1va_list <- list()
+de_list <- list()
 for (region in names(regions)) {
-    print(region)
-    de_1va_list[[region]] <- FindMarkers(
-        seurat_obj,
-        ident.1 = regions[[region]],
-        min.pct = 0.1,
-        verbose = TRUE
-    )
-    write.csv(
-        de_1va_list[[region]],
-        paste0(
-            WORKDIR,
-            "results/DE/", scale_method, "-", cluster_method, "/region-specific/DE-",region,
-            ".csv"
+    for (timepoint in names(timepoints)) {
+        g <- paste(region, timepoint, sep = "-")
+        print(g)
+        ident_1 <- c()
+        ident_2 <- c()
+        for (cluster in regions[[region]]) {
+            s <- strsplit(cluster, "_")[[1]][1]
+            if (s %in% timepoints[[timepoint]]) {
+                ident_1 <- c(ident_1, cluster)
+            } else {
+                ident_2 <- c(ident_2, cluster)
+            }
+        }
+        de_list[[g]] <- FindMarkers(
+            seurat_obj,
+            ident.1 = ident_1,
+            ident.2 = ident_2,
+            min.pct = 0.1,
+            verbose = TRUE
         )
-    )
+        write.csv(
+            de_list[[g]],
+            paste0(
+                WORKDIR,
+                "results/DE/", scale_method, "-", cluster_method, "/timepoint-specific/DE-",
+                g, ".csv"
+            )
+        )
+    }
 }

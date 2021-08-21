@@ -68,11 +68,12 @@ colors = [
 ]
 
 scale_method = sys.argv[1]
+cluster_method = sys.argv[2]
 
 # %% read counts
 count_path = Path.joinpath(
     WORKDIR,
-    f"Data/scale_df/{scale_method}/full-{scale_method}-inter.csv",
+    f"Data/scale_df/{scale_method}/full-{scale_method}.csv",
 )
 count_full_df = pd.read_csv(
     count_path,
@@ -83,7 +84,7 @@ count_full_df = pd.read_csv(
 # %% read cluster result
 cluster_path = Path.joinpath(
     WORKDIR,
-    f"results/cluster/SCT-SC3/pattern/full-SC3.csv",
+    f"results/cluster/{scale_method}-{cluster_method}/pattern/full-{cluster_method}.csv",
 )
 cluster_df = pd.read_csv(
     cluster_path,
@@ -93,7 +94,7 @@ cluster_df = pd.read_csv(
 count_full_df = count_full_df.reindex(cluster_df.index)
 
 regions_path = Path.joinpath(
-    WORKDIR, f"results/cluster/SCT-SC3/regions.json")
+    WORKDIR, f"results/cluster/{scale_method}-{cluster_method}/regions.json")
 with open(regions_path) as f:
     regions = json.load(f)["regions"]
 regions_label = dict(
@@ -105,7 +106,8 @@ regions_label = dict(
 )
 in_regions = [j for i in regions.values() for j in i]
 others = [
-    i for i in list(set(cluster_df[f"sc3_clusters"])) if i not in in_regions
+    i for i in list(set(cluster_df[f"{cluster_method}_clusters"]))
+    if i not in in_regions
 ]
 
 # %% umap
@@ -121,7 +123,8 @@ fig, ax = plt.subplots(figsize=(20, 20))
 ax.set_xticks([])
 ax.set_yticks([])
 draw_df = umap_df.reindex(index=[
-    i for i in umap_df.index if cluster_df.loc[i, "sc3_clusters"] in others
+    i for i in umap_df.index
+    if cluster_df.loc[i, f"{cluster_method}_clusters"] in others
 ])
 ax.scatter(
     draw_df["X"],
@@ -133,7 +136,7 @@ ax.scatter(
 for region, c in zip(regions, ["red", "green", "blue", "yellow", "orange"]):
     draw_df = umap_df.reindex(index=[
         i for i in umap_df.index
-        if cluster_df.loc[i, "sc3_clusters"] in regions[region]
+        if cluster_df.loc[i, f"{cluster_method}_clusters"] in regions[region]
     ])
     ax.scatter(
         draw_df["X"],
@@ -147,7 +150,7 @@ ax.set_title(f"UMAP {scale_method}")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        f"results/dimension_reduction/{scale_method}/umap-{scale_method}-1.jpg"
+        f"results/dimension_reduction/{scale_method}-{cluster_method}/umap-{scale_method}-1.jpg"
     ))
 plt.close(fig)
 
@@ -169,7 +172,7 @@ ax.set_title(f"UMAP {scale_method}")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        f"results/dimension_reduction/{scale_method}/umap-{scale_method}-2.jpg"
+        f"results/dimension_reduction/{scale_method}-{cluster_method}/umap-{scale_method}-2.jpg"
     ))
 plt.close(fig)
 
@@ -186,7 +189,8 @@ fig, ax = plt.subplots(figsize=(20, 20))
 ax.set_xticks([])
 ax.set_yticks([])
 draw_df = densmap_df.reindex(index=[
-    i for i in densmap_df.index if cluster_df.loc[i, "sc3_clusters"] in others
+    i for i in densmap_df.index
+    if cluster_df.loc[i, f"{cluster_method}_clusters"] in others
 ])
 ax.scatter(
     draw_df["X"],
@@ -198,7 +202,7 @@ ax.scatter(
 for region, c in zip(regions, ["red", "green", "blue", "yellow", "orange"]):
     draw_df = densmap_df.reindex(index=[
         i for i in densmap_df.index
-        if cluster_df.loc[i, "sc3_clusters"] in regions[region]
+        if cluster_df.loc[i, f"{cluster_method}_clusters"] in regions[region]
     ])
     ax.scatter(
         draw_df["X"],
@@ -212,7 +216,7 @@ ax.set_title(f"densmap {scale_method}")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        f"results/dimension_reduction/{scale_method}/densmap-{scale_method}-1.jpg"
+        f"results/dimension_reduction/{scale_method}-{cluster_method}/densmap-{scale_method}-1.jpg"
     ))
 plt.close(fig)
 
@@ -235,7 +239,7 @@ ax.set_title(f"densmap {scale_method}")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        f"results/dimension_reduction/{scale_method}/densmap-{scale_method}-2.jpg"
+        f"results/dimension_reduction/{scale_method}-{cluster_method}/densmap-{scale_method}-2.jpg"
     ))
 plt.close(fig)
 
@@ -252,7 +256,8 @@ fig, ax = plt.subplots(figsize=(20, 20))
 ax.set_xticks([])
 ax.set_yticks([])
 draw_df = tsne_df.reindex(index=[
-    i for i in tsne_df.index if cluster_df.loc[i, "sc3_clusters"] in others
+    i for i in tsne_df.index
+    if cluster_df.loc[i, f"{cluster_method}_clusters"] in others
 ])
 ax.scatter(
     draw_df["X"],
@@ -264,7 +269,7 @@ ax.scatter(
 for region, c in zip(regions, ["red", "green", "blue", "yellow", "orange"]):
     draw_df = tsne_df.reindex(index=[
         i for i in tsne_df.index
-        if cluster_df.loc[i, "sc3_clusters"] in regions[region]
+        if cluster_df.loc[i, f"{cluster_method}_clusters"] in regions[region]
     ])
     ax.scatter(
         draw_df["X"],
@@ -278,7 +283,7 @@ ax.set_title(f"tSNE {scale_method}")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        f"results/dimension_reduction/{scale_method}/tsne-{scale_method}-1.jpg"
+        f"results/dimension_reduction/{scale_method}-{cluster_method}/tsne-{scale_method}-1.jpg"
     ))
 plt.close(fig)
 
@@ -300,7 +305,7 @@ ax.set_title(f"tSNE {scale_method}")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        f"results/dimension_reduction/{scale_method}/tsne-{scale_method}-2.jpg"
+        f"results/dimension_reduction/{scale_method}-{cluster_method}/tsne-{scale_method}-2.jpg"
     ))
 plt.close(fig)
 
@@ -315,7 +320,8 @@ fig, ax = plt.subplots(figsize=(20, 20))
 ax.set_xticks([])
 ax.set_yticks([])
 draw_df = densne_df.reindex(index=[
-    i for i in densne_df.index if cluster_df.loc[i, "sc3_clusters"] in others
+    i for i in densne_df.index
+    if cluster_df.loc[i, f"{cluster_method}_clusters"] in others
 ])
 ax.scatter(
     draw_df["X"],
@@ -327,7 +333,7 @@ ax.scatter(
 for region, c in zip(regions, ["red", "green", "blue", "yellow", "orange"]):
     draw_df = densne_df.reindex(index=[
         i for i in densne_df.index
-        if cluster_df.loc[i, "sc3_clusters"] in regions[region]
+        if cluster_df.loc[i, f"{cluster_method}_clusters"] in regions[region]
     ])
     ax.scatter(
         draw_df["X"],
@@ -341,7 +347,7 @@ ax.set_title(f"densne {scale_method}")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        f"results/dimension_reduction/{scale_method}/densne-{scale_method}-1.jpg"
+        f"results/dimension_reduction/{scale_method}-{cluster_method}/densne-{scale_method}-1.jpg"
     ))
 plt.close(fig)
 
@@ -363,6 +369,6 @@ ax.set_title(f"densne {scale_method}")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        f"results/dimension_reduction/{scale_method}/densne-{scale_method}-2.jpg"
+        f"results/dimension_reduction/{scale_method}-{cluster_method}/densne-{scale_method}-2.jpg"
     ))
 plt.close(fig)

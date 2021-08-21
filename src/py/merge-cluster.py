@@ -33,14 +33,11 @@ import json
 import sys
 from pathlib import Path
 
-import pandas as pd
 import session_info
-from matplotlib import pyplot as plt
-from PIL import Image
+import pandas as pd
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 session_info.show()
-plt.rcParams.update({"font.size": 24})
 
 idx_full = {
     "E135A": "V10M17-100-E135A",
@@ -52,7 +49,7 @@ idx_full = {
     "E175A1": "V10M17-101-E175A1",
     "E175A2": "V10M17-101-E175A2",
     "E175B": "V10M17-085-E175B",
-    "P0B": "V10M17-100-P0B",
+    # "P0B": "V10M17-100-P0B",
     "P0A1": "V10M17-101-P0A1",
     "P0A2": "V10M17-101-P0A2",
 }
@@ -61,42 +58,28 @@ scale_method = sys.argv[1]
 cluster_method = sys.argv[2]
 
 # %% read data
-cluster_path = Path.joinpath(
-    WORKDIR,
-    f"results/cluster/{scale_method}-{cluster_method}/pattern/full-{cluster_method}.csv",
-)
-cluster_df = pd.read_csv(cluster_path, index_col=0, header=0)
-
+cluster_full_df = pd.DataFrame(columns=[f"{cluster_method}_clusters"])
 regions_path = Path.joinpath(
     WORKDIR, f"results/cluster/{scale_method}-{cluster_method}/regions.json")
 with open(regions_path) as f:
-    regions = json.load(f)["regions"]
+    ncs_full = json.load(f)["ncs"]
 
-# %% draw
 for idx in idx_full:
-    coor_path = Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv")
-    coor_df = pd.read_csv(coor_path, index_col=0, header=0)
-    he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
-    with Image.open(he_path) as he_image:
-        for region in regions:
-            region_index = [
-                i for i in cluster_df.index
-                if cluster_df.loc[i, f"{cluster_method}_clusters"] in
-                [p for p in regions[region] if idx in p]
-            ]
-            if len(region_index) == 0:
-                continue
-            draw_df = coor_df.reindex(index=region_index)
-            fig, ax = plt.subplots(figsize=(10, 10))
-            ax.imshow(he_image)
-            ax.scatter(draw_df['X'], draw_df['Y'], s=16, alpha=0.7)
-            ax.set_xticks([])
-            ax.set_yticks([])
-            ax.set_title(f'{idx} {region}')
-            [axis.set_visible(False) for axis in ax.spines.values()]
-            fig.savefig(
-                Path.joinpath(
-                    WORKDIR,
-                    f"results/cluster/{scale_method}-{cluster_method}/region/{idx}_{region}.jpg",
-                ))
-            plt.close(fig)
+    cluster_path = Path.joinpath(
+        WORKDIR,
+        f"results/cluster/{scale_method}-{cluster_method}/pattern/{idx}-{cluster_method}.csv"
+    )
+    cluster_df = pd.read_csv(cluster_path, index_col=0, header=0)
+    cluster_series = cluster_df[f'{cluster_method}_{ncs_full[idx]}_clusters']
+    cluster_df = pd.DataFrame(
+        [f"{idx}_{i}" for i in cluster_series],
+        index=cluster_df.index,
+    )
+    cluster_df.columns = [f"{cluster_method}_clusters"]
+    cluster_full_df = pd.concat([cluster_full_df, cluster_df])
+
+cluster_full_df.to_csv(
+    Path.joinpath(
+        WORKDIR,
+        f"results/cluster/{scale_method}-{cluster_method}/pattern/full-{cluster_method}.csv"
+    ), )

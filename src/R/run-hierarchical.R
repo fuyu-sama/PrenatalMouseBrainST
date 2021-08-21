@@ -30,9 +30,8 @@
 # %% environment config
 WORKDIR <- paste0(Sys.getenv("HOME"), "/workspace/mouse-brain-full/")
 renv::activate(WORKDIR)
-library(Seurat)
+library(ape)
 library(dplyr)
-library(ggplot2)
 
 options(future.globals.maxSize = 1024 * 1024^2)
 sessionInfo()
@@ -42,7 +41,7 @@ args <- commandArgs(trailingOnly = TRUE)
 scale_method <- args[1]
 cluster_method <- args[2]
 
-# %% read data and create Seurat object
+# %% read data
 read_df <- read.csv(
     paste0(
         WORKDIR,
@@ -57,35 +56,59 @@ cluster_df <- read.csv(
         ),
     check.names = F, row.names = 1
 )
+colnames(cluster_df) <- "clusters"
 read_df <- read_df[, rownames(cluster_df)]
 if (!all(rownames(cluster_df) == colnames(read_df))) {
     stop("AssertionError")
 }
-
-seurat_obj <- CreateSeuratObject(read_df)
-seurat_obj <- SetIdent(seurat_obj, value = cluster_df[, 1])
 
 regions <- jsonlite::read_json(
     paste0(WORKDIR, "results/cluster/", scale_method, "-", cluster_method, "/regions.json"),
     simplifyVector = TRUE
     )$regions
 
-# %% DGE
-de_1va_list <- list()
-for (region in names(regions)) {
-    print(region)
-    de_1va_list[[region]] <- FindMarkers(
-        seurat_obj,
-        ident.1 = regions[[region]],
-        min.pct = 0.1,
-        verbose = TRUE
-    )
-    write.csv(
-        de_1va_list[[region]],
-        paste0(
-            WORKDIR,
-            "results/DE/", scale_method, "-", cluster_method, "/region-specific/DE-",region,
-            ".csv"
-        )
-    )
+# %% build mean_df
+mean_df <- data.frame(row.names = rownames(read_df))
+for (cluster in unique(cluster_df[, 1])) {
+    subset_df <- filter(cluster_df, clusters == cluster)
+    subset_df <- read_df[, rownames(subset_df)]
+    mean_df[, cluster] <- rowMeans(subset_df)
 }
+
+# %% draw
+regions_label <- list(
+    cortex = 1,
+    thalamus = 2,
+    hypothalamus = 3,
+    olfactory = 4,
+    hippocampus = 5
+)
+tip_color <- c()
+for (i in colnames(mean_df)) {
+    flag <- 1
+    for (j in names(regions)) {
+        for (k in regions[[j]]) {
+            if (i == k) {
+                tip_color <- c(tip_color, regions_label[[j]])
+                flag = 0
+            }
+        }
+    }
+    if (flag) {
+        tip_color <- c(tip_color, 6)
+    }
+}
+names(tip_color) <- colnames(mean_df)
+colors = c("violet", "peru", "red", "blue", "green", "black")
+hc <- hclust(dist(t(mean_df)))
+jpeg(
+    paste0(
+        WORKDIR, "results/cluster/", scale_method, "-", cluster_method, "/hierarchical.jpg"
+    ),
+    width = 1500, height = 1500
+)
+par(cex = 1.5)
+plot(as.phylo(hc), type = "fan", tip.color = colors[tip_color], underscore = TRUE)
+par(cex = 2)
+legend(x = "topright", legend = names(regions_label), text.col = colors)
+dev.off()

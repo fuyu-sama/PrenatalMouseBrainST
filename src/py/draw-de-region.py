@@ -30,6 +30,7 @@
 
 # %% envoronment config
 import json
+import sys
 from pathlib import Path
 
 import pandas as pd
@@ -62,12 +63,13 @@ colors = [
     "#8E804B", "#0089A7", "#CB1B45", "#FFB6C1", "#00FF00", "#800000",
     "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
 ]
-scale_method = "combat"
+scale_method = sys.argv[1]
+cluster_method = sys.argv[2]
 
 # %% read counts
 count_path = Path.joinpath(
     WORKDIR,
-    f"Data/scale_df/{scale_method}/full-{scale_method}-inter.csv",
+    f"Data/scale_df/{scale_method}/full-{scale_method}.csv",
 )
 count_full_df = pd.read_csv(
     count_path,
@@ -78,7 +80,7 @@ count_full_df = pd.read_csv(
 # %% read cluster result
 cluster_path = Path.joinpath(
     WORKDIR,
-    f"results/cluster/{scale_method}-SC3/pattern/full-SC3.csv",
+    f"results/cluster/{scale_method}-{cluster_method}/pattern/full-{cluster_method}.csv",
 )
 cluster_df = pd.read_csv(
     cluster_path,
@@ -88,7 +90,7 @@ cluster_df = pd.read_csv(
 count_full_df = count_full_df.reindex(cluster_df.index)
 
 regions_path = Path.joinpath(
-    WORKDIR, f"results/cluster/{scale_method}-SC3/regions.json")
+    WORKDIR, f"results/cluster/{scale_method}-{cluster_method}/regions.json")
 with open(regions_path) as f:
     regions = json.load(f)["regions"]
 regions_label = dict(
@@ -100,7 +102,8 @@ regions_label = dict(
 )
 in_regions = [j for i in regions.values() for j in i]
 others = [
-    i for i in list(set(cluster_df[f"sc3_clusters"])) if i not in in_regions
+    i for i in list(set(cluster_df[f"{cluster_method}_clusters"]))
+    if i not in in_regions
 ]
 
 # %% draw 1vsa
@@ -109,7 +112,7 @@ genes = []  # up, avg_log2FC > 0
 for region in regions:
     de_path = Path.joinpath(
         WORKDIR,
-        f"results/DE/{scale_method}/region-specific/DE-{region}.csv",
+        f"results/DE/{scale_method}-{cluster_method}/region-specific/DE-{region}.csv",
     )
     de_df = pd.read_csv(de_path, index_col=0, header=0)
     de_df = de_df[(de_df["avg_log2FC"] > 0) & (de_df["p_val_adj"] <= 0.01)]
@@ -117,7 +120,8 @@ for region in regions:
     de_df.to_csv(
         Path.joinpath(
             WORKDIR,
-            f"results/DE/{scale_method}/region-specific/UP-{region}.csv"))
+            f"results/DE/{scale_method}-{cluster_method}/region-specific/UP-{region}.csv"
+        ))
     for j in de_df.index:
         if j not in genes:
             genes.append(j)
@@ -134,7 +138,7 @@ for i in range(len(genes)):
 # cluster pcolor
 region_ticks = []
 length = [0]
-draw_cluster = cluster_df[f"sc3_clusters"].copy()
+draw_cluster = cluster_df[f"{cluster_method}_clusters"].copy()
 for c in regions:
     draw_cluster.replace(regions[c], c, inplace=True)
 flag = len(regions)
@@ -191,7 +195,7 @@ cb = fig.colorbar(hm, ax=ax_heatmap)
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        f"results/DE/{scale_method}/region-specific/heatmap.jpg",
+        f"results/DE/{scale_method}-{cluster_method}/region-specific/heatmap.jpg",
     ),
     bbox_inches="tight",
 )

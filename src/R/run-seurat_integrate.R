@@ -30,10 +30,12 @@
 # %% environment config
 WORKDIR <- paste0(Sys.getenv("HOME"), "/workspace/mouse-brain-full/")
 renv::activate(WORKDIR)
+library(dplyr)
 library(Seurat)
 
 options(future.globals.maxSize = 1024 * 1024^2)
 sessionInfo()
+set.seed(42)
 
 idx_full <- list(
     E135A = "V10M17-100-E135A",
@@ -45,7 +47,7 @@ idx_full <- list(
     E175A1 = "V10M17-101-E175A1",
     E175A2 = "V10M17-101-E175A2",
     E175B = "V10M17-085-E175B",
-    P0B = "V10M17-100-P0B",
+    #P0B = "V10M17-100-P0B",
     P0A1 = "V10M17-101-P0A1",
     P0A2 = "V10M17-101-P0A2"
 )
@@ -55,7 +57,7 @@ read_df_list <- list()
 select_genes <- c()
 for (idx in names(idx_full)) {
     read_df <- read.csv(
-        paste0(WORKDIR, "Data/scale_df/raw_count/", idx, "-raw.csv"),
+        paste0(WORKDIR, "Data/scale_df/raw/", idx, "-raw.csv"),
         check.names = FALSE, row.names = 1
     )
     if (length(select_genes) == 0) {
@@ -72,7 +74,7 @@ for (idx in names(read_df_list)) {
     seurat_obj <- CreateSeuratObject(read_df_list[[idx]][select_genes, ])
     seurat_obj <- NormalizeData(seurat_obj, verbose = FALSE)
     seurat_obj <- FindVariableFeatures(
-        seurat_obj, selection.method = "vst", nfeatures = 12000, verbose = FALSE
+        seurat_obj, selection.method = "vst", nfeatures = 6000, verbose = FALSE
     )
     seurat_list[[idx]] <- seurat_obj
 }
@@ -80,15 +82,33 @@ for (idx in names(read_df_list)) {
 # %% perform integration
 anchors <- FindIntegrationAnchors(
     object.list = seurat_list,
-    anchor.features = length(select_genes),
+    anchor.features = 4000,
     verbose = FALSE
 )
 seurat_combined <- IntegrateData(anchorset = anchors, verbose = FALSE)
 
+# %% write results
+full_df <- as.data.frame(seurat_combined[["integrated"]]@data)
 write.csv(
-    as.data.frame(seurat_combined[["integrated"]]@data),
+    full_df,
     paste0(
         WORKDIR,
-        "Data/scale_df/seurat_integrate/full-seurat_integrate-inter.csv"
+        "Data/scale_df/seurat_integrate/full-seurat_integrate.csv"
     )
 )
+for (idx in names(idx_full)) {
+    spots <- c()
+    for (i in colnames(full_df)) {
+        if (grepl(idx, i)) {
+            spots <- c(spots, i)
+        }
+    }
+    sub_df <- full_df[, spots]
+    write.csv(
+        sub_df,
+        paste0(
+            WORKDIR,
+            "Data/scale_df/seurat_integrate/", idx, "-seurat_integrate.csv"
+        )
+    )
+}
