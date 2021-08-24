@@ -100,3 +100,53 @@ pvalue_df = pvalue_df.fillna(0)
 fraction_df = fraction_df.fillna(0)
 
 # %% draw
+fig, ax = plt.subplots(figsize=(10, 30))
+vmax = pvalue_df.max().max()
+vmin = pvalue_df.min().min()
+for i in range(pvalue_df.shape[1]):
+    for j in range(pvalue_df.shape[0]):
+        sc = ax.scatter(
+            i,
+            j,
+            s=fraction_df.iloc[j, i] * 800,
+            c=pvalue_df.iloc[j, i],
+            cmap="Reds",
+            vmax=vmax,
+            vmin=vmin,
+        )
+ax.set_xticks(range(pvalue_df.shape[1]))
+ax.set_yticks(range(pvalue_df.shape[0]))
+ax.set_xticklabels(pvalue_df.columns)
+ax.set_yticklabels(pvalue_df.index)
+cb = fig.colorbar(sc, location="top")
+cb.set_ticks([vmin, vmax])
+cb.set_ticklabels(["Low", "High"])
+cb.ax.set_ylabel("-logP")
+ax_legend = fig.add_axes([1, 0.11, 0.1, 0.2])
+ax_legend.scatter(
+    [1, 1, 1, 1],
+    [0.9, 1, 1.1, 1.2],
+    s=[
+        fraction_df.max().max() * 200,
+        fraction_df.max().max() * 400,
+        fraction_df.max().max() * 600,
+        fraction_df.max().max() * 800
+    ],
+)
+ax_legend.set_xticks([])
+ax_legend.set_yticks([0.85, 0.9, 1, 1.1, 1.2, 1.25])
+ax_legend.set_yticklabels([
+    "", f"{fraction_df.max().max() / 4:.3f}",
+    f"{fraction_df.max().max() / 2:.3f}",
+    f"{fraction_df.max().max() / 4 * 3:.3f}", f"{fraction_df.max().max():.3f}",
+    ""
+])
+ax_legend.yaxis.tick_right()
+ax_legend.set_title("Gene ratio")
+fig.savefig(
+    Path.joinpath(
+        WORKDIR,
+        f"results/motifResults/{scale_method}-{cluster_method}/go.jpg"),
+    bbox_inches="tight",
+)
+plt.close(fig)
