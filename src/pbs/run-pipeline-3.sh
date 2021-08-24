@@ -58,7 +58,10 @@ do
         )&
         done
         wait
-        ${PYTHON_PATH} src/py/draw-homer.py \
-            ${scale_method} ${cluster_method} &>> log/pipeline-3.log
+        (${PYTHON_PATH} src/py/draw-homer.py \
+            ${scale_method} ${cluster_method} &>> log/pipeline-3.log)&
+        (${PYTHON_PATH} src/py/draw-go.py \
+            ${scale_method} ${cluster_method} &>> log/pipeline-3.log)&
     done
 done
+wait
