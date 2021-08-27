@@ -7,11 +7,9 @@ PYTHON_PATH=$HOME/workspace/mouse-brain-full/venv/bin/python
 cd $HOME/workspace/mouse-brain-full
 
 # scale data
-if false
-then
+if false; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Scaling data with combat and Seurat..."
-    for directory in raw logcpm combat seurat_integrate
-    do
+    for directory in raw logcpm combat seurat_integrate; do
         if [ ! -d Data/scale_df/${directory} ]
         then
             mkdir Data/scale_df/${directory}
@@ -24,10 +22,8 @@ then
 fi
 
 # cluster
-for scale_method in seurat_integrate
-do
-    if true
-    then
+for scale_method in seurat_integrate; do
+    if true; then
         echo "[`date +%Y.%m.%d\ %H:%M:%S`] Clustering with KMeans on all features..."
         if [ ! -d results/cluster/${scale_method}-kmeans ]
         then
@@ -36,48 +32,37 @@ do
             mkdir results/cluster/${scale_method}-kmeans/separate
             mkdir results/cluster/${scale_method}-kmeans/together
         fi
-        for idx in E135A E135B E155A E155B E165A E165B E175A1 E175A2 E175B P0A1 P0A2
-        do
-            (
-                ${PYTHON_PATH} src/py/run-kmeans.py \
-                    ${idx} ${scale_method} 1 0 0 &>> log/pipeline-2.log;
-            )&
+        for idx in E135A E135B E155A E155B E165A E165B E175A1 E175A2 E175B P0A1 P0A2; do
+            (${PYTHON_PATH} src/py/run-kmeans.py \
+                ${idx} ${scale_method} 1 0 0 &>> log/pipeline-2.log)&
         done
         wait
     fi
 
-    if true
-    then
+    if true; then
         echo "[`date +%Y.%m.%d\ %H:%M:%S`] Clustering with KMeans on PCA features..."
-        if [ ! -d results/cluster/${scale_method}-pca-kmeans ]
-        then
+        if [ ! -d results/cluster/${scale_method}-pca-kmeans ]; then
             mkdir results/cluster/${scale_method}-pca-kmeans
             mkdir results/cluster/${scale_method}-pca-kmeans/pattern
             mkdir results/cluster/${scale_method}-pca-kmeans/separate
             mkdir results/cluster/${scale_method}-pca-kmeans/together
         fi
-        for idx in E135A E135B E155A E155B E165A E165B E175A1 E175A2 E175B P0A1 P0A2
-        do
-            (
-                ${PYTHON_PATH} src/py/run-kmeans.py \
-                    ${idx} ${scale_method} 0 1 0 &>> log/pipeline-2.log;
-            )&
+        for idx in E135A E135B E155A E155B E165A E165B E175A1 E175A2 E175B P0A1 P0A2; do
+            (${PYTHON_PATH} src/py/run-kmeans.py \
+                ${idx} ${scale_method} 0 1 0 &>> log/pipeline-2.log)&
         done
         wait
     fi
 
-    if true
-    then
+    if true; then
         echo "[`date +%Y.%m.%d\ %H:%M:%S`] Clustering with KMeans on ICA features..."
-        if [ ! -d results/cluster/${scale_method}-ica-kmeans ]
-        then
+        if [ ! -d results/cluster/${scale_method}-ica-kmeans ]; then
             mkdir results/cluster/${scale_method}-ica-kmeans
             mkdir results/cluster/${scale_method}-ica-kmeans/pattern
             mkdir results/cluster/${scale_method}-ica-kmeans/separate
             mkdir results/cluster/${scale_method}-ica-kmeans/together
         fi
-        for idx in E135A E135B E155A E155B E165A E165B E175A1 E175A2 E175B P0A1 P0A2
-        do
+        for idx in E135A E135B E155A E155B E165A E165B E175A1 E175A2 E175B P0A1 P0A2; do
             (
                 ${PYTHON_PATH} src/py/run-kmeans.py \
                     ${idx} ${scale_method} 0 0 1 &>> log/pipeline-2.log;
@@ -86,18 +71,15 @@ do
         wait
     fi
 
-    if false
-    then
+    if false; then
         echo "[`date +%Y.%m.%d\ %H:%M:%S`] Clustering with SC3..."
-        if [ ! -d results/cluster/${scale_method}-sc3 ]
-        then
+        if [ ! -d results/cluster/${scale_method}-sc3 ]; then
             mkdir results/cluster/${scale_method}-sc3
             mkdir results/cluster/${scale_method}-sc3/pattern
             mkdir results/cluster/${scale_method}-sc3/separate
             mkdir results/cluster/${scale_method}-sc3/together
         fi
-        for idx in E135A E135B E155A E155B E165A E165B E175A1 E175A2 E175B P0A1 P0A2
-        do
+        for idx in E135A E135B E155A E155B E165A E165B E175A1 E175A2 E175B P0A1 P0A2; do
             (
                 Rscript src/R/run-sc3.R ${idx} ${scale_method} &>> log/pipeline-2.log;
                 ${PYTHON_PATH} src/py/draw-sc3.py ${idx} ${scale_method} &>> log/pipeline-2.log;

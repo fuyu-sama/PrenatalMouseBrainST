@@ -6,22 +6,17 @@ PYTHON_PATH=$HOME/workspace/mouse-brain-full/venv/bin/python
 
 cd $HOME/workspace/mouse-brain-full
 
-for scale_method in combat seurat_integrate
-do
-    for cluster_method in sc3
-    do
-        if [ ! -d results/cluster/${scale_method}-${cluster_method}/region ]
-        then
+for scale_method in combat seurat_integrate; do
+    for cluster_method in sc3; do
+        if [ ! -d results/cluster/${scale_method}-${cluster_method}/region ]; then
             mkdir results/cluster/${scale_method}-${cluster_method}/region
         fi
 
-        if [ ! -d results/dimension_reduction/${scale_method}-${cluster_method} ]
-        then
+        if [ ! -d results/dimension_reduction/${scale_method}-${cluster_method} ]; then
             mkdir results/dimension_reduction/${scale_method}-${cluster_method}
         fi
 
-        if [ ! -d results/DE/${scale_method}-${cluster_method} ]
-        then
+        if [ ! -d results/DE/${scale_method}-${cluster_method} ]; then
             mkdir results/DE/${scale_method}-${cluster_method}
             mkdir results/DE/${scale_method}-${cluster_method}/region-specific
             mkdir results/DE/${scale_method}-${cluster_method}/timepoint-specific
@@ -43,8 +38,7 @@ do
             ${scale_method} ${cluster_method} &>> log/pipeline-3.log)
         (${PYTHON_PATH} src/py/run-dim_redu.py \
             ${scale_method} ${cluster_method} &>> log/pipeline-3.log)&
-        for region in cortex hippocampus hypothalamus thalamus olfactory
-        do
+        for region in cortex hippocampus hypothalamus thalamus olfactory amygdalar mge striatum; do
         (
             source homer-4.11.sh;
             ${PYTHON_PATH} src/py/run-id-transfer.py \
