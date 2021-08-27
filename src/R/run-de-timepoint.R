@@ -94,6 +94,9 @@ for (region in names(regions)) {
                 ident_2 <- c(ident_2, cluster)
             }
         }
+        if (length(ident_1) < 1) {
+            next
+        }
         de_list[[g]] <- FindMarkers(
             seurat_obj,
             ident.1 = ident_1,

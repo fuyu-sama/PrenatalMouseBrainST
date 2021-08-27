@@ -33,6 +33,7 @@ import json
 import sys
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import session_info
 from matplotlib import pyplot as plt
@@ -112,11 +113,12 @@ for region in regions:
     known_df = pd.DataFrame(-read_df["Log P-value"])
     known_df.index = [i.split("/")[0].split("(")[0] for i in read_df.index]
     known_df.columns = [region]
+    known_df = known_df.drop_duplicates()
     draw_pvalue = pd.concat([draw_pvalue, known_df], axis=1)
 
 pvalue_min = draw_pvalue.min().min()
 pvalue_max = draw_pvalue.max().max()
-draw_pvalue = draw_pvalue.fillna(0.5)
+draw_pvalue = draw_pvalue.fillna(0.0)
 draw_pvalue.index = [i.lower().capitalize() for i in draw_pvalue.index]
 draw_pvalue.index = [alias[i] if i in alias else i for i in draw_pvalue.index]
 
@@ -142,8 +144,8 @@ for region in regions:
             draw_count.loc[gene, region] = count_sub[gene].mean()
 
 # %% draw
-fig, ax = plt.subplots(figsize=(10, 25))
-vmax = draw_count.max().max()
+fig, ax = plt.subplots(figsize=(10, 30))
+vmax = draw_count.max().max() * 0.9
 vmin = draw_count.min().min()
 for i in range(draw_pvalue.shape[1]):
     for j in range(draw_pvalue.shape[0]):
@@ -158,19 +160,21 @@ for i in range(draw_pvalue.shape[1]):
         )
 ax.set_xticks(range(draw_pvalue.shape[1]))
 ax.set_yticks(range(draw_pvalue.shape[0]))
-ax.set_xticklabels(draw_pvalue.columns)
+ax.set_xticklabels(draw_pvalue.columns, rotation=45, ha="right")
 ax.set_yticklabels(draw_pvalue.index)
-fig.colorbar(sc, location="top")
-ax_legend = fig.add_axes([1, 0.11, 0.1, 0.2])
+ax.yaxis.tick_right()
+cb = fig.colorbar(sc, location="top")
+cb.set_ticks([vmin, vmax])
+cb.set_ticklabels(["Low", "High"])
+ax_legend = fig.add_axes([0, 0.11, 0.1, 0.2])
 ax_legend.scatter(
     [1, 1, 1],
     [0.9, 1, 1.1],
-    s=[0.5 * 50, pvalue_min * 50, pvalue_max * 50],
+    s=[pvalue_min * 50, -np.log(1e-5) * 50, pvalue_max * 50],
 )
 ax_legend.set_xticks([])
 ax_legend.set_yticks([0.85, 0.9, 1, 1.1, 1.15])
-ax_legend.set_yticklabels(["", "1", "1e-2", "1e-7", ""])
-ax_legend.yaxis.tick_right()
+ax_legend.set_yticklabels(["", "1e-2", "1e-5", "1e-7", ""])
 ax_legend.set_title("pvalue")
 fig.savefig(
     Path.joinpath(

@@ -108,6 +108,9 @@ regions_label = dict(
     hypothalamus=2,
     olfactory=3,
     hippocampus=4,
+    striatum=5,
+    mge=6,
+    amygdalar=7,
 )
 in_regions = [j for i in regions.values() for j in i]
 others = [
@@ -132,7 +135,10 @@ for region in regions:
             WORKDIR,
             f"results/DE/{scale_method}-{cluster_method}/timepoint-specific/DE-{region}-{timepoint}.csv",
         )
-        de_df = pd.read_csv(de_path, index_col=0, header=0)
+        try:
+            de_df = pd.read_csv(de_path, index_col=0, header=0)
+        except FileNotFoundError:
+            continue
         de_df = de_df[(de_df["avg_log2FC"] > 0) & (de_df["p_val_adj"] <= 0.01)]
         de_df = de_df.sort_values(by="avg_log2FC", ascending=False)
         de_df.to_csv(

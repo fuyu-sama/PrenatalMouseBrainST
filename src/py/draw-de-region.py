@@ -99,6 +99,9 @@ regions_label = dict(
     hypothalamus=2,
     olfactory=3,
     hippocampus=4,
+    striatum=5,
+    mge=6,
+    amygdalar=7,
 )
 in_regions = [j for i in regions.values() for j in i]
 others = [

@@ -74,6 +74,11 @@ for (cluster in unique(cluster_df[, 1])) {
     subset_df <- read_df[, rownames(subset_df)]
     mean_df[, cluster] <- rowMeans(subset_df)
 }
+in_regions <- c()
+for (i in regions) {
+    in_regions <- c(in_regions, i)
+}
+mean_df <- mean_df[, in_regions]
 
 # %% draw
 regions_label <- list(
@@ -81,7 +86,10 @@ regions_label <- list(
     thalamus = 2,
     hypothalamus = 3,
     olfactory = 4,
-    hippocampus = 5
+    hippocampus = 5,
+    striatum = 6,
+    mge = 7,
+    amygdalar = 8
 )
 tip_color <- c()
 for (i in colnames(mean_df)) {
@@ -95,11 +103,11 @@ for (i in colnames(mean_df)) {
         }
     }
     if (flag) {
-        tip_color <- c(tip_color, 6)
+        tip_color <- c(tip_color, length(regions_label) + 1)
     }
 }
 names(tip_color) <- colnames(mean_df)
-colors = c("violet", "peru", "red", "blue", "green", "black")
+colors = c("violet", "peru", "red", "blue", "green", "skyblue", "yellowgreen", "orange", "black")
 hc <- hclust(dist(t(mean_df)))
 jpeg(
     paste0(

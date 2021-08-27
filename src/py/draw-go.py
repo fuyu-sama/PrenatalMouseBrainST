@@ -89,6 +89,8 @@ for region in regions:
             header=0,
             sep="\t",
         )
+        read_df.index = [f"[{process}] {i}" for i in read_df.index]
+        read_df = read_df[read_df["logP"] < -3]
         go_df = pd.concat([go_df, read_df.iloc[0:5, ]])
     read_pvalue = pd.DataFrame(-go_df["logP"])
     read_fraction = pd.DataFrame(go_df["Fraction of Targets in Term"])
@@ -98,9 +100,11 @@ for region in regions:
     fraction_df = pd.concat([fraction_df, read_fraction], axis=1)
 pvalue_df = pvalue_df.fillna(0)
 fraction_df = fraction_df.fillna(0)
+pvalue_df = pvalue_df.sort_index()
+fraction_df = fraction_df.sort_index()
 
 # %% draw
-fig, ax = plt.subplots(figsize=(10, 30))
+fig, ax = plt.subplots(figsize=(15, 45))
 vmax = pvalue_df.max().max()
 vmin = pvalue_df.min().min()
 for i in range(pvalue_df.shape[1]):
@@ -116,13 +120,14 @@ for i in range(pvalue_df.shape[1]):
         )
 ax.set_xticks(range(pvalue_df.shape[1]))
 ax.set_yticks(range(pvalue_df.shape[0]))
-ax.set_xticklabels(pvalue_df.columns)
+ax.set_xticklabels(pvalue_df.columns, rotation=45, ha="right")
 ax.set_yticklabels(pvalue_df.index)
+ax.yaxis.tick_right()
 cb = fig.colorbar(sc, location="top")
 cb.set_ticks([vmin, vmax])
 cb.set_ticklabels(["Low", "High"])
 cb.ax.set_ylabel("-logP")
-ax_legend = fig.add_axes([1, 0.11, 0.1, 0.2])
+ax_legend = fig.add_axes([0, 0.11, 0.1, 0.2])
 ax_legend.scatter(
     [1, 1, 1, 1],
     [0.9, 1, 1.1, 1.2],
@@ -141,7 +146,6 @@ ax_legend.set_yticklabels([
     f"{fraction_df.max().max() / 4 * 3:.3f}", f"{fraction_df.max().max():.3f}",
     ""
 ])
-ax_legend.yaxis.tick_right()
 ax_legend.set_title("Gene ratio")
 fig.savefig(
     Path.joinpath(
