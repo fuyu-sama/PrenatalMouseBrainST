@@ -103,6 +103,9 @@ regions_label = dict(
     hypothalamus=2,
     olfactory=3,
     hippocampus=4,
+    striatum=5,
+    mge=6,
+    amygdalar=7,
 )
 in_regions = [j for i in regions.values() for j in i]
 others = [
@@ -133,7 +136,7 @@ ax.scatter(
     c="grey",
     s=2,
 )
-for region, c in zip(regions, ["red", "green", "blue", "yellow", "orange"]):
+for region, c in zip(regions, colors):
     draw_df = umap_df.reindex(index=[
         i for i in umap_df.index
         if cluster_df.loc[i, f"{cluster_method}_clusters"] in regions[region]
@@ -199,7 +202,7 @@ ax.scatter(
     c="grey",
     s=2,
 )
-for region, c in zip(regions, ["red", "green", "blue", "yellow", "orange"]):
+for region, c in zip(regions, colors):
     draw_df = densmap_df.reindex(index=[
         i for i in densmap_df.index
         if cluster_df.loc[i, f"{cluster_method}_clusters"] in regions[region]
@@ -266,7 +269,7 @@ ax.scatter(
     c="grey",
     s=2,
 )
-for region, c in zip(regions, ["red", "green", "blue", "yellow", "orange"]):
+for region, c in zip(regions, colors):
     draw_df = tsne_df.reindex(index=[
         i for i in tsne_df.index
         if cluster_df.loc[i, f"{cluster_method}_clusters"] in regions[region]
@@ -330,7 +333,7 @@ ax.scatter(
     c="grey",
     s=2,
 )
-for region, c in zip(regions, ["red", "green", "blue", "yellow", "orange"]):
+for region, c in zip(regions, colors):
     draw_df = densne_df.reindex(index=[
         i for i in densne_df.index
         if cluster_df.loc[i, f"{cluster_method}_clusters"] in regions[region]
