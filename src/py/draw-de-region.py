@@ -104,8 +104,8 @@ others = [
     if i not in in_regions
 ]
 
-# %% draw 1vsa
-genes = []  # up, avg_log2FC > 0
+# %% draw avg_log2FC > 0
+up_genes = []  # up, avg_log2FC > 0
 # in regions
 for region in regions:
     de_path = Path.joinpath(
@@ -121,17 +121,17 @@ for region in regions:
             f"results/DE/{scale_method}-{cluster_method}/region-specific/UP-{region}.csv"
         ))
     for j in de_df.index:
-        if j not in genes:
-            genes.append(j)
+        if j not in up_genes:
+            up_genes.append(j)
 
 # x_ticks genes
 gene_ticks = []
 gene_tick_labels = []
 wanted = ["Neurog2", "Sox11", "Tmem132b", "Otp", "Sox2", "Zbtb20", "Satb2"]
-for i in range(len(genes)):
-    if genes[i] in wanted:
+for i in range(len(up_genes)):
+    if up_genes[i] in wanted:
         gene_ticks.append(i)
-        gene_tick_labels.append(genes[i])
+        gene_tick_labels.append(up_genes[i])
 
 # cluster pcolor
 region_ticks = []
@@ -152,7 +152,7 @@ draw_cluster.sort_values(inplace=True)
 
 # build draw_df
 draw_df = count_full_df.reindex(draw_cluster.index, axis="index")
-draw_df = draw_df.reindex(genes, axis="columns")
+draw_df = draw_df.reindex(up_genes, axis="columns")
 
 # z-score
 draw_df = (draw_df - draw_df.mean()) / draw_df.std()
@@ -174,8 +174,8 @@ plt.setp(ax_heatmap.get_xticklabels(), rotation=90, fontsize=10)
 ax_heatmap.set_xlabel("Differential Expression Genes")
 ax_heatmap.set_xticks(gene_ticks)
 ax_heatmap.set_xticklabels(gene_tick_labels)
-# ax_heatmap.set_xticks(range(len(genes)))
-# ax_heatmap.set_xticklabels(genes)
+# ax_heatmap.set_xticks(range(len(up_genes)))
+# ax_heatmap.set_xticklabels(up_genes)
 ax_heatmap.xaxis.set_label_position("top")
 ax_cluster.pcolor(
     draw_cluster.to_numpy().reshape([len(draw_cluster), 1]),
@@ -195,7 +195,104 @@ cb = fig.colorbar(hm, ax=ax_heatmap)
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        f"results/DE/{scale_method}-{cluster_method}/region-specific/heatmap.jpg",
+        f"results/DE/{scale_method}-{cluster_method}/region-specific/heatmap-up.jpg",
+    ),
+    bbox_inches="tight",
+)
+plt.close(fig)
+
+# %% draw avg_log2FC < 0
+down_genes = []  # up, avg_log2FC < 0
+# in regions
+for region in regions:
+    de_path = Path.joinpath(
+        WORKDIR,
+        f"results/DE/{scale_method}-{cluster_method}/region-specific/DE-{region}.csv",
+    )
+    de_df = pd.read_csv(de_path, index_col=0, header=0)
+    de_df = de_df[(de_df["avg_log2FC"] < 0) & (de_df["p_val_adj"] <= 0.01)]
+    de_df = de_df.sort_values(by="avg_log2FC", ascending=False)
+    de_df.to_csv(
+        Path.joinpath(
+            WORKDIR,
+            f"results/DE/{scale_method}-{cluster_method}/region-specific/DOWN-{region}.csv"
+        ))
+    for j in de_df.index:
+        if j not in down_genes:
+            down_genes.append(j)
+
+# x_ticks genes
+gene_ticks = []
+gene_tick_labels = []
+wanted = ["Neurog2", "Sox11", "Tmem132b", "Otp", "Sox2", "Zbtb20", "Satb2"]
+for i in range(len(down_genes)):
+    if down_genes[i] in wanted:
+        gene_ticks.append(i)
+        gene_tick_labels.append(down_genes[i])
+
+# cluster pcolor
+region_ticks = []
+length = [0]
+draw_cluster = cluster_df[f"{cluster_method}_clusters"].copy()
+for c in regions:
+    draw_cluster.replace(regions[c], c, inplace=True)
+flag = len(regions)
+for c in others:
+    draw_cluster.replace(c, flag, inplace=True)
+    # flag += 1
+for c, i in zip(regions, range(len(regions))):
+    c_len = draw_cluster[draw_cluster == c].shape[0]
+    region_ticks.append(c_len / 2 + sum(length[:i + 1]))
+    length.append(c_len)
+    draw_cluster.replace(c, regions_label[c], inplace=True)
+draw_cluster.sort_values(inplace=True)
+
+# build draw_df
+draw_df = count_full_df.reindex(draw_cluster.index, axis="index")
+draw_df = draw_df.reindex(down_genes, axis="columns")
+
+# z-score
+draw_df = (draw_df - draw_df.mean()) / draw_df.std()
+
+# draw
+left, bottom = 0.1, 0.1
+width, height = 0.65, 0.65
+spacing, cluster_width = 0.02, 0.01
+rect_heatmap = [left + spacing, bottom + height + spacing, width, height]
+rect_cluster = [left, bottom + height + spacing, cluster_width, height]
+fig = plt.figure(figsize=(25, 10))
+ax_heatmap = fig.add_axes(rect_heatmap)
+ax_cluster = fig.add_axes(
+    rect_cluster,
+    sharey=ax_heatmap,
+)
+hm = ax_heatmap.imshow(draw_df, cmap="bwr", aspect="auto", vmin=-3, vmax=3)
+plt.setp(ax_heatmap.get_xticklabels(), rotation=90, fontsize=10)
+ax_heatmap.set_xlabel("Differential Expression Genes")
+ax_heatmap.set_xticks(gene_ticks)
+ax_heatmap.set_xticklabels(gene_tick_labels)
+# ax_heatmap.set_xticks(range(len(down_genes)))
+# ax_heatmap.set_xticklabels(down_genes)
+ax_heatmap.xaxis.set_label_position("top")
+ax_cluster.pcolor(
+    draw_cluster.to_numpy().reshape([len(draw_cluster), 1]),
+    cmap=ListedColormap(colors[:len(regions) + len(others)]),
+)
+ax_cluster.set_xticks([])
+ax_cluster.set_yticks(region_ticks)
+ax_cluster.set_yticklabels(regions.keys())
+ax_cluster.set_xlabel("Regions")
+ax_cluster.xaxis.set_label_position("top")
+cb = fig.colorbar(hm, ax=ax_heatmap)
+
+[tk.set_visible(False) for tk in ax_heatmap.get_yticklabels()]
+[axis.set_visible(False) for axis in ax_heatmap.spines.values()]
+[axis.set_visible(False) for axis in ax_cluster.spines.values()]
+
+fig.savefig(
+    Path.joinpath(
+        WORKDIR,
+        f"results/DE/{scale_method}-{cluster_method}/region-specific/heatmap-down.jpg",
     ),
     bbox_inches="tight",
 )

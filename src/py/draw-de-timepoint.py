@@ -113,7 +113,7 @@ others = [
     if i not in in_regions
 ]
 
-# %% draw 1vsa
+# %% draw avg_log2FC > 0
 draw_cluster = cluster_df[f"{cluster_method}_clusters"].copy()
 for c in regions:
     draw_cluster.replace(regions[c], c, inplace=True)
@@ -124,7 +124,7 @@ for c, i in zip(regions, range(len(regions))):
     draw_cluster.replace(c, regions_label[c], inplace=True)
 
 for region in regions:
-    genes = []  # up, avg_log2FC > 0
+    up_genes = []  # up, avg_log2FC > 0
     for timepoint in timepoints:
         de_path = Path.joinpath(
             WORKDIR,
@@ -142,13 +142,13 @@ for region in regions:
                 f"results/DE/{scale_method}-{cluster_method}/timepoint-specific/UP-{region}-{timepoint}.csv"
             ))
         for j in de_df.index:
-            if j not in genes:
-                genes.append(j)
+            if j not in up_genes:
+                up_genes.append(j)
 
     # build draw_df
     spots = draw_cluster[draw_cluster == regions_label[region]].sort_index()
     draw_df = count_full_df.reindex(spots.index, axis="index")
-    draw_df = draw_df.reindex(genes, axis="columns")
+    draw_df = draw_df.reindex(up_genes, axis="columns")
 
     # pcolor
     flag = -1
@@ -214,3 +214,106 @@ for region in regions:
         bbox_inches="tight",
     )
     plt.close(fig)
+
+# %% draw avg_log2FC < 0
+draw_cluster = cluster_df[f"{cluster_method}_clusters"].copy()
+for c in regions:
+    draw_cluster.replace(regions[c], c, inplace=True)
+flag = len(regions_label)
+for c in others:
+    draw_cluster.replace(c, flag, inplace=True)
+for c, i in zip(regions, range(len(regions))):
+    draw_cluster.replace(c, regions_label[c], inplace=True)
+
+for region in regions:
+    down_genes = []  # up, avg_log2FC < 0
+    for timepoint in timepoints:
+        de_path = Path.joinpath(
+            WORKDIR,
+            f"results/DE/{scale_method}-{cluster_method}/timepoint-specific/DE-{region}-{timepoint}.csv",
+        )
+        try:
+            de_df = pd.read_csv(de_path, index_col=0, header=0)
+        except FileNotFoundError:
+            continue
+        de_df = de_df[(de_df["avg_log2FC"] < 0) & (de_df["p_val_adj"] <= 0.01)]
+        de_df = de_df.sort_values(by="avg_log2FC", ascending=False)
+        de_df.to_csv(
+            Path.joinpath(
+                WORKDIR,
+                f"results/DE/{scale_method}-{cluster_method}/timepoint-specific/DOWN-{region}-{timepoint}.csv"
+            ))
+        for j in de_df.index:
+            if j not in down_genes:
+                down_genes.append(j)
+
+    # build draw_df
+    spots = draw_cluster[draw_cluster == regions_label[region]].sort_index()
+    draw_df = count_full_df.reindex(spots.index, axis="index")
+    draw_df = draw_df.reindex(down_genes, axis="columns")
+
+    # pcolor
+    flag = -1
+    length = 0
+    lastlength = 0
+    lastlabel = ""
+    timepoint_ticks = []
+    timepoint_ticklabels = []
+    pcolor_list = [i.split("_")[0] for i in spots.index]
+    for i in range(len(pcolor_list)):
+        if pcolor_list[i] != lastlabel:
+            timepoint_ticks.append(int(length / 2) + lastlength)
+            timepoint_ticklabels.append(lastlabel)
+            lastlength += length
+            length = 0
+            flag += 1
+        lastlabel = pcolor_list[i]
+        length += 1
+        pcolor_list[i] = flag
+    timepoint_ticks.append(int(length / 2) + lastlength)
+    timepoint_ticklabels.append(lastlabel)
+
+    # z-score
+    draw_df = (draw_df - draw_df.mean()) / draw_df.std()
+
+    # draw
+    left, bottom = 0.1, 0.1
+    width, height = 0.65, 0.65
+    spacing, cluster_width = 0.02, 0.01
+    rect_heatmap = [left + spacing, bottom + height + spacing, width, height]
+    rect_cluster = [left, bottom + height + spacing, cluster_width, height]
+    fig = plt.figure(figsize=(15, 10))
+    ax_heatmap = fig.add_axes(rect_heatmap)
+    ax_cluster = fig.add_axes(
+        rect_cluster,
+        sharey=ax_heatmap,
+    )
+    hm = ax_heatmap.imshow(draw_df, cmap="bwr", aspect="auto", vmin=-3, vmax=3)
+    plt.setp(ax_heatmap.get_xticklabels(), rotation=90, fontsize=10)
+    ax_heatmap.set_xlabel(f"DEG in {region}: {draw_df.shape}")
+    ax_heatmap.set_xticks([])
+    ax_heatmap.xaxis.set_label_position("top")
+    ax_cluster.pcolor(
+        np.array(pcolor_list).reshape([len(pcolor_list), 1]),
+        cmap=ListedColormap(colors[:len(regions) + len(others)]),
+    )
+    ax_cluster.set_xticks([])
+    ax_cluster.set_yticks(timepoint_ticks)
+    ax_cluster.set_yticklabels(timepoint_ticklabels)
+    ax_cluster.set_xlabel("Regions")
+    ax_cluster.xaxis.set_label_position("top")
+    cb = fig.colorbar(hm, ax=ax_heatmap)
+
+    [tk.set_visible(False) for tk in ax_heatmap.get_yticklabels()]
+    [axis.set_visible(False) for axis in ax_heatmap.spines.values()]
+    [axis.set_visible(False) for axis in ax_cluster.spines.values()]
+
+    fig.savefig(
+        Path.joinpath(
+            WORKDIR,
+            f"results/DE/{scale_method}-{cluster_method}/timepoint-specific/heatmap-down-{region}.jpg",
+        ),
+        bbox_inches="tight",
+    )
+    plt.close(fig)
+
