@@ -29,7 +29,6 @@
 #
 
 # %% environment config
-import math
 import sys
 from pathlib import Path
 
@@ -39,7 +38,7 @@ from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
 from PIL import Image
 
-import sakuya
+import sakuyahelp
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 session_info.show()
@@ -69,9 +68,14 @@ colors = [
     "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
 ]
 
-idx = sys.argv[1]
-scale_method = sys.argv[2]
-cluster_method = sys.argv[3]
+try:
+    idx = sys.argv[1]
+    scale_method = sys.argv[2]
+    cluster_method = sys.argv[3]
+except IndexError:
+    idx = "E165A"
+    scale_method = "combat"
+    cluster_method = "sc3"
 
 # %% read data
 he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
@@ -82,66 +86,21 @@ scale_path = Path.joinpath(
 coor_path = Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv")
 cluster_path = Path.joinpath(
     WORKDIR,
-    f"results/cluster/{scale_method}-{cluster_method}/pattern/{idx}-{cluster_method}.csv"
+    f"results/cluster/{scale_method}-{cluster_method}/pattern/full-{cluster_method}.csv"
 )
 
 he_image = Image.open(he_path)
 scale_df = pd.read_csv(scale_path, index_col=0, header=0).T
 coor_df = pd.read_csv(coor_path, index_col=0, header=0)
 cluster_df = pd.read_csv(cluster_path, index_col=0, header=0)
-assert all(scale_df.index == coor_df.index)
+cluster_df = cluster_df.reindex(index=scale_df.index)
 
 # %% run hmrf
 hmrf_df = pd.DataFrame(index=cluster_df.index)
-fig, ax = plt.subplots(6, 4, figsize=(40, 60))
-for k, j in zip(range(5, 29), ax.flatten()):
-    cluster_result = sakuya.cluster.HMRF_cluster(
-        expression=scale_df,
-        coordinate=coor_df,
-        init_cluster=cluster_df[f"{cluster_method}_{k}_clusters"],
-        beta=0.2,
-    )
-    hmrf_df[f"{cluster_method}-hmrf_{k}_clusters"] = cluster_result
-    j.axis("off")
-    j.imshow(he_image)
-    j.set_title(f"{idx} ncs {k} HMRF")
-    j.scatter(
-        coor_df["X"],
-        coor_df["Y"],
-        s=16,
-        c=cluster_result,
-        cmap=ListedColormap(colors[:k]),
-        alpha=0.7,
-        vmin=0,
-        vmax=k - 1,
-    )
-fig.savefig(
-    Path.joinpath(
-        WORKDIR,
-        f"results/cluster/{scale_method}-{cluster_method}/together/{idx}-{cluster_method}-hmrf.jpg"
-    ))
-plt.close(fig)
-hmrf_df.to_csv(
-    Path.joinpath(
-        WORKDIR,
-        f"results/cluster/{scale_method}-{cluster_method}/pattern/{idx}-{cluster_method}-hmrf.csv"
-    ))
-
-# %% draw separate
-# for k in range(5, 29):
-    # cluster_series = hmrf_df[f"{cluster_method}-hmrf_{k}_clusters"]
-    # nrows = math.ceil(k / 5)
-    # fig, axes = plt.subplots(nrows, 5, figsize=(50, nrows * 10))
-    # [ax.axis("off") for ax in axes.flatten()]
-    # for n, ax in zip(set(cluster_series), axes.flatten()):
-        # draw_series = cluster_series[cluster_series == n]
-        # draw_coor = coor_df.reindex(index=draw_series.index)
-        # ax.imshow(he_image)
-        # ax.scatter(draw_coor["X"], draw_coor["Y"], s=16)
-        # ax.set_title(f"{idx} ncs {k} cluster {n}")
-        # fig.savefig(
-            # Path.joinpath(
-                # WORKDIR,
-                # f"results/cluster/{scale_method}-{cluster_method}/separate/{idx}-{k}-{cluster_method}-hmrf.jpg"
-            # ))
-    # plt.close(fig)
+cluster_result = sakuyahelp.cluster.HMRF_cluster(
+    expression=scale_df,
+    coordinate=coor_df,
+    init_cluster=[int(i.split("_")[1]) for i in cluster_df[f"{cluster_method}_clusters"]],
+    beta=0.5,
+)
+hmrf_df[f"{cluster_method}-hmrf_clusters"] = cluster_result
