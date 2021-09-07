@@ -6,7 +6,7 @@ PYTHON_PATH=$HOME/workspace/mouse-brain-full/venv/bin/python
 
 cd $HOME/workspace/mouse-brain-full
 
-for scale_method in combat seurat_integrate; do
+for scale_method in combat; do
     for cluster_method in sc3; do
         if [ ! -d results/cluster/${scale_method}-${cluster_method}/region ]; then
             mkdir results/cluster/${scale_method}-${cluster_method}/region
@@ -38,7 +38,7 @@ for scale_method in combat seurat_integrate; do
             ${scale_method} ${cluster_method} &>> log/pipeline-3.log)
         (${PYTHON_PATH} src/py/run-dim_redu.py \
             ${scale_method} ${cluster_method} &>> log/pipeline-3.log)&
-        for region in cortex hippocampus hypothalamus thalamus olfactory amygdalar mge striatum; do
+        for region in cortex hippocampus hypothalamus thalamus amygdalar mge striatum; do
         (
             source homer-4.11.sh;
             ${PYTHON_PATH} src/py/run-id-transfer.py \

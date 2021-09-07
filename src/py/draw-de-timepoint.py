@@ -104,13 +104,12 @@ with open(regions_path) as f:
     regions = json.load(f)["regions"]
 regions_label = dict(
     cortex=0,
-    thalamus=1,
-    hypothalamus=2,
-    olfactory=3,
-    hippocampus=4,
-    striatum=5,
-    mge=6,
-    amygdalar=7,
+    hippocampus=1,
+    thalamus=2,
+    hypothalamus=3,
+    striatum=4,
+    mge=5,
+    amygdalar=6,
 )
 in_regions = [j for i in regions.values() for j in i]
 others = [

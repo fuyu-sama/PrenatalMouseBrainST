@@ -83,13 +83,12 @@ mean_df <- mean_df[, in_regions]
 # %% draw
 regions_label <- list(
     cortex = 1,
-    thalamus = 2,
-    hypothalamus = 3,
-    olfactory = 4,
-    hippocampus = 5,
-    striatum = 6,
-    mge = 7,
-    amygdalar = 8
+    hippocampus = 2,
+    thalamus = 3,
+    hypothalamus = 4,
+    striatum = 5,
+    mge = 6,
+    amygdalar = 7
 )
 tip_color <- c()
 for (i in colnames(mean_df)) {
