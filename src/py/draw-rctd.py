@@ -63,7 +63,10 @@ colors = [
     "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
 ]
 
-idx = sys.argv[1]
+try:
+    idx = sys.argv[1]
+except IndexError:
+    idx = "E165A"
 
 # %% read data
 he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")

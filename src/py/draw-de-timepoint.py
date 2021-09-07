@@ -72,8 +72,12 @@ timepoints = dict(
     P0=("P0A1", "P0A2"),
 )
 
-scale_method = sys.argv[1]
-cluster_method = sys.argv[2]
+try:
+    scale_method = sys.argv[1]
+    cluster_method = sys.argv[2]
+except IndexError:
+    scale_method = "combat"
+    cluster_method = "sc3"
 
 # %% read counts
 count_path = Path.joinpath(
@@ -102,15 +106,7 @@ regions_path = Path.joinpath(
     WORKDIR, f"results/cluster/{scale_method}-{cluster_method}/regions.json")
 with open(regions_path) as f:
     regions = json.load(f)["regions"]
-regions_label = dict(
-    cortex=0,
-    hippocampus=1,
-    thalamus=2,
-    hypothalamus=3,
-    striatum=4,
-    mge=5,
-    amygdalar=6,
-)
+regions_label = {j: i for i, j in enumerate(regions)}
 in_regions = [j for i in regions.values() for j in i]
 others = [
     i for i in list(set(cluster_df[f"{cluster_method}_clusters"]))

@@ -63,8 +63,12 @@ colors = [
     "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
 ]
 
-scale_method = sys.argv[1]
-cluster_method = sys.argv[2]
+try:
+    scale_method = sys.argv[1]
+    cluster_method = sys.argv[2]
+except IndexError:
+    scale_method = "combat"
+    cluster_method = "sc3"
 
 # %% read data
 regions_path = Path.joinpath(

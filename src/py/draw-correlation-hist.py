@@ -63,7 +63,10 @@ colors = [
     "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
 ]
 
-scale_method = sys.argv[1]
+try:
+    scale_method = sys.argv[1]
+except IndexError:
+    scale_method = "combat"
 
 # %% draw
 for idx in idx_full:

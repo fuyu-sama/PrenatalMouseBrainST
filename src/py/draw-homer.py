@@ -81,8 +81,12 @@ gene_family = {
     "Runx": ["Runx1", "Runx2"],
 }
 
-scale_method = sys.argv[1]
-cluster_method = sys.argv[2]
+try:
+    scale_method = sys.argv[1]
+    cluster_method = sys.argv[2]
+except IndexError:
+    scale_method = "combat"
+    cluster_method = "sc3"
 
 # %% read count data
 count_path = Path.joinpath(

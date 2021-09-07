@@ -54,8 +54,12 @@ idx_full = {
     "P0A2": "V10M17-101-P0A2",
 }
 
-scale_method = sys.argv[1]
-cluster_method = sys.argv[2]
+try:
+    scale_method = sys.argv[1]
+    cluster_method = sys.argv[2]
+except IndexError:
+    scale_method = "combat"
+    cluster_method = "sc3"
 
 # %% read data
 cluster_full_df = pd.DataFrame(columns=[f"{cluster_method}_clusters"])

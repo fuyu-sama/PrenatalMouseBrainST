@@ -73,7 +73,10 @@ timepoints = {
     "P0": [["P0A1"], ["P0A2"]],
 }
 
-scale_method = sys.argv[1]
+try:
+    scale_method = sys.argv[1]
+except IndexError:
+    scale_method = "combat"
 
 # %% read data
 count_full_df = pd.read_csv(
