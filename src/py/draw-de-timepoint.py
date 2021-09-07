@@ -209,7 +209,7 @@ for region in regions:
     fig.savefig(
         Path.joinpath(
             WORKDIR,
-            f"results/DE/{scale_method}-{cluster_method}/timepoint-specific/heatmap-{region}.jpg",
+            f"results/DE/{scale_method}-{cluster_method}/timepoint-specific/heatmap-up-{region}.jpg",
         ),
         bbox_inches="tight",
     )
@@ -316,4 +316,3 @@ for region in regions:
         bbox_inches="tight",
     )
     plt.close(fig)
-
