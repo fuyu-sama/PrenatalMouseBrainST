@@ -15,7 +15,7 @@ for idx in E135A E135B E155A E155B E165A E165B E175A1 E175A2 E175B P0A1 P0A2; do
         fi
 
         source hdf5-1.12.0.sh
-        Rscript src/R/run-rctd.R ${idx};
+        Rscript src/R/run-rctd.R ${idx} combat sc3;
         ${PYTHON_PATH} src/py/draw-rctd.py ${idx};
     )&
 done

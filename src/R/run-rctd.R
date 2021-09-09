@@ -66,6 +66,8 @@ timepoint_list <- list(
 
 args <- commandArgs(trailingOnly = TRUE)
 idx <- args[1]
+scale_method <- args[2]
+cluster_method <- args[3]
 
 # %% read sc data and build reference
 sc_df <- as.data.frame(Seurat::Read10X_h5(
@@ -131,6 +133,27 @@ coor_df <- read.csv(
     paste0(WORKDIR, "Data/coor_df/", idx, "-coor.csv"),
     check.names = FALSE, row.names = 1
 )
+
+cluster_df <- read.csv(
+    paste0(
+        WORKDIR,
+        "results/cluster/", scale_method, "-", cluster_method,
+        "/pattern/full-", cluster_method, ".csv"
+        ),
+    check.names = F, row.names = 1
+)
+cluster_df <- as.data.frame(cluster_df[colnames(st_df), ])
+rownames(cluster_df) <- colnames(st_df)
+colnames(cluster_df) <- "clusters"
+
+regions <- jsonlite::read_json(
+    paste0(WORKDIR, "results/cluster/", scale_method, "-", cluster_method, "/regions.json"),
+    simplifyVector = TRUE
+    )$regions
+
+cluster_df <- filter(cluster_df, clusters %in% regions$cortex | clusters %in% regions$hippocampus)
+st_df <- st_df[, rownames(cluster_df)]
+coor_df <- coor_df[rownames(cluster_df), ]
 
 n_umi_st <- colSums(st_df)
 puck <- SpatialRNA(coor_df, st_df, n_umi_st)
