@@ -36,8 +36,6 @@ from pathlib import Path
 import pandas as pd
 import session_info
 from matplotlib import pyplot as plt
-from sklearn.manifold import TSNE
-from umap import UMAP
 
 import densne
 
@@ -108,217 +106,25 @@ others = [
     if i not in in_regions
 ]
 
-# %% umap
-model_umap = UMAP(random_state=42)
-umap_df = pd.DataFrame(
-    model_umap.fit_transform(count_full_df),
-    index=count_full_df.index,
-    columns=["X", "Y"],
-)
-
-# %% color by region
-fig, ax = plt.subplots(figsize=(20, 20))
-ax.set_xticks([])
-ax.set_yticks([])
-draw_df = umap_df.reindex(index=[
-    i for i in umap_df.index
-    if cluster_df.loc[i, f"{cluster_method}_clusters"] in others
-])
-ax.scatter(
-    draw_df["X"],
-    draw_df["Y"],
-    label="Others",
-    c="grey",
-    s=2,
-)
-for region, c in zip(regions, colors):
-    draw_df = umap_df.reindex(index=[
-        i for i in umap_df.index
-        if cluster_df.loc[i, f"{cluster_method}_clusters"] in regions[region]
-    ])
-    ax.scatter(
-        draw_df["X"],
-        draw_df["Y"],
-        label=region,
-        c=c,
-        s=2,
-    )
-ax.legend(loc="best", fontsize=16, markerscale=10)
-ax.set_title(f"UMAP {scale_method}")
-fig.savefig(
-    Path.joinpath(
-        WORKDIR,
-        f"results/dimension_reduction/{scale_method}-{cluster_method}/umap-{scale_method}-1.jpg"
-    ))
-plt.close(fig)
-
-# %% color by sample
-fig, ax = plt.subplots(figsize=(20, 20))
-ax.set_xticks([])
-ax.set_yticks([])
-for tp, c in zip(idx_full.keys(), colors):
-    draw_df = umap_df.reindex(index=[i for i in umap_df.index if tp in i])
-    ax.scatter(
-        draw_df["X"],
-        draw_df["Y"],
-        label=tp,
-        c=c,
-        s=2,
-    )
-ax.legend(loc="best", fontsize=16, markerscale=10, ncol=2)
-ax.set_title(f"UMAP {scale_method}")
-fig.savefig(
-    Path.joinpath(
-        WORKDIR,
-        f"results/dimension_reduction/{scale_method}-{cluster_method}/umap-{scale_method}-2.jpg"
-    ))
-plt.close(fig)
-
-# %% densmap
-model_densmap = UMAP(random_state=42, densmap=True)
-densmap_df = pd.DataFrame(
-    model_densmap.fit_transform(count_full_df),
-    index=count_full_df.index,
-    columns=["X", "Y"],
-)
-
-# %% color by region
-fig, ax = plt.subplots(figsize=(20, 20))
-ax.set_xticks([])
-ax.set_yticks([])
-draw_df = densmap_df.reindex(index=[
-    i for i in densmap_df.index
-    if cluster_df.loc[i, f"{cluster_method}_clusters"] in others
-])
-ax.scatter(
-    draw_df["X"],
-    draw_df["Y"],
-    label="Others",
-    c="grey",
-    s=2,
-)
-for region, c in zip(regions, colors):
-    draw_df = densmap_df.reindex(index=[
-        i for i in densmap_df.index
-        if cluster_df.loc[i, f"{cluster_method}_clusters"] in regions[region]
-    ])
-    ax.scatter(
-        draw_df["X"],
-        draw_df["Y"],
-        label=region,
-        c=c,
-        s=2,
-    )
-ax.legend(loc="best", fontsize=16, markerscale=10)
-ax.set_title(f"densmap {scale_method}")
-fig.savefig(
-    Path.joinpath(
-        WORKDIR,
-        f"results/dimension_reduction/{scale_method}-{cluster_method}/densmap-{scale_method}-1.jpg"
-    ))
-plt.close(fig)
-
-# %% color by sample
-fig, ax = plt.subplots(figsize=(20, 20))
-ax.set_xticks([])
-ax.set_yticks([])
-for tp, c in zip(idx_full.keys(), colors):
-    draw_df = densmap_df.reindex(
-        index=[i for i in densmap_df.index if tp in i])
-    ax.scatter(
-        draw_df["X"],
-        draw_df["Y"],
-        label=tp,
-        c=c,
-        s=2,
-    )
-ax.legend(loc="best", fontsize=16, markerscale=10, ncol=2)
-ax.set_title(f"densmap {scale_method}")
-fig.savefig(
-    Path.joinpath(
-        WORKDIR,
-        f"results/dimension_reduction/{scale_method}-{cluster_method}/densmap-{scale_method}-2.jpg"
-    ))
-plt.close(fig)
-
-# %% tsne
-model_tsne = TSNE(random_state=42)
-tsne_df = pd.DataFrame(
-    model_tsne.fit_transform(count_full_df),
-    index=count_full_df.index,
-    columns=["X", "Y"],
-)
-
-# %% color by region
-fig, ax = plt.subplots(figsize=(20, 20))
-ax.set_xticks([])
-ax.set_yticks([])
-draw_df = tsne_df.reindex(index=[
-    i for i in tsne_df.index
-    if cluster_df.loc[i, f"{cluster_method}_clusters"] in others
-])
-ax.scatter(
-    draw_df["X"],
-    draw_df["Y"],
-    label="Others",
-    c="grey",
-    s=2,
-)
-for region, c in zip(regions, colors):
-    draw_df = tsne_df.reindex(index=[
-        i for i in tsne_df.index
-        if cluster_df.loc[i, f"{cluster_method}_clusters"] in regions[region]
-    ])
-    ax.scatter(
-        draw_df["X"],
-        draw_df["Y"],
-        label=region,
-        c=c,
-        s=2,
-    )
-ax.legend(loc="best", fontsize=16, markerscale=10)
-ax.set_title(f"tSNE {scale_method}")
-fig.savefig(
-    Path.joinpath(
-        WORKDIR,
-        f"results/dimension_reduction/{scale_method}-{cluster_method}/tsne-{scale_method}-1.jpg"
-    ))
-plt.close(fig)
-
-# %% color by sample
-fig, ax = plt.subplots(figsize=(20, 20))
-ax.set_xticks([])
-ax.set_yticks([])
-for tp, c in zip(idx_full.keys(), colors):
-    draw_df = tsne_df.reindex(index=[i for i in tsne_df.index if tp in i])
-    ax.scatter(
-        draw_df["X"],
-        draw_df["Y"],
-        label=tp,
-        c=c,
-        s=2,
-    )
-ax.legend(loc="best", fontsize=16, markerscale=10, ncol=2)
-ax.set_title(f"tSNE {scale_method}")
-fig.savefig(
-    Path.joinpath(
-        WORKDIR,
-        f"results/dimension_reduction/{scale_method}-{cluster_method}/tsne-{scale_method}-2.jpg"
-    ))
-plt.close(fig)
-
 # %% densne
 result_densne = densne.run_densne(count_full_df)[0]
-densne_df = pd.DataFrame(result_densne,
-                         index=count_full_df.index,
-                         columns=["X", "Y"])
+result_df = pd.DataFrame(
+    result_densne,
+    index=count_full_df.index,
+    columns=["X", "Y"],
+)
+result_df.to_csv(
+    Path.joinpath(
+        WORKDIR,
+        f"results/dimension_reduction/{scale_method}-{cluster_method}/densne-{scale_method}.csv"
+    ))
 
 # %% color by region
 fig, ax = plt.subplots(figsize=(20, 20))
 ax.set_xticks([])
 ax.set_yticks([])
-draw_df = densne_df.reindex(index=[
-    i for i in densne_df.index
+draw_df = result_df.reindex(index=[
+    i for i in result_df.index
     if cluster_df.loc[i, f"{cluster_method}_clusters"] in others
 ])
 ax.scatter(
@@ -329,8 +135,8 @@ ax.scatter(
     s=2,
 )
 for region, c in zip(regions, colors):
-    draw_df = densne_df.reindex(index=[
-        i for i in densne_df.index
+    draw_df = result_df.reindex(index=[
+        i for i in result_df.index
         if cluster_df.loc[i, f"{cluster_method}_clusters"] in regions[region]
     ])
     ax.scatter(
@@ -354,7 +160,7 @@ fig, ax = plt.subplots(figsize=(20, 20))
 ax.set_xticks([])
 ax.set_yticks([])
 for tp, c in zip(idx_full.keys(), colors):
-    draw_df = densne_df.reindex(index=[i for i in densne_df.index if tp in i])
+    draw_df = result_df.reindex(index=[i for i in result_df.index if tp in i])
     ax.scatter(
         draw_df["X"],
         draw_df["Y"],
@@ -370,3 +176,23 @@ fig.savefig(
         f"results/dimension_reduction/{scale_method}-{cluster_method}/densne-{scale_method}-2.jpg"
     ))
 plt.close(fig)
+
+# %% color by gene
+for gene in count_full_df.columns:
+    fig, ax = plt.subplots(figsize=(15, 15))
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.scatter(
+        result_df["X"],
+        result_df["Y"],
+        c=count_full_df[gene],
+        cmap="Reds",
+        s=2,
+    )
+    ax.set_title(f"{gene}")
+    fig.savefig(
+        Path.joinpath(
+            WORKDIR,
+            f"draw_genes/{scale_method}-densne/{gene}.jpg"
+        ))
+    plt.close(fig)
