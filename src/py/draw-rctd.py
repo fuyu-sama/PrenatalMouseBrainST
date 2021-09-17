@@ -65,8 +65,10 @@ colors = [
 
 try:
     idx = sys.argv[1]
+    region = sys.argv[2]
 except IndexError:
     idx = "E165A"
+    region = "cortex"
 
 # %% read data
 he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
@@ -74,9 +76,9 @@ he_image = Image.open(he_path)
 coor_path = Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv")
 coor_df = pd.read_csv(coor_path, index_col=0, header=0)
 
-results_path = Path.joinpath(WORKDIR, f"results/RCTD/{idx}/results/results_df.csv")
+results_path = Path.joinpath(WORKDIR, f"results/RCTD/{region}/{idx}/results/results_df.csv")
 results_df = pd.read_csv(results_path, index_col=0, header=0)
-weights_path = Path.joinpath(WORKDIR, f"results/RCTD/{idx}/results/weights.csv")
+weights_path = Path.joinpath(WORKDIR, f"results/RCTD/{region}/{idx}/results/weights.csv")
 weights_df = pd.read_csv(weights_path, index_col=0, header=0)
 
 coor_df = coor_df.reindex(index=weights_df.index)
@@ -96,7 +98,7 @@ for cell_type in weights_df.columns:
     )
     ax.set_title(f"{idx} {cell_type}")
     fig.colorbar(sc, ax=ax)
-    fig.savefig(Path.joinpath(WORKDIR, f"results/RCTD/{idx}/weights/{cell_type}.jpg"))
+    fig.savefig(Path.joinpath(WORKDIR, f"results/RCTD/{region}/{idx}/weights/{cell_type}.jpg"))
     plt.close(fig)
 
 # %% draw first type
@@ -118,7 +120,7 @@ for i in range(len(all_types)):
     )
 ax.set_title(f"{idx} first type")
 ax.legend(fontsize=16, markerscale=2, loc="upper left", bbox_to_anchor=(1.05, 1))
-fig.savefig(Path.joinpath(WORKDIR, f"results/RCTD/{idx}/first_type.jpg"), bbox_inches="tight")
+fig.savefig(Path.joinpath(WORKDIR, f"results/RCTD/region/{idx}/first_type.jpg"), bbox_inches="tight")
 plt.close(fig)
 
 # %% draw second type
@@ -140,5 +142,5 @@ for i in range(len(all_types)):
     )
 ax.set_title(f"{idx} second type")
 ax.legend(fontsize=16, markerscale=2, loc="upper left", bbox_to_anchor=(1.05, 1))
-fig.savefig(Path.joinpath(WORKDIR, f"results/RCTD/{idx}/second_type.jpg"), bbox_inches="tight")
+fig.savefig(Path.joinpath(WORKDIR, f"results/RCTD/{region}/{idx}/second_type.jpg"), bbox_inches="tight")
 plt.close(fig)

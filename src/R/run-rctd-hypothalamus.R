@@ -31,6 +31,7 @@
 WORKDIR <- paste0(Sys.getenv("HOME"), "/workspace/mouse-brain-full/")
 renv::activate(WORKDIR)
 library(RCTD)
+library(Seurat)
 library(dplyr)
 
 sessionInfo()
@@ -38,30 +39,13 @@ sessionInfo()
 set.seed(42)
 
 sc_list <- list(
-    E135A = "GSM4635074_E13_5_filtered_gene_bc_matrices_h5.h5",
-    E135B = "GSM4635074_E13_5_filtered_gene_bc_matrices_h5.h5",
-    E155A = "GSM4635076_E15_5_S1_filtered_gene_bc_matrices_h5.h5",
-    E155B = "GSM4635076_E15_5_S1_filtered_gene_bc_matrices_h5.h5",
-    E165A = "GSM4635077_E16_filtered_gene_bc_matrices_h5.h5",
-    E165B = "GSM4635077_E16_filtered_gene_bc_matrices_h5.h5",
-    E175A1 = "GSM5277844_E17_5_filtered_feature_bc_matrix.h5",
-    E175A2 = "GSM5277844_E17_5_filtered_feature_bc_matrix.h5",
-    E175B = "GSM5277844_E17_5_filtered_feature_bc_matrix.h5",
-    P0A1 = "GSM4635080_P1_S1_filtered_gene_bc_matrices_h5.h5",
-    P0A2 = "GSM4635080_P1_S1_filtered_gene_bc_matrices_h5.h5"
-)
-timepoint_list <- list(
-    E135A = "E13_5_",
-    E135B = "E13_5_",
-    E155A = "E15_5_",
-    E155B = "E15_5_",
-    E165A = "E16_5_",
-    E165B = "E16_5_",
-    E175A1 = "E17_5_",
-    E175A2 = "E17_5_",
-    E175B = "E17_5_",
-    P0A1 = "P1_S1_",
-    P0A2 = "P1_S1_"
+    E155A = "GSM3890934_Hypothalamus_traject_E15_srt_annotated_wo_blood.rds",
+    E155B = "GSM3890934_Hypothalamus_traject_E15_srt_annotated_wo_blood.rds",
+    E175A1 = "GSM3890935_Hypothalamus_traject_E17_srt_annotated_wo_blood.rds",
+    E175A2 = "GSM3890935_Hypothalamus_traject_E17_srt_annotated_wo_blood.rds",
+    E175B = "GSM3890935_Hypothalamus_traject_E17_srt_annotated_wo_blood.rds",
+    P0A1 = "GSM3890936_Hypothalamus_traject_P0_srt_annotated_wo_blood.rds",
+    P0A2 = "GSM3890936_Hypothalamus_traject_P0_srt_annotated_wo_blood.rds"
 )
 
 args <- commandArgs(trailingOnly = TRUE)
@@ -69,51 +53,28 @@ idx <- args[1]
 scale_method <- args[2]
 cluster_method <- args[3]
 if (is.na(idx) | is.na(scale_method) | is.na(cluster_method)) {
-    idx <- "E165A"
+    idx <- "E175B"
     scale_method <- "combat"
     cluster_method <- "sc3"
 }
 
 # %% read sc data and build reference
-sc_df <- as.data.frame(
-    Seurat::Read10X_h5(
-        paste0(
-            Sys.getenv("HOME"),
-            "/Data/scRNAseq/2021_Nature_MolecularLogicMouseBrain/COUNT/",
-            sc_list[[idx]]
-        )
-    )
-)
-cell_names <- c()
-for (i in strsplit(colnames(sc_df), "-")) {
-    cell_names <- c(cell_names, paste0(timepoint_list[[idx]], i[1]))
-}
-colnames(sc_df) <- cell_names
-
-meta_df <- read.delim(
+if (!(idx %in% names(sc_list))) exit(save = "no", status = 404)
+seurat_obj <- readRDS(
     paste0(
         Sys.getenv("HOME"),
-        "/Data/scRNAseq/2021_Nature_MolecularLogicMouseBrain/META/",
-        "metaData_scDevSC.txt"
-        ),
-    row.names = 1, check.names = FALSE
+        "/Data/scRNAseq/2020_Nature_MolecularDesignMouseHypothalamus/COUNT/",
+        sc_list[[idx]]
+    )
 )
-meta_names <- c()
-for (i in rownames(meta_df)) {
-    if (grepl("-", i, fixed = TRUE)) {
-        meta_names <- c(meta_names, strsplit(i, "-")[[1]][1])
-    } else {
-        meta_names <- c(meta_names, i)
-    }
+sc_df <- as.data.frame(GetAssayData(seurat_obj, slot = "counts"))
+
+cell_types <- as.character(Idents(seurat_obj))
+for (i in 1:length(cell_types)) {
+    cell_types[i] <- gsub("/", "or", cell_types[i])
 }
-rownames(meta_df) <- meta_names
-
-cell_names <- intersect(cell_names, rownames(meta_df))
-meta_df <- meta_df[cell_names, ]
-sc_df <- sc_df[, cell_names]
-
-cell_types <- meta_df$New_cellType
-names(cell_types) <- rownames(meta_df)
+names(cell_types) <- colnames(sc_df)
+cell_types <- as.factor(cell_types)
 
 removed_cells <- c()
 for (i in unique(cell_types)) {
@@ -123,7 +84,6 @@ for (i in unique(cell_types)) {
 }
 cell_types <- cell_types[!(names(cell_types) %in% removed_cells)]
 sc_df <- sc_df[, names(cell_types)]
-cell_types <- as.factor(cell_types)
 
 n_umi_sc <- colSums(sc_df)
 names(n_umi_sc) <- colnames(sc_df)
@@ -160,7 +120,7 @@ regions <- jsonlite::read_json(
 
 cluster_df <- filter(
     cluster_df,
-    clusters %in% regions[["cortex"]] | clusters %in% regions[["hippocampus"]] | clusters %in% regions[["!RCTD-cortex"]]
+    clusters %in% regions[["hypothalamus"]]
 )
 st_df <- st_df[, rownames(cluster_df)]
 coor_df <- coor_df[rownames(cluster_df), ]
@@ -176,7 +136,7 @@ for (i in names(rctd_obj@results)) {
     write.csv(
         rctd_obj@results[[i]],
         paste0(
-            WORKDIR, "results/RCTD/cortex/", idx, "/results/", i, ".csv"
+            WORKDIR, "results/RCTD/hypothalamus/", idx, "/results/", i, ".csv"
         )
     )
 }
