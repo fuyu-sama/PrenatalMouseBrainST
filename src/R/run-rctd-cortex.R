@@ -70,13 +70,15 @@ scale_method <- args[2]
 cluster_method <- args[3]
 
 # %% read sc data and build reference
-sc_df <- as.data.frame(Seurat::Read10X_h5(
+sc_df <- as.data.frame(
+    Seurat::Read10X_h5(
         paste0(
             Sys.getenv("HOME"),
             "/Data/scRNAseq/2021_Nature_MolecularLogicMouseBrain/COUNT/",
             sc_list[[idx]]
         )
-        ))
+    )
+)
 cell_names <- c()
 for (i in strsplit(colnames(sc_df), "-")) {
     cell_names <- c(cell_names, paste0(timepoint_list[[idx]], i[1]))
@@ -153,7 +155,7 @@ regions <- jsonlite::read_json(
 
 cluster_df <- filter(
     cluster_df,
-    clusters %in% regions[["cortex"]] | clusters %in% regions[["hippocampus"]] | clusters %in% regions[["!RCTD"]]
+    clusters %in% regions[["cortex"]] | clusters %in% regions[["hippocampus"]] | clusters %in% regions[["!RCTD-cortex"]]
 )
 st_df <- st_df[, rownames(cluster_df)]
 coor_df <- coor_df[rownames(cluster_df), ]
@@ -169,7 +171,7 @@ for (i in names(rctd_obj@results)) {
     write.csv(
         rctd_obj@results[[i]],
         paste0(
-            WORKDIR, "results/RCTD/", idx, "/results/", i, ".csv"
+            WORKDIR, "results/RCTD/cortex/", idx, "/results/", i, ".csv"
         )
     )
 }
