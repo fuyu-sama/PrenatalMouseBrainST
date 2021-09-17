@@ -59,7 +59,7 @@ if (is.na(idx) | is.na(scale_method) | is.na(cluster_method)) {
 }
 
 # %% read sc data and build reference
-if (!(idx %in% names(sc_list))) exit(save = "no", status = 404)
+if (!(idx %in% names(sc_list))) quit(save = "no", status = 404)
 seurat_obj <- readRDS(
     paste0(
         Sys.getenv("HOME"),

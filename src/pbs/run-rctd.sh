@@ -1,12 +1,12 @@
-#PBS -N pipeline-2
-#PBS -l nodes=1:ppn=10
+#PBS -N RCTD
+#PBS -l nodes=1:ppn=20
 #PBS -l walltime=240:00:00
 
 PYTHON_PATH=$HOME/workspace/mouse-brain-full/venv/bin/python
 
 cd $HOME/workspace/mouse-brain-full
 
-for region in hypothalamus, cortex; do
+for region in hypothalamus cortex; do
     if [ ! -d results/RCTD/${region} ]; then
         mkdir results/RCTD/${region}
     fi
@@ -22,7 +22,7 @@ for region in hypothalamus, cortex; do
         Rscript src/R/run-rctd-${region}.R ${idx} combat sc3;
 
         exit_status=$?
-        if [ $exit_status -ne 404 ]; then
+        if [ $exit_status -eq 0 ]; then
             ${PYTHON_PATH} src/py/draw-rctd.py ${idx} ${region};
         fi
         )&

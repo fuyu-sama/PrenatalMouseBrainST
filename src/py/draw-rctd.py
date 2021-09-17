@@ -120,7 +120,7 @@ for i in range(len(all_types)):
     )
 ax.set_title(f"{idx} first type")
 ax.legend(fontsize=16, markerscale=2, loc="upper left", bbox_to_anchor=(1.05, 1))
-fig.savefig(Path.joinpath(WORKDIR, f"results/RCTD/region/{idx}/first_type.jpg"), bbox_inches="tight")
+fig.savefig(Path.joinpath(WORKDIR, f"results/RCTD/{region}/{idx}/first_type.jpg"), bbox_inches="tight")
 plt.close(fig)
 
 # %% draw second type
