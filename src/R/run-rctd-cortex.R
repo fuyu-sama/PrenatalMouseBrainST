@@ -76,7 +76,7 @@ sc_df <- as.data.frame(Seurat::Read10X_h5(
             "/Data/scRNAseq/2021_Nature_MolecularLogicMouseBrain/COUNT/",
             sc_list[[idx]]
         )
-))
+        ))
 cell_names <- c()
 for (i in strsplit(colnames(sc_df), "-")) {
     cell_names <- c(cell_names, paste0(timepoint_list[[idx]], i[1]))
@@ -88,7 +88,7 @@ meta_df <- read.delim(
         Sys.getenv("HOME"),
         "/Data/scRNAseq/2021_Nature_MolecularLogicMouseBrain/META/",
         "metaData_scDevSC.txt"
-    ),
+        ),
     row.names = 1, check.names = FALSE
 )
 meta_names <- c()
@@ -151,7 +151,10 @@ regions <- jsonlite::read_json(
     simplifyVector = TRUE
     )$regions
 
-cluster_df <- filter(cluster_df, clusters %in% regions$cortex | clusters %in% regions$hippocampus)
+cluster_df <- filter(
+    cluster_df,
+    clusters %in% regions[["cortex"]] | clusters %in% regions[["hippocampus"]] | clusters %in% regions[["!RCTD"]]
+)
 st_df <- st_df[, rownames(cluster_df)]
 coor_df <- coor_df[rownames(cluster_df), ]
 
