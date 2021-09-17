@@ -106,6 +106,13 @@ regions_path = Path.joinpath(
     WORKDIR, f"results/cluster/{scale_method}-{cluster_method}/regions.json")
 with open(regions_path) as f:
     regions = json.load(f)["regions"]
+remove_regions = []
+for i in regions:
+    if i[0] == "!":
+        remove_regions.append(i)
+for i in remove_regions:
+    del regions[i]
+
 regions_label = {j: i for i, j in enumerate(regions)}
 in_regions = [j for i in regions.values() for j in i]
 others = [
@@ -133,6 +140,8 @@ for region in regions:
         try:
             de_df = pd.read_csv(de_path, index_col=0, header=0)
         except FileNotFoundError:
+            continue
+        if de_df.shape[0] <= 0:
             continue
         de_df = de_df[(de_df["avg_log2FC"] > 0) & (de_df["p_val_adj"] <= 0.01)]
         de_df = de_df.sort_values(by="avg_log2FC", ascending=False)
@@ -189,7 +198,9 @@ for region in regions:
     hm = ax_heatmap.imshow(draw_df, cmap="bwr", aspect="auto", vmin=-3, vmax=3)
     plt.setp(ax_heatmap.get_xticklabels(), rotation=90, fontsize=10)
     ax_heatmap.set_xlabel(f"DEG in {region}: {draw_df.shape}")
-    ax_heatmap.set_xticks([])
+    # ax_heatmap.set_xticks([])
+    ax_heatmap.set_xticks(range(len(up_genes)))
+    ax_heatmap.set_xticklabels(up_genes)
     ax_heatmap.xaxis.set_label_position("top")
     ax_cluster.pcolor(
         np.array(pcolor_list).reshape([len(pcolor_list), 1]),
@@ -235,6 +246,8 @@ for region in regions:
         try:
             de_df = pd.read_csv(de_path, index_col=0, header=0)
         except FileNotFoundError:
+            continue
+        if de_df.shape[0] <= 0:
             continue
         de_df = de_df[(de_df["avg_log2FC"] < 0) & (de_df["p_val_adj"] <= 0.01)]
         de_df = de_df.sort_values(by="avg_log2FC", ascending=False)
@@ -291,7 +304,9 @@ for region in regions:
     hm = ax_heatmap.imshow(draw_df, cmap="bwr", aspect="auto", vmin=-3, vmax=3)
     plt.setp(ax_heatmap.get_xticklabels(), rotation=90, fontsize=10)
     ax_heatmap.set_xlabel(f"DEG in {region}: {draw_df.shape}")
-    ax_heatmap.set_xticks([])
+    # ax_heatmap.set_xticks([])
+    ax_heatmap.set_xticks(range(len(down_genes)))
+    ax_heatmap.set_xticklabels(down_genes)
     ax_heatmap.xaxis.set_label_position("top")
     ax_cluster.pcolor(
         np.array(pcolor_list).reshape([len(pcolor_list), 1]),

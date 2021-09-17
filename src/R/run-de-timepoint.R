@@ -70,17 +70,46 @@ if (!all(rownames(cluster_df) == colnames(read_df))) {
     stop("AssertionError")
 }
 
-seurat_obj <- CreateSeuratObject(read_df)
+# read genes from zzb
+de_region_df <- read.csv(
+    paste0(
+        WORKDIR, "/Data/genes_zzb.csv"
+        ),
+    check.names = FALSE
+)
+region_de_genes <- c()
+for (i in de_region_df) {
+    for (j in i) {
+        if (!(j == "" | j %in% region_de_genes)) region_de_genes <- c(region_de_genes, j)
+    }
+}
+
+region_exp_df <- read_df[region_de_genes, ]
+seurat_obj <- CreateSeuratObject(region_exp_df)
 seurat_obj <- SetIdent(seurat_obj, value = cluster_df[, 1])
 
 regions <- jsonlite::read_json(
     paste0(WORKDIR, "results/cluster/", scale_method, "-", cluster_method, "/regions.json"),
     simplifyVector = TRUE
-)$regions
+    )$regions
+regions <- regions[!grepl("!", names(regions))]
 
 # %% DGE
 de_list <- list()
 for (region in names(regions)) {
+    # read de genes from region specific dge analysis
+    #de_region_df <- read.csv(
+    #paste0(
+    #WORKDIR,
+    #"results/DE/", scale_method, "-", cluster_method,
+    #"/region-specific/DE-", region, ".csv"
+    #),
+    #check.names = FALSE, row.names = 1
+    #)
+    #region_de_genes <- rownames(filter(de_region_df, p_val_adj <= 0.01))
+    #region_exp_df <- read_df[region_de_genes, ]
+    #seurat_obj <- CreateSeuratObject(region_exp_df)
+    #seurat_obj <- SetIdent(seurat_obj, value = cluster_df[, 1])
     for (timepoint in names(timepoints)) {
         g <- paste(region, timepoint, sep = "-")
         print(g)
