@@ -39,6 +39,8 @@ sessionInfo()
 set.seed(42)
 
 sc_list <- list(
+    E135A = "GSM3890934_Hypothalamus_traject_E15_srt_annotated_wo_blood.rds",
+    E135B = "GSM3890934_Hypothalamus_traject_E15_srt_annotated_wo_blood.rds",
     E155A = "GSM3890934_Hypothalamus_traject_E15_srt_annotated_wo_blood.rds",
     E155B = "GSM3890934_Hypothalamus_traject_E15_srt_annotated_wo_blood.rds",
     E175A1 = "GSM3890935_Hypothalamus_traject_E17_srt_annotated_wo_blood.rds",
@@ -101,29 +103,7 @@ coor_df <- read.csv(
     check.names = FALSE, row.names = 1
 )
 
-cluster_df <- read.csv(
-    paste0(
-        WORKDIR,
-        "results/cluster/", scale_method, "-", cluster_method,
-        "/pattern/full-", cluster_method, ".csv"
-        ),
-    check.names = F, row.names = 1
-)
-cluster_df <- as.data.frame(cluster_df[colnames(st_df), ])
-rownames(cluster_df) <- colnames(st_df)
-colnames(cluster_df) <- "clusters"
-
-regions <- jsonlite::read_json(
-    paste0(WORKDIR, "results/cluster/", scale_method, "-", cluster_method, "/regions.json"),
-    simplifyVector = TRUE
-    )$regions
-
-cluster_df <- filter(
-    cluster_df,
-    clusters %in% regions[["hypothalamus"]]
-)
-st_df <- st_df[, rownames(cluster_df)]
-coor_df <- coor_df[rownames(cluster_df), ]
+st_df <- st_df[, rownames(coor_df)]
 
 n_umi_st <- colSums(st_df)
 puck <- SpatialRNA(coor_df, st_df, n_umi_st)
