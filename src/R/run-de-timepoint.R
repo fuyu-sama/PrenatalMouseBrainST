@@ -82,8 +82,7 @@ regions <- regions[!grepl("!", names(regions))]
 
 # %% DGE
 de_list <- list()
-#for (region in names(regions)) {
-for (region in colnames(de_region_df)) {
+for (region in names(regions)) {
     # read de genes from region specific dge analysis
     de_region_df <- read.csv(
         paste0(
@@ -94,7 +93,6 @@ for (region in colnames(de_region_df)) {
         check.names = FALSE, row.names = 1
     )
     region_de_genes <- rownames(filter(de_region_df, p_val_adj <= 0.01))
-    region_de_genes <- unique(de_region_df[[region]])
     region_exp_df <- read_df[region_de_genes, ]
     seurat_obj <- CreateSeuratObject(region_exp_df)
     seurat_obj <- SetIdent(seurat_obj, value = cluster_df[, 1])
