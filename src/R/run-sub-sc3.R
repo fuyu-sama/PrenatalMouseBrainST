@@ -104,6 +104,6 @@ write.csv(
     col_data,
     paste0(
         WORKDIR, "results/cluster/", scale_method,
-        "-sc3/sub-clusters/pattern", idx, "-", region, "-sc3.csv"
+        "-sc3/sub-clusters/pattern/", idx, "-", region, "-sc3.csv"
     )
 )

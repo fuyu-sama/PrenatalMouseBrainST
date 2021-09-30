@@ -66,16 +66,6 @@ for scale_method in combat; do
         (Rscript src/R/run-hierarchical.R \
             ${scale_method} ${cluster_method} &>> log/pipeline-3.log)&
 
-        # DE
-        (Rscript src/R/run-de-region.R \
-            ${scale_method} ${cluster_method} &>> log/pipeline-3.log;
-        ${PYTHON_PATH} src/py/draw-de-region.py \
-            ${scale_method} ${cluster_method} &>> log/pipeline-3.log;
-        Rscript src/R/run-de-timepoint.R \
-            ${scale_method} ${cluster_method} &>> log/pipeline-3.log;
-        ${PYTHON_PATH} src/py/draw-de-timepoint.py \
-            ${scale_method} ${cluster_method} &>> log/pipeline-3.log)&
-
         # sub-clustering
         for idx in E135A E135B E155A E155B E165A E165B E175A1 E175A2 E175B P0A1 P0A2; do
             for region in cortex hypothalamus; do
@@ -87,6 +77,17 @@ for scale_method in combat; do
             )&
             done
         done
+
+        # DE
+        (Rscript src/R/run-de-region.R \
+            ${scale_method} ${cluster_method} &>> log/pipeline-3.log;
+        ${PYTHON_PATH} src/py/draw-de-region.py \
+            ${scale_method} ${cluster_method} &>> log/pipeline-3.log;
+        Rscript src/R/run-de-timepoint.R \
+            ${scale_method} ${cluster_method} &>> log/pipeline-3.log;
+        ${PYTHON_PATH} src/py/draw-de-timepoint.py \
+            ${scale_method} ${cluster_method} &>> log/pipeline-3.log)&
+        wait $!
 
         # homer
         for region in cortex hippocampus hypothalamus thalamus amygdalar mge striatum; do
