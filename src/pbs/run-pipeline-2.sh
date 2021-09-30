@@ -89,4 +89,5 @@ for scale_method in seurat_integrate; do
     fi
 done
 
-echo "[`date +%Y.%m.%d\ %H:%M:%S`] Pipeline-2 finished. Waiting for manual check."
+echo "[`date +%Y.%m.%d\ %H:%M:%S`] Pipeline-2 finished."
+echo "[`date +%Y.%m.%d\ %H:%M:%S`] Manually check clustering result and run merge-clusters.py"
