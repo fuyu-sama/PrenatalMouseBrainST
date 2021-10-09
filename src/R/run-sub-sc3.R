@@ -49,10 +49,10 @@ if (is.na(idx) | is.na(scale_method) | is.na(region)) {
 
 # %% read data
 count_path <- paste0(WORKDIR, "Data/scale_df/raw/", idx, "-raw.csv")
-sct_path <- paste0(
+scale_path <- paste0(
     WORKDIR, "Data/scale_df/", scale_method, "/", idx, "-", scale_method, ".csv")
 count_df <- read.csv(count_path, check.names = FALSE, row.names = 1)
-scale_df <- read.csv(sct_path, check.names = FALSE, row.names = 1)
+scale_df <- read.csv(scale_path, check.names = FALSE, row.names = 1)
 
 # %% read cluster results
 cluster_df <- read.csv(
@@ -74,7 +74,7 @@ regions <- jsonlite::read_json(
 
 # %% subclustering
 region_label <- c()
-for (i in regions[["cortex"]]) {
+for (i in regions[[region]]) {
     if (grepl(idx, i)) region_label <- c(region_label, i)
 }
 
