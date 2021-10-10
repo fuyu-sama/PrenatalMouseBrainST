@@ -90,6 +90,7 @@ fig, ax = plt.subplots(2, 4, figsize=(40, 20))
 for i, j in zip(range(2, 10), ax.flatten()):
     j.axis("off")
     j.imshow(he_image)
+    j.set_title(f"{idx} {region} K = {i}")
     j.scatter(
         coor_df["X"],
         coor_df["Y"],
