@@ -35,6 +35,7 @@ from pathlib import Path
 import pandas as pd
 import session_info
 from matplotlib import pyplot as plt
+from matplotlib.colors import ListedColormap
 from PIL import Image
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
@@ -95,6 +96,7 @@ for i, j in zip(range(2, 10), ax.flatten()):
         coor_df["X"],
         coor_df["Y"],
         c=cluster_df[f"sc3_{i}_clusters"],
+        cmap=ListedColormap(colors),
         s=16,
         alpha=0.7,
     )
