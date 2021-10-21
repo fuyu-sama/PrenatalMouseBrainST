@@ -84,8 +84,8 @@ coor_path = Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv")
 coor_df = pd.read_csv(coor_path, index_col=0, header=0)
 
 # %% genarate pseudo points
-f = open("results/dbscan.csv")
-f.write("gene,chi2,df,chi2_pvalue,chi2_r_pvalue\n")
+f = open("results/dbscan.csv", "w")
+f.write("gene,chi2,df,chi2_pvalue\n")
 for gene in count_df.columns:
     meta_dist = min(pdist(coor_df))
     sigma = meta_dist / 3
@@ -110,6 +110,6 @@ for gene in count_df.columns:
 
     pp = PointPattern(pseudo_point)
     q_h = qs.QStatistic(pp, shape="hexagon")
-    f.write(f"{gene},{q_h.chi2},{q_h.df},{q_h.chi2_pvalue},{q_h.chi2_r_pvalue}\n")
+    f.write(f"{gene},{q_h.chi2},{q_h.df},{q_h.chi2_pvalue}\n")
 
 f.close()
