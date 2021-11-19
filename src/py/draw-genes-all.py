@@ -122,11 +122,11 @@ def draw_genes(range_list: list) -> None:
                 cmap="autumn_r",
                 s=16,
                 alpha=0.7,
-                vmax=count_df[gene].quantile(0.99) + 1,
+                vmax=count_df[gene].max() + 1,
                 vmin=0,
             )
             fig.colorbar(sc, ax=ax)
-        fig.savefig(Path.joinpath(WORKDIR, f"draw_genes/all/{gene}.jpg"))
+        fig.savefig(Path.joinpath(WORKDIR, f"draw_genes/all-raw/{gene}.jpg"))
         plt.close(fig)
 
 
