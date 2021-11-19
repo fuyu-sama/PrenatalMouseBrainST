@@ -36,8 +36,8 @@ from pathlib import Path
 import pandas as pd
 import session_info
 from matplotlib import pyplot as plt
-
-import densne
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 session_info.show()
@@ -53,7 +53,7 @@ idx_full = {
     "E175A1": "V10M17-101-E175A1",
     "E175A2": "V10M17-101-E175A2",
     "E175B": "V10M17-085-E175B",
-    "P0B": "V10M17-100-P0B",
+    # "P0B": "V10M17-100-P0B",
     "P0A1": "V10M17-101-P0A1",
     "P0A2": "V10M17-101-P0A2",
 }
@@ -107,16 +107,16 @@ others = [
 ]
 
 # %% densne
-result_densne = densne.run_densne(count_full_df)[0]
+result_tsne = TSNE().fit_transform(PCA(n_components=40).fit_transform(count_full_df))
 result_df = pd.DataFrame(
-    result_densne,
+    result_tsne,
     index=count_full_df.index,
     columns=["X", "Y"],
 )
 result_df.to_csv(
     Path.joinpath(
         WORKDIR,
-        f"results/dimension_reduction/{scale_method}-{cluster_method}/densne-{scale_method}.csv"
+        f"results/dimension_reduction/{scale_method}-{cluster_method}/tsne-{scale_method}.csv"
     ))
 
 # %% color by region
@@ -147,11 +147,11 @@ for region, c in zip(regions, colors):
         s=2,
     )
 ax.legend(loc="best", fontsize=16, markerscale=10)
-ax.set_title(f"densne {scale_method}")
+ax.set_title(f"tSNE {scale_method}")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        f"results/dimension_reduction/{scale_method}-{cluster_method}/densne-{scale_method}-1.jpg"
+        f"results/dimension_reduction/{scale_method}-{cluster_method}/tsne-{scale_method}-1.jpg"
     ))
 plt.close(fig)
 
@@ -169,11 +169,11 @@ for tp, c in zip(idx_full.keys(), colors):
         s=2,
     )
 ax.legend(loc="best", fontsize=16, markerscale=10, ncol=2)
-ax.set_title(f"densne {scale_method}")
+ax.set_title(f"tSNE {scale_method}")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        f"results/dimension_reduction/{scale_method}-{cluster_method}/densne-{scale_method}-2.jpg"
+        f"results/dimension_reduction/{scale_method}-{cluster_method}/tsne-{scale_method}-2.jpg"
     ))
 plt.close(fig)
 
@@ -193,6 +193,6 @@ for gene in count_full_df.columns:
     fig.savefig(
         Path.joinpath(
             WORKDIR,
-            f"draw_genes/{scale_method}-densne/{gene}.jpg"
+            f"draw_genes/{scale_method}-tsne/{gene}.jpg"
         ))
     plt.close(fig)
