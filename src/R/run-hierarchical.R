@@ -68,11 +68,16 @@ regions <- jsonlite::read_json(
     )$regions
 
 # %% build mean_df
+regions <- regions[names(regions) != "amygdalar.olfactory"]
 mean_df <- data.frame(row.names = rownames(read_df))
 for (cluster in unique(cluster_df[, 1])) {
     subset_df <- filter(cluster_df, clusters == cluster)
     subset_df <- read_df[, rownames(subset_df)]
-    mean_df[, cluster] <- rowMeans(subset_df)
+    if (is.null(dim(subset_df))) {
+        mean_df[, cluster] <- mean(subset_df)
+    } else {
+        mean_df[, cluster] <- rowMeans(subset_df)
+    }
 }
 in_regions <- c()
 for (i in regions) {
@@ -85,10 +90,7 @@ regions_label <- list(
     cortex = 1,
     hippocampus = 2,
     thalamus = 3,
-    hypothalamus = 4,
-    striatum = 5,
-    mge = 6,
-    amygdalar = 7
+    hypothalamus = 4
 )
 tip_color <- c()
 for (i in colnames(mean_df)) {
@@ -97,7 +99,7 @@ for (i in colnames(mean_df)) {
         for (k in regions[[j]]) {
             if (i == k) {
                 tip_color <- c(tip_color, regions_label[[j]])
-                flag = 0
+                flag <- 0
             }
         }
     }
@@ -106,12 +108,12 @@ for (i in colnames(mean_df)) {
     }
 }
 names(tip_color) <- colnames(mean_df)
-colors = c("violet", "peru", "red", "blue", "green", "skyblue", "yellowgreen", "orange", "black")
+colors <- c("violet", "peru", "red", "blue", "green")
 hc <- hclust(dist(t(mean_df)))
 jpeg(
     paste0(
         WORKDIR, "results/cluster/", scale_method, "-", cluster_method, "/hierarchical.jpg"
-    ),
+        ),
     width = 1500, height = 1500
 )
 par(cex = 1.5)

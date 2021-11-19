@@ -1,4 +1,4 @@
-#PBS -N pipeline-2
+#PBS -N pipeline-3
 #PBS -l nodes=1:ppn=20
 #PBS -l walltime=240:00:00
 
@@ -21,31 +21,26 @@ for region in hypothalamus cortex; do
 
             source hdf5-1.12.0.sh
             Rscript src/R/run-rctd-${region}.R \
-                ${idx} combat sc3 &>> log/pipeline-3.log;
+                ${idx} combat-qq-pattern sc3 &>> log/pipeline-3.log;
 
-            exit_status=$?
-            if [ $exit_status -eq 0 ]; then
-                ${PYTHON_PATH} src/py/draw-rctd.py \
-                    ${idx} ${region} & >> log/pipeline-3.log;
-            fi
+            ${PYTHON_PATH} src/py/draw-rctd.py \
+                ${idx} ${region} combat-qq-logcpm sc3 &>> log/pipeline-3.log;
         )&
     done
 done
 
-for scale_method in combat; do
+for scale_method in combat-qq-logcpm; do
     for cluster_method in sc3; do
         if [ ! -d results/cluster/${scale_method}-${cluster_method}/region ]; then
             mkdir results/cluster/${scale_method}-${cluster_method}/region
         fi
 
-        if [ ! -d results/cluster/${scale_method}-${cluster_method}/sub-clusters ]; then
-            mkdir results/cluster/${scale_method}-${cluster_method}/sub-clusters
-            mkdir results/cluster/${scale_method}-${cluster_method}/sub-clusters/pattern
-            mkdir results/cluster/${scale_method}-${cluster_method}/sub-clusters/together
-        fi
-
         if [ ! -d results/dimension_reduction/${scale_method}-${cluster_method} ]; then
             mkdir results/dimension_reduction/${scale_method}-${cluster_method}
+        fi
+
+        if [ ! -d draw_genes/${scale_method}-tsne ]; then
+            mkdir draw_genes/${scale_method}-tsne
         fi
 
         if [ ! -d results/DE/${scale_method}-${cluster_method} ]; then
@@ -66,18 +61,6 @@ for scale_method in combat; do
         (Rscript src/R/run-hierarchical.R \
             ${scale_method} ${cluster_method} &>> log/pipeline-3.log)&
 
-        # sub-clustering
-        for idx in E135A E135B E155A E155B E165A E165B E175A1 E175A2 E175B P0A1 P0A2; do
-            for region in cortex hypothalamus; do
-            (
-                Rscript src/R/run-sub-sc3.R \
-                    ${idx} ${scale_method} ${region} &>> log/pipeline-3.log;
-                ${PYTHON_PATH} src/py/draw-sub-sc3.py \
-                    ${idx} ${scale_method} ${region} &>> log/pipeline-3.log;
-            )&
-            done
-        done
-
         # DE
         (Rscript src/R/run-de-region.R \
             ${scale_method} ${cluster_method} &>> log/pipeline-3.log;
@@ -90,7 +73,7 @@ for scale_method in combat; do
         wait $!
 
         # homer
-        for region in cortex hippocampus hypothalamus thalamus amygdalar mge striatum; do
+        for region in cortex hippocampus hypothalamus thalamus "amygdalar.olfactory"; do
         (
             source homer-4.11.sh;
             ${PYTHON_PATH} src/py/run-id-transfer.py \
@@ -111,3 +94,5 @@ for scale_method in combat; do
     done
 done
 wait
+
+echo "[`date +%Y.%m.%d\ %H:%M:%S`] Pipeline-3 finished."

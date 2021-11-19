@@ -52,7 +52,7 @@ idx_full = {
     "E175A1": "V10M17-101-E175A1",
     "E175A2": "V10M17-101-E175A2",
     "E175B": "V10M17-085-E175B",
-    "P0B": "V10M17-100-P0B",
+    # "P0B": "V10M17-100-P0B",
     "P0A1": "V10M17-101-P0A1",
     "P0A2": "V10M17-101-P0A2",
 }
@@ -127,7 +127,7 @@ for region in regions:
 # x_ticks genes
 gene_ticks = []
 gene_tick_labels = []
-wanted = ["Neurog2", "Sox11", "Tmem132b", "Otp", "Sox2", "Zbtb20", "Satb2"]
+wanted = ["Tbr1", "Satb2", "Zbtb20", "Calb2", "Nefm", "Neurod1", "Sox2", "Pou3f1"]
 for i in range(len(up_genes)):
     if up_genes[i] in wanted:
         gene_ticks.append(i)
@@ -142,13 +142,17 @@ for c in regions:
 flag = len(regions)
 for c in others:
     draw_cluster.replace(c, flag, inplace=True)
-    # flag += 1
 for c, i in zip(regions, range(len(regions))):
     c_len = draw_cluster[draw_cluster == c].shape[0]
     region_ticks.append(c_len / 2 + sum(length[:i + 1]))
     length.append(c_len)
     draw_cluster.replace(c, regions_label[c], inplace=True)
 draw_cluster.sort_values(inplace=True)
+drop_others = []
+for i in draw_cluster.index:
+    if draw_cluster[i] == flag:
+        drop_others.append(i)
+draw_cluster.drop(drop_others, inplace=True)
 
 # build draw_df
 draw_df = count_full_df.reindex(draw_cluster.index, axis="index")
@@ -174,8 +178,6 @@ plt.setp(ax_heatmap.get_xticklabels(), rotation=90, fontsize=10)
 ax_heatmap.set_xlabel("Differential Expression Genes")
 ax_heatmap.set_xticks(gene_ticks)
 ax_heatmap.set_xticklabels(gene_tick_labels)
-# ax_heatmap.set_xticks(range(len(up_genes)))
-# ax_heatmap.set_xticklabels(up_genes)
 ax_heatmap.xaxis.set_label_position("top")
 ax_cluster.pcolor(
     draw_cluster.to_numpy().reshape([len(draw_cluster), 1]),
@@ -224,7 +226,7 @@ for region in regions:
 # x_ticks genes
 gene_ticks = []
 gene_tick_labels = []
-wanted = ["Neurog2", "Sox11", "Tmem132b", "Otp", "Sox2", "Zbtb20", "Satb2"]
+wanted = ["Tbr1", "Satb2", "Zbtb20", "Calb2", "Nefm", "Neurod1", "Sox2", "Pou3f1"]
 for i in range(len(down_genes)):
     if down_genes[i] in wanted:
         gene_ticks.append(i)
@@ -246,6 +248,11 @@ for c, i in zip(regions, range(len(regions))):
     length.append(c_len)
     draw_cluster.replace(c, regions_label[c], inplace=True)
 draw_cluster.sort_values(inplace=True)
+drop_others = []
+for i in draw_cluster.index:
+    if draw_cluster[i] == flag:
+        drop_others.append(i)
+draw_cluster.drop(drop_others, inplace=True)
 
 # build draw_df
 draw_df = count_full_df.reindex(draw_cluster.index, axis="index")

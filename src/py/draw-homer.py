@@ -52,7 +52,7 @@ idx_full = {
     "E175A1": "V10M17-101-E175A1",
     "E175A2": "V10M17-101-E175A2",
     "E175B": "V10M17-085-E175B",
-    "P0B": "V10M17-100-P0B",
+    # "P0B": "V10M17-100-P0B",
     "P0A1": "V10M17-101-P0A1",
     "P0A2": "V10M17-101-P0A2",
 }
@@ -85,7 +85,7 @@ try:
     scale_method = sys.argv[1]
     cluster_method = sys.argv[2]
 except IndexError:
-    scale_method = "combat"
+    scale_method = "combat-qq-logcpm"
     cluster_method = "sc3"
 
 # %% read count data
