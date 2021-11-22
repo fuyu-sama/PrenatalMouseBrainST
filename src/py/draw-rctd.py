@@ -72,7 +72,7 @@ try:
 except IndexError:
     idx = "E165A"
     region = "cortex"
-    scale_method = "combat"
+    scale_method = "combat-qq-logcpm"
     cluster_method = "sc3"
 
 # %% read data
@@ -95,7 +95,9 @@ regions_path = Path.joinpath(
     WORKDIR, f"results/cluster/{scale_method}-{cluster_method}/regions.json")
 with open(regions_path) as f:
     regions = json.load(f)["regions"]
-in_region = [i for i in cluster_df if (idx in i and i in regions[region])]
+in_region = [
+    i for i in cluster_df.index if (idx in i and cluster_df.loc[i, f"{cluster_method}_clusters"] in regions[region])
+]
 
 results_path = Path.joinpath(
     WORKDIR, f"results/RCTD/{region}/{idx}/results/results_df.csv")
