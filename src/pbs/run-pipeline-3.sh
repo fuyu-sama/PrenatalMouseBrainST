@@ -25,6 +25,8 @@ for region in hypothalamus cortex; do
 
             ${PYTHON_PATH} src/py/draw-rctd.py \
                 ${idx} ${region} combat-qq-logcpm sc3 &>> log/pipeline-3.log;
+            ${PYTHON_PATH} src/py/draw-rctd-IE.py \
+                ${idx} ${region} combat-qq-logcpm sc3 &>> log/pipeline-3.log;
         )&
     done
 done
