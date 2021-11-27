@@ -66,10 +66,12 @@ colors = [
 
 try:
     idx = sys.argv[1]
+    region = sys.argv[2]
     scale_method = sys.argv[3]
     cluster_method = sys.argv[4]
 except IndexError:
-    idx = "E155B"
+    idx = "E175A1"
+    region = "cortex"
     scale_method = "combat-qq-logcpm"
     cluster_method = "sc3"
 
@@ -94,15 +96,14 @@ regions_path = Path.joinpath(
 with open(regions_path) as f:
     regions = json.load(f)["regions"]
 in_region = [
-    i for i in cluster_df.index if (idx in i and cluster_df.loc[
-        i, f"{cluster_method}_clusters"] in regions["hypothalamus"])
+    i for i in cluster_df.index if (idx in i and cluster_df.loc[i, f"{cluster_method}_clusters"] in regions[region])
 ]
 
 results_path = Path.joinpath(
-    WORKDIR, f"results/RCTD/hypothalamus/{idx}/results/results_df.csv")
+    WORKDIR, f"results/RCTD/{region}/{idx}/results/results_df.csv")
 results_df = pd.read_csv(results_path, index_col=0, header=0)
 weights_path = Path.joinpath(
-    WORKDIR, f"results/RCTD/hypothalamus/{idx}/results/weights.csv")
+    WORKDIR, f"results/RCTD/{region}/{idx}/results/weights.csv")
 weights_df = pd.read_csv(weights_path, index_col=0, header=0)
 
 coor_df = coor_df.reindex(index=in_region)
@@ -110,40 +111,42 @@ results_df = results_df.reindex(index=in_region)
 weights_df = weights_df.reindex(index=in_region)
 
 # %% draw weight
+wanted_types = {
+    "Excitatory.neurons": "#D8BFD8",
+    "Inhibitory.neurons": "#7FFFD4",
+    "Radial.glia.or.Progenitors": "#B8860B",
+    "Vascular.endothelial.cells": "#CB1B45",
+    "Tanycytes.α": "#6495ED",
+    "Tanycytes.β": "#6495ED",
+} if region == "hypothalamus" else {
+    "Immature.neurons": "#D8BFD8",
+    "Migrating.neurons": "#7FFFD4",
+    "Interneurons": "#B8860B",
+    "CThPN": "#CB1B45",
+    "DL.CPN": "#6495ED",
+    "Layer.4": "#00FF00",
+    "SCPN": "#FFD700",
+}
+weights_df = weights_df.reindex(columns=wanted_types.keys())
+weights_df = weights_df.dropna(axis=1)
 fig, ax = plt.subplots(figsize=(15, 10))
-ax.axis("off")
 ax.imshow(he_image)
-draw_weights = weights_df[
-    weights_df["Excitatory.neurons"] >= weights_df["Inhibitory.neurons"]]
-sc = ax.scatter(
-    coor_df["X"].reindex(index=draw_weights.index),
-    coor_df["Y"].reindex(index=draw_weights.index),
-    c=draw_weights["Excitatory.neurons"],
-    cmap="autumn_r",
-    s=16,
-    alpha=0.7,
-    vmin=0,
-    vmax=0.6,
-)
-cb = fig.colorbar(sc, ax=ax, location="left")
-cb.set_label("Excitatory neurons")
-draw_weights = weights_df[
-    weights_df["Excitatory.neurons"] < weights_df["Inhibitory.neurons"]]
-sc = ax.scatter(
-    coor_df["X"].reindex(index=draw_weights.index),
-    coor_df["Y"].reindex(index=draw_weights.index),
-    c=draw_weights["Inhibitory.neurons"],
-    cmap="winter_r",
-    s=16,
-    alpha=0.7,
-    vmin=0,
-    vmax=0.6,
-)
-cb = fig.colorbar(sc, ax=ax, location="right")
-cb.set_label("Inhibitory neurons")
+ax.axis("off")
 ax.set_title(idx)
-fig.savefig(Path.joinpath(
-    WORKDIR,
-    f"results/RCTD/hypothalamus/{idx}/IE-neurons.jpg",
-))
-plt.close(fig)
+for i in weights_df.columns:
+    draw_spots = []
+    for j in weights_df.index:
+        if weights_df.loc[j, i] == weights_df.T.max()[j]:
+            draw_spots.append(j)
+    sc = ax.scatter(
+        coor_df["X"].reindex(index=draw_spots),
+        coor_df["Y"].reindex(index=draw_spots),
+        s=16,
+        c=wanted_types[i],
+        label=i,
+    )
+fig.legend(fontsize=16, markerscale=3)
+fig.savefig(
+    Path.joinpath(WORKDIR, f"results/RCTD/{region}/{idx}/types.jpg"),
+    bbox_inches="tight",
+)
