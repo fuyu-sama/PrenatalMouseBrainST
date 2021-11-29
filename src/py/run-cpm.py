@@ -69,15 +69,23 @@ for idx in idx_full:
     count_df.index = [f"{idx}_{i}" for i in count_df.index]
     coor_df.index = [f"{idx}_{i}" for i in coor_df.index]
     assert all(coor_df.index == count_df.index)
+
+    temp_df = count_df.where(count_df < 1, 1)
+    temp_series = temp_df.sum() / temp_df.shape[0]
+    drop_genes = []
+    for i in temp_series.index:
+        if temp_series[i] < 0.01:
+            drop_genes.append(i)
+    count_df.drop(columns=drop_genes, inplace=True)
+
+    drop_genes = []
+    for i in count_df.columns:
+        if sum(count_df[i]) <= 10:
+            drop_genes.append(i)
+    count_df.drop(columns=drop_genes, inplace=True)
+
     count_full_df = pd.concat([count_full_df, count_df], axis=0, join="outer")
     coor_df.to_csv(Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv"))
-
-# %% drop low
-drop_genes = []
-for i in count_full_df.columns:
-    if sum(count_full_df[i]) <= 0:
-        drop_genes.append(i)
-count_full_df.drop(columns=drop_genes, inplace=True)
 
 # %% scale data
 scale_full_df = np.log(count_full_df.T * 10000 / count_full_df.T.sum() + 1)
