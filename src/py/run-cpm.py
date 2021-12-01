@@ -86,6 +86,7 @@ for idx in idx_full:
 
     count_full_df = pd.concat([count_full_df, count_df], axis=0, join="outer")
     coor_df.to_csv(Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv"))
+count_full_df.fillna(0, inplace=True)
 
 # %% scale data
 scale_full_df = np.log(count_full_df.T * 10000 / count_full_df.T.sum() + 1)
