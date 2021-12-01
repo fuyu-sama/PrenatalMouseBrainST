@@ -7,23 +7,24 @@ PYTHON_PATH=$HOME/workspace/mouse-brain-full/venv/bin/python
 cd $HOME/workspace/mouse-brain-full
 
 # scale data
-if false; then
-    echo "[`date +%Y.%m.%d\ %H:%M:%S`] Scaling data with combat and Seurat..."
-    for directory in raw logcpm combat seurat_integrate z_score; do
+if true; then
+    echo "[`date +%Y.%m.%d\ %H:%M:%S`] Scaling data with combat..."
+    for directory in raw logcpm combat combat-zjq; do
         if [ ! -d Data/scale_df/${directory} ]
         then
             mkdir Data/scale_df/${directory}
         fi
     done
     ${PYTHON_PATH} src/py/run-cpm.py &>> log/pipeline-2.log
-    (${PYTHON_PATH} src/py/run-combat.py &>> log/pipeline-2.log)&
-    (Rscript src/R/run-seurat_integrate.R &>> log/pipeline-2.log)&
-    wait
+    ${PYTHON_PATH} src/py/run-combat.py &>> log/pipeline-2.log
 fi
 
+# subsample
+${PYTHON_PATH} src/py/run-subsample.py &>> log/pipeline-2.log
+
 # cluster
-for scale_method in combat-qq-logcpm combat-qq-raw; do
-    if false; then
+for scale_method in combat-zjq combat; do
+    if true; then
         echo "[`date +%Y.%m.%d\ %H:%M:%S`] Clustering with KMeans on all features..."
         if [ ! -d results/cluster/${scale_method}-kmeans ]
         then
@@ -38,7 +39,7 @@ for scale_method in combat-qq-logcpm combat-qq-raw; do
         done
     fi
 
-    if false; then
+    if true; then
         echo "[`date +%Y.%m.%d\ %H:%M:%S`] Clustering with KMeans on PCA features..."
         if [ ! -d results/cluster/${scale_method}-pca-kmeans ]; then
             mkdir results/cluster/${scale_method}-pca-kmeans
@@ -52,7 +53,7 @@ for scale_method in combat-qq-logcpm combat-qq-raw; do
         done
     fi
 
-    if false; then
+    if true; then
         echo "[`date +%Y.%m.%d\ %H:%M:%S`] Clustering with KMeans on ICA features..."
         if [ ! -d results/cluster/${scale_method}-ica-kmeans ]; then
             mkdir results/cluster/${scale_method}-ica-kmeans
