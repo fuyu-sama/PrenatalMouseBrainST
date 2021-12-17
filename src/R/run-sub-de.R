@@ -31,11 +31,8 @@
 WORKDIR <- paste0(Sys.getenv("HOME"), "/workspace/mouse-brain-full/")
 renv::activate(WORKDIR)
 library(Seurat)
-library(dplyr)
-library(ggplot2)
 
 options(future.globals.maxSize = 1024 * 1024^2)
-sessionInfo()
 
 set.seed(42)
 args <- commandArgs(trailingOnly = TRUE)
@@ -74,5 +71,5 @@ write.csv(
     de,
     paste0(
         WORKDIR, "results/cluster/", scale_method, "-", cluster_method,
-        "/sub-cluster/tables/", idx, "-", region, "-de.csv"
+        "/sub-cluster/tables/", idx, "-", region, "-", ncs, "-de.csv"
     ))
