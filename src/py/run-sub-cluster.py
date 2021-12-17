@@ -38,7 +38,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
 from PIL import Image
-from sklearn.cluster import AgglomerativeClustering, KMeans
+from sklearn.cluster import KMeans
 
 from SpaGene.spagene import Spagene
 
@@ -60,10 +60,11 @@ idx_full = {
     "P0A2": "V10M17-101-P0A2",
 }
 colors = [
-    "#FAEBD7", "#00FFFF", "#FFD700", "#0000FF", "#FF8C00", "#EE82EE", "#9ACD32",
-    "#5F9EA0", "#7FFF00", "#7FFFD4", "#6495ED", "#008B8B", "#B8860B", "#C0C0C0",
-    "#000080", "#D8BFD8", "#00CED1", "#9400D3", "#8E804B", "#0089A7", "#CB1B45",
-    "#FFB6C1", "#00FF00", "#800000", "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
+    "#FAEBD7", "#00FFFF", "#FFD700", "#0000FF", "#FF8C00", "#EE82EE",
+    "#9ACD32", "#5F9EA0", "#7FFF00", "#7FFFD4", "#6495ED", "#008B8B",
+    "#B8860B", "#C0C0C0", "#000080", "#D8BFD8", "#00CED1", "#9400D3",
+    "#8E804B", "#0089A7", "#CB1B45", "#FFB6C1", "#00FF00", "#800000",
+    "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
 ]
 
 try:
@@ -139,7 +140,7 @@ spagenes = Spagene(
     coordinate_df=coor_df,
     expression_df=count_df,
     genes=count_df.columns,
-    cores=20,
+    cores=8,
     k=8,
 )
 spagenes = spagenes[spagenes["adjusted_p_value"] < 0.05]
@@ -147,7 +148,6 @@ spagenes = spagenes[spagenes["adjusted_p_value"] < 0.05]
 # %%
 cluster_result = pd.DataFrame(index=coor_df.index)
 count_df_1 = count_df.reindex(columns=spagenes.index)
-count_df_1.reindex(columns=spagenes.index)
 fig, axes = plt.subplots(1, 5, figsize=(50, 10))
 [ax.axis("off") for ax in axes.flatten()]
 [ax.imshow(he_image) for ax in axes.flatten()]
@@ -159,7 +159,7 @@ for n, ax in enumerate(axes.flatten()):
         draw_df = coor_df.reindex(index=[
             j for j in cluster_result[n + 2].index
             if i == cluster_result.loc[j, n + 2]
-        ],)
+        ], )
         ax.scatter(
             draw_df["X"],
             draw_df["Y"],
@@ -194,41 +194,39 @@ for ncs in range(2, n + 3):
     de_df_1 = pd.read_csv(
         Path.joinpath(
             WORKDIR,
-            f"results/cluster/{scale_method}-{cluster_method}/sub-cluster/tables/{idx}-{region}-de.csv"
+            f"results/cluster/{scale_method}-{cluster_method}/sub-cluster/tables/{idx}-{region}-{ncs}-de.csv"
         ),
         index_col=0,
         header=0,
     )
-    de_df_1 = de_df_1[(de_df_1["avg_log2FC"] < 0) & (de_df_1["p_val_adj"] <= 0.01)]
-    de_df_1 = de_df_1.sort_values(by="cluster", ascending=True)
+    de_df_1 = de_df_1[(de_df_1["avg_log2FC"] > 0) & (de_df_1["p_val_adj"] <= 0.01)]
+    de_df_1 = de_df_1.sort_values(
+        by=["cluster", "avg_log2FC"],
+        ascending=[True, False],
+    )
 
     draw_cluster = cluster_result[ncs].sort_values(ascending=True)
 
+    draw_genes = []
+    [draw_genes.append(i) for i in de_df_1["gene"] if i not in draw_genes]
+
     draw_df = count_df_1.reindex(
-        columns=set(de_df_1["gene"]),
+        columns=draw_genes,
         index=draw_cluster.index,
     )
     draw_df = (draw_df - draw_df.mean()) / draw_df.std()
 
-    try:
-        clustering = pd.DataFrame(
-            AgglomerativeClustering(n_clusters=4).fit_predict(draw_df.T),
-            index=draw_df.columns,
-        ).sort_values(by=0)
-        draw_df = draw_df.reindex(columns=clustering.index)
-    except:
-        continue
-
     left, bottom = 0.1, 0.1
-    width, height = 1.0, 0.4
+    width, height = 0.8, 0.4
     spacing, cluster_width = 0.02, 0.01
     rect_he = [left, bottom + height + spacing, height, height]
     rect_heatmap = [
-        left + height * 0.8 + spacing * 2, bottom + height + spacing, width, height
+        left + height * 0.9 + spacing * 2, bottom + height + spacing, width,
+        height
     ]
     rect_cluster = [
-        left + height * 0.8 + spacing * 1, bottom + height + spacing, cluster_width,
-        height
+        left + height * 0.9 + spacing * 1, bottom + height + spacing,
+        cluster_width, height
     ]
     fig = plt.figure(figsize=(30, 25))
     ax_he = fig.add_axes(rect_he)
@@ -240,10 +238,10 @@ for ncs in range(2, n + 3):
 
     ax_he.imshow(he_image)
     ax_he.scatter(
-        coor_df["X"],
-        coor_df["Y"],
+        coor_df["X"].reindex(index=draw_cluster.index),
+        coor_df["Y"].reindex(index=draw_cluster.index),
         s=16,
-        c=cluster_result[ncs],
+        c=draw_cluster,
         cmap=ListedColormap(colors[:ncs]),
     )
     ax_he.set_title(f"n_clusters = {ncs}")
