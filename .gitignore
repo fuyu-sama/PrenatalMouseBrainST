@@ -6,6 +6,7 @@ Data
 renv.lock
 !.gitignore
 !/src/
+!/src/test-scripts/
 !/src/pbs/
 !/src/py/
 !/src/R/
