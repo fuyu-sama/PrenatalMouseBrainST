@@ -29,14 +29,13 @@
 #
 
 # %% environment config
+import os
 import sys
 from pathlib import Path
 
 import pandas as pd
+from matplotlib_venn import venn2
 from matplotlib import pyplot as plt
-from matplotlib.colors import ListedColormap
-from PIL import Image
-from sklearn.cluster import KMeans
 
 from SpaGene.spagene import Spagene
 from SpaGene.utils import combine_p_values
@@ -70,41 +69,85 @@ try:
     scale_method = sys.argv[1]
     cluster_method = sys.argv[2]
     idx = sys.argv[3]
-    region = sys.argv[4]
 
 except IndexError:
     scale_method = "combat-zjq"
     cluster_method = "sc3"
-    idx = "E165A"
-    region = "hypothalamus"
 
-# %%
-count_path = Path.joinpath(
-    WORKDIR,
-    f"Data/scale_df/{scale_method}/{idx}-{scale_method}.csv",
-)
-count_df = pd.read_csv(
-    count_path,
-    index_col=0,
-    header=0,
-).T
+# %% run spagenes
+spagenes_dict = {}
+combined_dict = {}
+for idx in idx_full:
+    count_path = Path.joinpath(
+        WORKDIR,
+        f"Data/scale_df/{scale_method}/{idx}-{scale_method}.csv",
+    )
+    count_df = pd.read_csv(
+        count_path,
+        index_col=0,
+        header=0,
+    ).T
 
-coor_path = Path.joinpath(
-    WORKDIR,
-    f"Data/coor_df/{idx}-coor.csv",
-)
-coor_df = pd.read_csv(
-    coor_path,
-    index_col=0,
-    header=0,
-)
+    coor_path = Path.joinpath(
+        WORKDIR,
+        f"Data/coor_df/{idx}-coor.csv",
+    )
+    coor_df = pd.read_csv(
+        coor_path,
+        index_col=0,
+        header=0,
+    )
 
-# %%
-spagenes = Spagene(
-    coordinate_df=coor_df,
-    expression_df=count_df,
-    genes=count_df.columns,
-    cores=8,
-    k=8,
-)
-# spagenes = spagenes[spagenes["adjusted_p_value"] < 0.05]
+    spagenes = Spagene(
+        coordinate_df=coor_df,
+        expression_df=count_df,
+        genes=count_df.columns,
+        cores=40,
+        k=24,
+    )
+    spagenes_dict[idx] = spagenes
+
+# %% combine p values
+for idx in idx_full:
+    pvalues = spagenes_dict[idx].iloc[:, 0:5]
+    combined_dict[idx] = combine_p_values(pvalues)
+
+# %% draw venn
+for idx in idx_full:
+    fig, ax = plt.subplots(figsize=(10, 10))
+    ax.axis("off")
+    ax.set_title(idx)
+    venn2(
+        [
+            set(spagenes_dict[idx][
+                spagenes_dict[idx]["adjusted_p_value"] <= 0.05].index),
+            set(combined_dict[idx][
+                combined_dict[idx]["adjusted_p_value"] <= 0.05].index)
+        ],
+        ["minP", "combinedP"],
+        ax=ax,
+    )
+    fig.savefig(Path.joinpath(WORKDIR, f"results/2/test-{idx}.jpg"))
+    plt.close(fig)
+
+# %% save tables
+for idx in idx_full:
+    spagenes_dict[idx].to_csv(
+        Path.joinpath(WORKDIR, f"results/2/tables/spagene_{idx}.csv"))
+    combined_dict[idx].to_csv(
+        Path.joinpath(WORKDIR, f"results/2/tables/combined_{idx}.csv"))
+
+# %% cp genes
+for idx in idx_full:
+    os.mkdir(Path.joinpath(WORKDIR, f"results/2/genes/{idx}"))
+    min_genes = list(
+        set(spagenes_dict[idx][
+            spagenes_dict[idx]["adjusted_p_value"] <= 0.05].index))
+    combined_genes = list(
+        set(combined_dict[idx][
+            combined_dict[idx]["adjusted_p_value"] <= 0.05].index))
+    g = [i for i in min_genes if i not in combined_genes]
+    for i in g:
+        os.system(
+            f"cp $HOME/workspace/mouse-brain-full/draw_genes/all/{i}.jpg $HOME/workspace/mouse-brain-full/results/2/genes/{idx}/{i}.jpg"
+        )

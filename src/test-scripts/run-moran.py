@@ -29,7 +29,6 @@
 #
 
 # %%
-import json
 import sys
 from pathlib import Path
 
@@ -42,6 +41,7 @@ from umap import UMAP
 from SpaGene.weighted_correlation import Moran_Process
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
+plt.rcParams.update({"font.size": 16})
 
 idx_full = {
     "E135A": "V10M17-100-E135A",
@@ -72,45 +72,42 @@ except IndexError:
     cluster_method = "sc3"
 
 # %% read counts
-idx = "E165A"
-count_path = Path.joinpath(
-    WORKDIR,
-    f"Data/scale_df/{scale_method}/{idx}-{scale_method}.csv",
-)
-count_full_df = pd.read_csv(
-    count_path,
-    index_col=0,
-    header=0,
-).T
+moran_dict = {}
+for idx in idx_full:
+    count_path = Path.joinpath(
+        WORKDIR,
+        f"Data/scale_df/{scale_method}/{idx}-{scale_method}.csv",
+    )
+    count_df = pd.read_csv(
+        count_path,
+        index_col=0,
+        header=0,
+    ).T
 
-# %%
-moran_all_df = pd.DataFrame()
-coor_path = Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv")
-coor_df = pd.read_csv(coor_path, index_col=0, header=0)
-count_df = count_full_df.reindex(index=coor_df.index)
-points = np.array(coor_df[["X", "Y"]])
-weight = libpysal.weights.KNN(points, k=4)
-moran_df = Moran_Process(
-    selected_genes=count_df.columns,
-    gene_expression_df=count_df,
-    weights_moran=weight,
-    transform_moran='r',
-    permutation=999,
-    cores=8,
-)
-moran_all_df = pd.concat([moran_all_df, moran_df], axis=0, join="outer").T
+    coor_path = Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv")
+    coor_df = pd.read_csv(coor_path, index_col=0, header=0)
+    count_df = count_df.reindex(index=coor_df.index)
+    points = np.array(coor_df[["X", "Y"]])
+    weight = libpysal.weights.KNN(points, k=4)
+    moran_df = Moran_Process(
+        selected_genes=count_df.columns,
+        gene_expression_df=count_df,
+        weights_moran=weight,
+        transform_moran='r',
+        permutation=999,
+        cores=20,
+    )
+    moran_dict[idx] = moran_df
 
-# %%
-dim_results = UMAP().fit_transform(moran_all_df)
-dim_results = pd.DataFrame(dim_results, index=moran_all_df.index)
+    dim_results = UMAP().fit_transform(moran_df)
+    dim_results = pd.DataFrame(dim_results, index=moran_df.index)
 
-# %%
-fig, ax = plt.subplots(figsize=(20, 20))
-ax.scatter(
-    dim_results[0],
-    dim_results[1],
-    s=4,
-)
-
-fig.legend()
-fig.savefig(Path.joinpath(WORKDIR, f"results/test-1.jpg"))
+    fig, ax = plt.subplots(figsize=(10, 10))
+    ax.set_title(idx)
+    ax.scatter(
+        dim_results[0],
+        dim_results[1],
+        s=4,
+    )
+    fig.savefig(Path.joinpath(WORKDIR, f"results/3/{idx}.jpg"))
+    plt.close(fig)
