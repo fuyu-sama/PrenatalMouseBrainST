@@ -58,7 +58,7 @@ try:
     scale_method = sys.argv[1]
     cluster_method = sys.argv[2]
 except IndexError:
-    scale_method = "combat"
+    scale_method = "combat-zjq"
     cluster_method = "sc3"
 
 # %% read data

@@ -7,7 +7,7 @@ PYTHON_PATH=$HOME/workspace/mouse-brain-full/venv/bin/python
 cd $HOME/workspace/mouse-brain-full
 
 # scale data
-if true; then
+if false; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Scaling data with combat..."
     for directory in raw logcpm combat combat-zjq; do
         if [ ! -d Data/scale_df/${directory} ]
@@ -24,7 +24,7 @@ ${PYTHON_PATH} src/py/run-subsample.py &>> log/pipeline-2.log
 
 # cluster
 for scale_method in combat-zjq combat; do
-    if true; then
+    if false; then
         echo "[`date +%Y.%m.%d\ %H:%M:%S`] Clustering with KMeans on all features..."
         if [ ! -d results/cluster/${scale_method}-kmeans ]
         then
@@ -39,7 +39,7 @@ for scale_method in combat-zjq combat; do
         done
     fi
 
-    if true; then
+    if false; then
         echo "[`date +%Y.%m.%d\ %H:%M:%S`] Clustering with KMeans on PCA features..."
         if [ ! -d results/cluster/${scale_method}-pca-kmeans ]; then
             mkdir results/cluster/${scale_method}-pca-kmeans
@@ -53,7 +53,7 @@ for scale_method in combat-zjq combat; do
         done
     fi
 
-    if true; then
+    if false; then
         echo "[`date +%Y.%m.%d\ %H:%M:%S`] Clustering with KMeans on ICA features..."
         if [ ! -d results/cluster/${scale_method}-ica-kmeans ]; then
             mkdir results/cluster/${scale_method}-ica-kmeans

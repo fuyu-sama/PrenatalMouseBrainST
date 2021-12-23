@@ -21,17 +21,17 @@ for region in hypothalamus cortex; do
 
             source hdf5-1.12.0.sh
             Rscript src/R/run-rctd-${region}.R \
-                ${idx} combat-qq-pattern sc3 &>> log/pipeline-3.log;
+                ${idx} combat-zjq sc3 &>> log/pipeline-3.log;
 
             ${PYTHON_PATH} src/py/draw-rctd.py \
-                ${idx} ${region} combat-qq-logcpm sc3 &>> log/pipeline-3.log;
-            ${PYTHON_PATH} src/py/draw-rctd-IE.py \
-                ${idx} ${region} combat-qq-logcpm sc3 &>> log/pipeline-3.log;
+                ${idx} ${region} combat-zjq sc3 &>> log/pipeline-3.log;
+            #${PYTHON_PATH} src/py/draw-rctd-IE.py \
+                #${idx} ${region} combat-zjq sc3 &>> log/pipeline-3.log;
         )&
     done
 done
 
-for scale_method in combat-qq-logcpm; do
+for scale_method in combat-zjq; do
     for cluster_method in sc3; do
         if [ ! -d results/cluster/${scale_method}-${cluster_method}/region ]; then
             mkdir results/cluster/${scale_method}-${cluster_method}/region
