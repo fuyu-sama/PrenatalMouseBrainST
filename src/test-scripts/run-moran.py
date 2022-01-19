@@ -97,6 +97,8 @@ for idx in idx_full:
         permutation=999,
         cores=20,
     )
+    moran_df.T.to_csv(
+        Path.joinpath(WORKDIR, f"results/3/{idx}-{scale_method}-moran.csv"))
     moran_dict[idx] = moran_df
 
     dim_results = UMAP().fit_transform(moran_df)
