@@ -38,7 +38,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from umap import UMAP
 
-from SpaGene.weighted_correlation import Moran_Process
+from SpaGene.moran import Moran_Process
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 plt.rcParams.update({"font.size": 16})
