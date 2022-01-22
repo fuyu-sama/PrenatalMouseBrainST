@@ -38,7 +38,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from umap import UMAP
 
-from SpaGene.moran import Moran_Process
+from SpaGene.moran import moran_process
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 plt.rcParams.update({"font.size": 16})
@@ -89,7 +89,7 @@ for idx in idx_full:
     count_df = count_df.reindex(index=coor_df.index)
     points = np.array(coor_df[["X", "Y"]])
     weight = libpysal.weights.KNN(points, k=4)
-    moran_df = Moran_Process(
+    moran_df = moran_process(
         selected_genes=count_df.columns,
         gene_expression_df=count_df,
         weights_moran=weight,
