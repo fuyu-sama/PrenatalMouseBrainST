@@ -34,12 +34,13 @@ import os
 import sys
 from pathlib import Path
 
+import libpysal
+import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib_venn import venn2
 from PIL import Image
 from scipy.cluster import hierarchy as sch
-from sklearn.decomposition import PCA
 
 import SpaGene
 
@@ -141,7 +142,7 @@ pvals = SpaGene.spagene.Spagene(
     expression_df=count_df,
     genes=count_df.columns,
     permutation=9999,
-    cores=8,
+    cores=20,
 )
 pvals_cbd = SpaGene.utils.combine_p_values(pvals).sort_values(
     by="adjusted_p_value")
@@ -206,101 +207,14 @@ for i in range(1, n_gene_clusters + 1):
         bbox_inches="tight",
     )
 
-# %% euclidean
-gene_pca = PCA(n_components=40).fit_transform(count_sub_df.T)
-spot_pca = PCA(n_components=40).fit_transform(count_sub_df)
-gene_pca_distmat = sch.distance.pdist(gene_pca)
-spot_pca_distmat = sch.distance.pdist(spot_pca)
-
-Z = sch.linkage(gene_pca_distmat, method="ward")
-gene_pca_result = pd.Series(
-    sch.fcluster(Z, t=n_gene_clusters, criterion="maxclust"),
-    index=count_sub_df.columns,
-).sort_values()
-
-Z = sch.linkage(spot_pca_distmat, method="ward")
-spot_pca_result = pd.Series(
-    sch.fcluster(Z, t=n_spot_clusters, criterion="maxclust"),
-    index=count_sub_df.index,
-).sort_values()
-
-# %% draw
-fig, ax = plt.subplots(figsize=(10, 10))
-ax.imshow(
-    count_sub_df.reindex(
-        columns=gene_pca_result.index,
-        index=spot_pca_result.index,
-    ),
-    cmap="Reds",
-    aspect="auto",
-)
-ax.set_title("PCA euclidean")
-ax.set_xticks([])
-ax.set_yticks([])
-ax.set_xlabel("Genes")
-ax.set_ylabel("Spots")
-flag = 0
-for i in range(1, n_gene_clusters):
-    flag += len(gene_pca_result[gene_pca_result == i])
-    ax.plot([flag, flag], [0, count_df.shape[0] - 5])
-fig.savefig(
-    Path.joinpath(WORKDIR, f"results/5/{idx}/euclidean/euclidean-0.jpg"),
-    bbox_inches="tight",
-)
-
-for i in range(1, n_gene_clusters + 1):
-    fig, ax = plt.subplots(figsize=(10, 10))
-    ax.set_xticks([])
-    ax.set_yticks([])
-    ax.imshow(he_image)
-    sc = ax.scatter(
-        coor_df["X"],
-        coor_df["Y"],
-        c=count_df[gene_pca_result[gene_pca_result == i].index].T.mean(),
-        cmap="autumn_r",
-        s=16,
-        alpha=0.7,
-    )
-    ax.set_title(f"Cluster {i} euclidean genes")
-    fig.colorbar(sc, ax=ax)
-    fig.savefig(
-        Path.joinpath(WORKDIR, f"results/5/{idx}/euclidean/euclidean-{i}.jpg"),
-        bbox_inches="tight",
-    )
-
 # %%
-for i in range(1, 1 + n_gene_clusters):
-    for j in range(1, 1 + n_gene_clusters):
-        fig, ax = plt.subplots(figsize=(10, 10))
-        venn2(
-            [
-                set(gene_result[gene_result == i].index),
-                set(gene_pca_result[gene_pca_result == j].index)
-            ],
-            set_labels=(f"jaccard cluster {i}", f"euclidean cluster {j}"),
-        )
-        fig.savefig(
-            Path.joinpath(WORKDIR, f"results/5/{idx}/0/{i}-{j}.jpg"),
-            bbox_inches="tight",
-        )
-
-# %%
-ja = 11
-eu = 12
+ja = 2
 ja_path = Path.joinpath(WORKDIR, f"results/5/{idx}/1/ja_{ja}")
-eu_path = Path.joinpath(WORKDIR, f"results/5/{idx}/1/eu_{eu}")
 ja_set = gene_result[gene_result == ja].index
-eu_set = gene_pca_result[gene_pca_result == eu].index
 if not os.path.exists(ja_path):
     os.mkdir(ja_path)
-if not os.path.exists(eu_path):
-    os.mkdir(eu_path)
 for i in ja_set:
-    os.system(
-        f"cp /mnt/Data/mouse-brain-full/draw_genes/all/{i}.jpg {ja_path}")
-for i in eu_set:
-    os.system(
-        f"cp /mnt/Data/mouse-brain-full/draw_genes/all/{i}.jpg {eu_path}")
+    os.system(f"cp draw_genes/all/{i}.jpg {ja_path}")
 
 # %%
 fig, ax = plt.subplots(figsize=(10, 10))
@@ -309,3 +223,51 @@ ax.violinplot([
     for i in range(1, 1 + n_gene_clusters)
 ])
 fig.savefig(Path.joinpath(WORKDIR, f"results/5/{idx}/jaccard/pvals-adj.jpg"))
+
+# %%
+for gene in ["Gbx2", "Zbtb18", "Calb2", "Satb2", "Tbr1", "Sox5", "Sox2"]:
+    fig, ax = plt.subplots(figsize=(10, 10))
+    ax.scatter(
+        coor_df["X"],
+        coor_df["Y"],
+        c=count_df[gene],
+        cmap="Reds",
+        vmin=0,
+        vmax=1,
+    )
+    ax.imshow(he_image)
+    ax.set_title(gene)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    fig.savefig(Path.joinpath(WORKDIR, f"results/5/{idx}/{gene}.jpg"))
+
+# %%
+points = np.array(coor_df[["X", "Y"]])
+weight = libpysal.weights.KNN(points, k=4)
+global_moran_df = SpaGene.moran.global_moran(
+    gene_lists=count_df.columns,
+    expression_df=count_df,
+    select_weights=weight,
+    transform_moran='r',
+    permutation=999,
+    cores=20,
+)
+global_moran_df = global_moran_df.sort_values(by="I_value", ascending=False)
+
+# %%
+global_moran_df2 = pd.read_csv(
+    Path.joinpath(WORKDIR, "Data/E165A_cpm_knn_gaussian_global_moran_999.csv"),
+    index_col=0, header=0,
+).sort_values(by="knn4_I_value", ascending=False)
+
+# %%
+n_genes = 2000
+fig, ax = plt.subplots(figsize=(10, 10))
+venn2(
+    [set(global_moran_df.index[:n_genes]),
+     set(global_moran_df2.index[:n_genes])],
+    set_labels=("hotspot", "cpm"),
+    ax=ax,
+)
+ax.set_title(f"Top {n_genes} genes")
+fig.savefig(Path.joinpath(WORKDIR, f"results/5/{idx}/{n_genes}.jpg"))
