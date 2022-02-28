@@ -30,19 +30,13 @@
 
 # %% environment config
 import json
-import os
 import sys
 from pathlib import Path
 
-import libpysal
-import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-from matplotlib_venn import venn2
 from PIL import Image
 from scipy.cluster import hierarchy as sch
-
-import SpaGene
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 plt.rcParams.update({"font.size": 16})
@@ -137,16 +131,11 @@ for c, i in zip(regions, range(len(regions))):
 draw_cluster.sort_values(inplace=True)
 
 # %% pvalue
-pvals = SpaGene.spagene.Spagene(
-    coordinate_df=coor_df,
-    expression_df=count_df,
-    genes=count_df.columns,
-    permutation=9999,
-    cores=20,
-)
-pvals_cbd = SpaGene.utils.combine_p_values(pvals).sort_values(
-    by="adjusted_p_value")
-count_sub_df = count_df.reindex(columns=pvals_cbd.index[:1000])
+global_moran_df = pd.read_csv(
+    Path.joinpath(WORKDIR, "Data/E165A_cpm_knn_gaussian_global_moran_999.csv"),
+    index_col=0, header=0,
+).sort_values(by="knn8_I_value", ascending=False)
+count_sub_df = count_df.reindex(columns=global_moran_df.index[:1000])
 
 # %% calculate distmat
 gene_distmat = sch.distance.pdist(count_sub_df.T, metric="jaccard")
@@ -208,23 +197,6 @@ for i in range(1, n_gene_clusters + 1):
     )
 
 # %%
-ja = 2
-ja_path = Path.joinpath(WORKDIR, f"results/5/{idx}/1/ja_{ja}")
-ja_set = gene_result[gene_result == ja].index
-if not os.path.exists(ja_path):
-    os.mkdir(ja_path)
-for i in ja_set:
-    os.system(f"cp draw_genes/all/{i}.jpg {ja_path}")
-
-# %%
-fig, ax = plt.subplots(figsize=(10, 10))
-ax.violinplot([
-    pvals_cbd.loc[gene_result[gene_result == i].index, "adjusted_p_value"]
-    for i in range(1, 1 + n_gene_clusters)
-])
-fig.savefig(Path.joinpath(WORKDIR, f"results/5/{idx}/jaccard/pvals-adj.jpg"))
-
-# %%
 for gene in ["Gbx2", "Zbtb18", "Calb2", "Satb2", "Tbr1", "Sox5", "Sox2"]:
     fig, ax = plt.subplots(figsize=(10, 10))
     ax.scatter(
@@ -240,34 +212,3 @@ for gene in ["Gbx2", "Zbtb18", "Calb2", "Satb2", "Tbr1", "Sox5", "Sox2"]:
     ax.set_xticks([])
     ax.set_yticks([])
     fig.savefig(Path.joinpath(WORKDIR, f"results/5/{idx}/{gene}.jpg"))
-
-# %%
-points = np.array(coor_df[["X", "Y"]])
-weight = libpysal.weights.KNN(points, k=4)
-global_moran_df = SpaGene.moran.global_moran(
-    gene_lists=count_df.columns,
-    expression_df=count_df,
-    select_weights=weight,
-    transform_moran='r',
-    permutation=999,
-    cores=20,
-)
-global_moran_df = global_moran_df.sort_values(by="I_value", ascending=False)
-
-# %%
-global_moran_df2 = pd.read_csv(
-    Path.joinpath(WORKDIR, "Data/E165A_cpm_knn_gaussian_global_moran_999.csv"),
-    index_col=0, header=0,
-).sort_values(by="knn4_I_value", ascending=False)
-
-# %%
-n_genes = 2000
-fig, ax = plt.subplots(figsize=(10, 10))
-venn2(
-    [set(global_moran_df.index[:n_genes]),
-     set(global_moran_df2.index[:n_genes])],
-    set_labels=("hotspot", "cpm"),
-    ax=ax,
-)
-ax.set_title(f"Top {n_genes} genes")
-fig.savefig(Path.joinpath(WORKDIR, f"results/5/{idx}/{n_genes}.jpg"))
