@@ -32,11 +32,10 @@
 import sys
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from sklearn.neighbors import NearestNeighbors
-
-import SpaGene
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 plt.rcParams.update({"font.size": 16})
@@ -90,16 +89,34 @@ for idx in idx_full:
 
 distribution_dict = {}
 for idx in idx_full:
-    distribution_df = pd.DataFrame(index=moran_dict[idx].index, columns=moran_dict[idx].columns)
-    nbrs = NearestNeighbors(n_neighbors=9, algorithm='ball_tree').fit(coor_dict[idx])
+    distribution_df = pd.DataFrame(
+        index=moran_dict[idx].index,
+        columns=moran_dict[idx].columns,
+    )
+    nbrs = NearestNeighbors(
+        n_neighbors=9,
+        algorithm='ball_tree',
+    ).fit(coor_dict[idx])
     distances, indices = nbrs.kneighbors(coor_dict[idx])
     for spot in range(len(moran_dict[idx].index)):
         for gene in range(len(moran_dict[idx].columns)):
             if moran_dict[idx].iloc[spot, gene] < 1:
-                distribution_df.iloc[spot, gene] = 0
+                distribution_df.iloc[spot, gene] = np.nan
                 continue
             rel = 0
             for i in indices[spot, 1:]:
                 rel += moran_dict[idx].iloc[i, gene]
             distribution_df.iloc[spot, gene] = rel / 8
-    distribution_df[idx] = distribution_df
+    distribution_dict[idx] = distribution_df
+    break
+
+# %% draw
+for idx in idx_full:
+    fig, ax = plt.subplots(figsize=(10, 10))
+    ax.hist(
+        distribution_dict2[idx].to_numpy().flatten(),
+        bins=100,
+    )
+    ax.set_title(f"{idx} neighbor distribution")
+    ax.set_yticks([])
+    fig.savefig(Path.joinpath(WORKDIR, f"results/2/{idx}.jpg"))
