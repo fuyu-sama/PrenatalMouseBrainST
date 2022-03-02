@@ -108,14 +108,13 @@ for idx in idx_full:
                 rel += moran_dict[idx].iloc[i, gene]
             distribution_df.iloc[spot, gene] = rel / 8
     distribution_dict[idx] = distribution_df
-    break
+    distribution_df.T.to_csv(Path.joinpath(WORKDIR, f"results/2/{idx}.csv"))
 
-# %% draw
-for idx in idx_full:
+    flag = distribution_dict[idx].to_numpy().flatten().astype(np.float)
     fig, ax = plt.subplots(figsize=(10, 10))
     ax.hist(
-        distribution_dict2[idx].to_numpy().flatten(),
-        bins=100,
+        flag[np.logical_not(np.isnan(flag))],
+        bins=10,
     )
     ax.set_title(f"{idx} neighbor distribution")
     ax.set_yticks([])

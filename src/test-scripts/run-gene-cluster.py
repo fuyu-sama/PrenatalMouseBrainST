@@ -29,7 +29,6 @@
 #
 
 # %% environment config
-import json
 import sys
 from pathlib import Path
 
@@ -37,6 +36,8 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from PIL import Image
 from scipy.cluster import hierarchy as sch
+
+import SpaGene
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 plt.rcParams.update({"font.size": 16})
@@ -65,18 +66,16 @@ colors = [
 
 try:
     scale_method = sys.argv[1]
-    cluster_method = sys.argv[2]
-    idx = sys.argv[3]
+    idx = sys.argv[2]
 
 except IndexError:
-    scale_method = "combat-zjq"
-    cluster_method = "sc3"
+    scale_method = "cpm-moran-8"
     idx = "E165A"
 
 # %% read data
 count_path = Path.joinpath(
     WORKDIR,
-    f"Data/scale_df/{scale_method}-moran/{idx}-{scale_method}-moran.csv",
+    f"Data/scale_df/{scale_method}/{idx}-{scale_method}.csv",
 )
 count_df = pd.read_csv(
     count_path,
@@ -94,41 +93,6 @@ for i in count_df:
     if count_df[i].var() < 1e-6:
         drop_genes.append(i)
 count_df.drop(columns=drop_genes, inplace=True)
-
-cluster_path = Path.joinpath(
-    WORKDIR,
-    f"results/cluster/{scale_method}-{cluster_method}/pattern/full-{cluster_method}.csv",
-)
-cluster_df = pd.read_csv(
-    cluster_path,
-    index_col=0,
-    header=0,
-)
-cluster_df = cluster_df.reindex(
-    index=[i for i in cluster_df.index if idx in i])
-
-regions_path = Path.joinpath(
-    WORKDIR, f"results/cluster/{scale_method}-{cluster_method}/regions.json")
-with open(regions_path) as f:
-    regions = json.load(f)["regions"]
-
-regions_label = {j: i for i, j in enumerate(regions)}
-in_regions = [j for i in regions.values() for j in i]
-others = [
-    i for i in list(set(cluster_df[f"{cluster_method}_clusters"]))
-    if i not in in_regions
-]
-
-draw_cluster = cluster_df[f"{cluster_method}_clusters"].copy()
-for c in regions:
-    draw_cluster.replace(regions[c], c, inplace=True)
-flag = len(regions)
-for c in others:
-    draw_cluster.replace(c, flag, inplace=True)
-for c, i in zip(regions, range(len(regions))):
-    c_len = draw_cluster[draw_cluster == c].shape[0]
-    draw_cluster.replace(c, regions_label[c], inplace=True)
-draw_cluster.sort_values(inplace=True)
 
 # %% pvalue
 global_moran_df = pd.read_csv(

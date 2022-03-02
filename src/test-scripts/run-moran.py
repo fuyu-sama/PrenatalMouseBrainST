@@ -35,13 +35,10 @@ from pathlib import Path
 import libpysal
 import numpy as np
 import pandas as pd
-from matplotlib import pyplot as plt
-from umap import UMAP
 
-from SpaGene.moran import moran_process
+from SpaGene.moran import local_moran
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
-plt.rcParams.update({"font.size": 16})
 
 idx_full = {
     "E135A": "V10M17-100-E135A",
@@ -66,10 +63,8 @@ colors = [
 ]
 try:
     scale_method = sys.argv[1]
-    cluster_method = sys.argv[2]
 except IndexError:
-    scale_method = "combat-zjq"
-    cluster_method = "sc3"
+    scale_method = "cpm"
 
 # %% read counts
 moran_dict = {}
@@ -88,31 +83,18 @@ for idx in idx_full:
     coor_df = pd.read_csv(coor_path, index_col=0, header=0)
     count_df = count_df.reindex(index=coor_df.index)
     points = np.array(coor_df[["X", "Y"]])
-    weight = libpysal.weights.KNN(points, k=4)
-    moran_df = moran_process(
+    weights = libpysal.weights.KNN(points, k=8)
+    moran_df = local_moran(
         selected_genes=count_df.columns,
         gene_expression_df=count_df,
-        weights_moran=weight,
+        weights=weights,
         transform_moran='r',
         permutation=999,
-        cores=20,
+        cores=40,
     )
     moran_df.T.to_csv(
         Path.joinpath(
             WORKDIR,
-            f"Data/scale_df/{scale_method}-moran/{idx}-{scale_method}-moran.csv"
+            f"Data/scale_df/{scale_method}-moran-8/{idx}-{scale_method}-moran-8.csv"
         ))
     moran_dict[idx] = moran_df
-
-    dim_results = UMAP().fit_transform(moran_df)
-    dim_results = pd.DataFrame(dim_results, index=moran_df.index)
-
-    fig, ax = plt.subplots(figsize=(10, 10))
-    ax.set_title(idx)
-    ax.scatter(
-        dim_results[0],
-        dim_results[1],
-        s=4,
-    )
-    fig.savefig(Path.joinpath(WORKDIR, f"results/3/{idx}.jpg"))
-    plt.close(fig)
