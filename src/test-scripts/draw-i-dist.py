@@ -96,6 +96,11 @@ for idx in idx_full:
         permutation=999,
         cores=20,
     )
+    global_moran.to_csv(
+        Path.joinpath(
+            WORKDIR,
+            f"results/global_moran/{idx}-{scale_method}-8.csv",
+        ))
     moran_dict[idx] = global_moran
 
     count_dict[idx] = count_df
