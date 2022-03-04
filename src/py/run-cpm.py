@@ -101,7 +101,7 @@ scale_full_df = np.log(count_full_df.T * 10000 / count_full_df.T.sum() + 1)
 scale_full_df.to_csv(
     Path.joinpath(WORKDIR, f"Data/scale_df/logcpm/full-logcpm.csv"))
 for idx in idx_full:
-    spots = [i for i in scale_full_df.index if idx in i]
+    spots = [i for i in scale_full_df.columns if idx in i]
     scale_full_df.reindex(columns=spots).to_csv(
         Path.joinpath(WORKDIR, f"Data/scale_df/logcpm/{idx}-logcpm.csv"))
 
@@ -109,6 +109,6 @@ for idx in idx_full:
 scale_full_df = count_full_df.T * 10000 / count_full_df.T.sum()
 scale_full_df.to_csv(Path.joinpath(WORKDIR, f"Data/scale_df/cpm/full-cpm.csv"))
 for idx in idx_full:
-    spots = [i for i in scale_full_df.index if idx in i]
+    spots = [i for i in scale_full_df.columns if idx in i]
     scale_full_df.reindex(columns=spots).to_csv(
         Path.joinpath(WORKDIR, f"Data/scale_df/cpm/{idx}-cpm.csv"))
