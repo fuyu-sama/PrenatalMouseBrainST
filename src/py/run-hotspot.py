@@ -68,8 +68,7 @@ except IndexError:
     scale_method = "cpm"
     knn = 8
 
-# %% read counts
-moran_dict = {}
+# %%
 for idx in idx_full:
     count_path = Path.joinpath(
         WORKDIR,
@@ -86,7 +85,7 @@ for idx in idx_full:
     count_df = count_df.reindex(index=coor_df.index)
     points = np.array(coor_df[["X", "Y"]])
     weights = libpysal.weights.KNN(points, k=knn)
-    moran_df = local_moran(
+    hotspot_df = local_moran(
         selected_genes=count_df.columns,
         gene_expression_df=count_df,
         weights=weights,
@@ -94,9 +93,8 @@ for idx in idx_full:
         permutation=999,
         cores=40,
     )
-    moran_df.T.to_csv(
+    hotspot_df.T.to_csv(
         Path.joinpath(
             WORKDIR,
-            f"Data/scale_df/{scale_method}-moran-{knn}/{idx}-{scale_method}-moran-{knn}.csv"
+            f"Data/scale_df/{scale_method}-hotspot-{knn}/{idx}-{scale_method}-hotspot-{knn}.csv"
         ))
-    moran_dict[idx] = moran_df

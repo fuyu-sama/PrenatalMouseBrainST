@@ -65,8 +65,10 @@ colors = [
 ]
 try:
     scale_method = sys.argv[1]
+    knn = sys.argv[2]
 except IndexError:
     scale_method = "cpm"
+    knn = 8
 
 # %% read counts
 count_dict = {}
@@ -87,7 +89,7 @@ for idx in idx_full:
     coor_df = pd.read_csv(coor_path, index_col=0, header=0)
     count_df = count_df.reindex(index=coor_df.index)
 
-    weights = libpysal.weights.KNN(coor_df, k=8)
+    weights = libpysal.weights.KNN(coor_df, k=knn)
     global_moran = SpaGene.moran.global_moran(
         selected_genes=count_df.columns,
         gene_expression_df=count_df,
@@ -99,39 +101,9 @@ for idx in idx_full:
     global_moran.to_csv(
         Path.joinpath(
             WORKDIR,
-            f"results/global_moran/{idx}-{scale_method}-8.csv",
+            f"results/global_moran/{idx}-{scale_method}-{knn}.csv",
         ))
     moran_dict[idx] = global_moran
 
     count_dict[idx] = count_df
     coor_dict[idx] = coor_df
-
-# %%
-for idx in idx_full:
-    fig, ax = plt.subplots(figsize=(10, 10))
-    ax.hist(
-        np.log(moran_dict[idx]["I_value"].dropna().astype(np.float) + 2),
-        bins=100,
-    )
-    ax.set_title(f"{idx} log(I + 2)")
-    ax.set_yticks([])
-    fig.savefig(Path.joinpath(WORKDIR, f"results/1/{idx}-1.jpg"))
-
-# %%
-for idx in idx_full:
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
-    ax1.hist(
-        np.log(moran_dict[idx]["I_value"][
-            moran_dict[idx]["I_value"] > 0].dropna().astype(np.float)),
-        bins=100,
-    )
-    ax1.set_title(f"{idx} log(I) where I > 0")
-    ax1.set_yticks([])
-    ax2.hist(
-        np.log(-moran_dict[idx]["I_value"][
-            moran_dict[idx]["I_value"] < 0].dropna().astype(np.float)),
-        bins=100,
-    )
-    ax2.set_title(f"{idx} log(-I) where I < 0")
-    ax2.set_yticks([])
-    fig.savefig(Path.joinpath(WORKDIR, f"results/1/{idx}-2.jpg"))
