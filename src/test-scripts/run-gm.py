@@ -32,19 +32,14 @@
 import sys
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
-import session_info
+import scipy.stats as stats
 from matplotlib import pyplot as plt
-from matplotlib.colors import ListedColormap
-from PIL import Image
-
-import sakuyahelp
+from sklearn.mixture import GaussianMixture
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
-session_info.show()
-plt.rcParams.update({"font.size": 24})
-Image.MAX_IMAGE_PIXELS = None
-random_state = 42
+plt.rcParams.update({"font.size": 16})
 
 idx_full = {
     "E135A": "V10M17-100-E135A",
@@ -56,7 +51,7 @@ idx_full = {
     "E175A1": "V10M17-101-E175A1",
     "E175A2": "V10M17-101-E175A2",
     "E175B": "V10M17-085-E175B",
-    "P0B": "V10M17-100-P0B",
+    # "P0B": "V10M17-100-P0B",
     "P0A1": "V10M17-101-P0A1",
     "P0A2": "V10M17-101-P0A2",
 }
@@ -67,40 +62,60 @@ colors = [
     "#8E804B", "#0089A7", "#CB1B45", "#FFB6C1", "#00FF00", "#800000",
     "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
 ]
-
 try:
-    idx = sys.argv[1]
-    scale_method = sys.argv[2]
-    cluster_method = sys.argv[3]
+    scale_method = sys.argv[1]
+    idx = sys.argv[2]
 except IndexError:
+    scale_method = "cpm"
     idx = "E165A"
-    scale_method = "combat"
-    cluster_method = "sc3"
 
-# %% read data
-he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
-scale_path = Path.joinpath(
-    WORKDIR,
-    f"Data/scale_df/{scale_method}/{idx}-{scale_method}.csv",
-)
-coor_path = Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv")
-cluster_path = Path.joinpath(
-    WORKDIR,
-    f"results/cluster/{scale_method}-{cluster_method}/pattern/full-{cluster_method}.csv"
-)
 
-he_image = Image.open(he_path)
-scale_df = pd.read_csv(scale_path, index_col=0, header=0).T
-coor_df = pd.read_csv(coor_path, index_col=0, header=0)
-cluster_df = pd.read_csv(cluster_path, index_col=0, header=0)
-cluster_df = cluster_df.reindex(index=scale_df.index)
+def exp_trans(x, gamma):
+    if gamma == 0:
+        return x
+    return (np.exp(gamma * x) - 1) / gamma
 
-# %% run hmrf
-hmrf_df = pd.DataFrame(index=cluster_df.index)
-cluster_result = sakuyahelp.cluster.HMRF_cluster(
-    expression=scale_df,
-    coordinate=coor_df,
-    init_cluster=[int(i.split("_")[1]) for i in cluster_df[f"{cluster_method}_clusters"]],
-    beta=0.5,
-)
-hmrf_df[f"{cluster_method}-hmrf_clusters"] = cluster_result
+
+# %% read
+for idx in idx_full:
+    global_moran = pd.read_csv(
+        Path.joinpath(
+            WORKDIR,
+            f"results/global_moran/{idx}-{scale_method}-8.csv",
+        ),
+        index_col=0,
+        header=0,
+    )
+
+    for n_components in [2, 3]:
+        i_values = global_moran["I_value"].dropna()
+        i_values = exp_trans(i_values.to_frame(), -6)
+        gmm = GaussianMixture(n_components=n_components)
+        results = pd.Series(gmm.fit_predict(i_values), index=i_values.index)
+
+        fig, ax = plt.subplots(figsize=(10, 10))
+        ax.set_yticks([])
+        ax.hist(i_values.to_numpy(), bins=100, density=True)
+        x = np.linspace(i_values.min(), i_values.max(), 5000)
+        ax.plot(x, np.exp(gmm.score_samples(x)), lw=2, label="GMM")
+        for i in range(n_components):
+            ax.plot(
+                x,
+                stats.norm.pdf(
+                    x,
+                    gmm.means_[i, 0],
+                    gmm.covariances_[i, 0]**(1 / 2),
+                ) * gmm.weights_[i],
+                lw=2,
+                ls="--",
+                label=f"Gaussian {i}, weight {gmm.weights_[i]:.3f}",
+            )
+        ax.set_title(f"{idx} GMM PDF")
+        plt.legend()
+        fig.savefig(
+            Path.joinpath(
+                WORKDIR,
+                f"results/3/{idx}-{n_components}-pdf.jpg",
+            ))
+        results.to_csv(
+            Path.joinpath(WORKDIR, f"results/3/{idx}-{n_components}.csv"))

@@ -32,12 +32,11 @@
 import sys
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from PIL import Image
 from scipy.cluster import hierarchy as sch
-
-import SpaGene
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 plt.rcParams.update({"font.size": 16})
@@ -69,13 +68,20 @@ try:
     idx = sys.argv[2]
 
 except IndexError:
-    scale_method = "cpm-moran-8"
+    scale_method = "cpm"
     idx = "E165A"
+
+
+def exp_trans(x, gamma):
+    if gamma == 0:
+        return x
+    return (np.exp(gamma * x) - 1) / gamma
+
 
 # %% read data
 count_path = Path.joinpath(
     WORKDIR,
-    f"Data/scale_df/{scale_method}/{idx}-{scale_method}.csv",
+    f"Data/scale_df/{scale_method}-moran-8/{idx}-{scale_method}-moran-8.csv",
 )
 count_df = pd.read_csv(
     count_path,
@@ -86,18 +92,52 @@ count_df = pd.read_csv(
 coor_path = Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv")
 coor_df = pd.read_csv(coor_path, index_col=0, header=0)
 
-he_image = Image.open(Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif"))
+global_moran = pd.read_csv(
+    Path.joinpath(
+        WORKDIR,
+        f"results/global_moran/{idx}-{scale_method}-8.csv",
+    ),
+    index_col=0,
+    header=0,
+)
 
-drop_genes = []
-for i in count_df:
-    if count_df[i].var() < 1e-6:
-        drop_genes.append(i)
-count_df.drop(columns=drop_genes, inplace=True)
+# %%
+n_components = 3
+i_values = global_moran["I_value"].dropna()
+i_values = exp_trans(i_values.to_frame(), -6)
+gmm = GaussianMixture(n_components=n_components)
+results = pd.Series(gmm.fit_predict(i_values), index=i_values.index)
+
+fig, ax = plt.subplots(figsize=(10, 10))
+ax.set_yticks([])
+ax.hist(i_values.to_numpy(), bins=100, density=True)
+x = np.linspace(i_values.min(), i_values.max(), 5000)
+ax.plot(x, np.exp(gmm.score_samples(x)), lw=2, label="GMM")
+for i in range(n_components):
+    ax.plot(
+        x,
+        stats.norm.pdf(
+            x,
+            gmm.means_[i, 0],
+            gmm.covariances_[i, 0]**(1 / 2),
+        ) * gmm.weights_[i],
+        lw=2,
+        ls="--",
+        label=f"Gaussian {i}, weight {gmm.weights_[i]:.3f}",
+    )
+ax.set_title(f"{idx} GMM PDF")
+plt.legend()
+fig.savefig(
+    Path.joinpath(
+        WORKDIR,
+        f"results/5/{idx}/pdf.jpg",
+    ))
 
 # %% pvalue
 global_moran_df = pd.read_csv(
     Path.joinpath(WORKDIR, "Data/E165A_cpm_knn_gaussian_global_moran_999.csv"),
-    index_col=0, header=0,
+    index_col=0,
+    header=0,
 ).sort_values(by="knn8_I_value", ascending=False)
 count_sub_df = count_df.reindex(columns=global_moran_df.index[:1000])
 

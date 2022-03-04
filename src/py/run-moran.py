@@ -28,7 +28,7 @@
 #  Codes are far away from bugs with Buddha's bless
 #
 
-# %%
+# %% environment config
 import sys
 from pathlib import Path
 
@@ -63,8 +63,10 @@ colors = [
 ]
 try:
     scale_method = sys.argv[1]
+    knn = sys.argv[2]
 except IndexError:
     scale_method = "cpm"
+    knn = 8
 
 # %% read counts
 moran_dict = {}
@@ -83,7 +85,7 @@ for idx in idx_full:
     coor_df = pd.read_csv(coor_path, index_col=0, header=0)
     count_df = count_df.reindex(index=coor_df.index)
     points = np.array(coor_df[["X", "Y"]])
-    weights = libpysal.weights.KNN(points, k=8)
+    weights = libpysal.weights.KNN(points, k=knn)
     moran_df = local_moran(
         selected_genes=count_df.columns,
         gene_expression_df=count_df,
@@ -95,6 +97,6 @@ for idx in idx_full:
     moran_df.T.to_csv(
         Path.joinpath(
             WORKDIR,
-            f"Data/scale_df/{scale_method}-moran-8/{idx}-{scale_method}-moran-8.csv"
+            f"Data/scale_df/{scale_method}-moran-{knn}/{idx}-{scale_method}-moran-{knn}.csv"
         ))
     moran_dict[idx] = moran_df
