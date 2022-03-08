@@ -2,6 +2,7 @@
 mnt
 results
 Data
+draw_genes
 .Rprofile
 renv.lock
 !.gitignore
