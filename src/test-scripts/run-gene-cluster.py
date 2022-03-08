@@ -29,14 +29,16 @@
 #
 
 # %% environment config
+import os
 import sys
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from PIL import Image
 from scipy.cluster import hierarchy as sch
+
+import SpaGene
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 plt.rcParams.update({"font.size": 16})
@@ -71,17 +73,10 @@ except IndexError:
     scale_method = "cpm"
     idx = "E165A"
 
-
-def exp_trans(x, gamma):
-    if gamma == 0:
-        return x
-    return (np.exp(gamma * x) - 1) / gamma
-
-
 # %% read data
 count_path = Path.joinpath(
     WORKDIR,
-    f"Data/scale_df/{scale_method}-moran-8/{idx}-{scale_method}-moran-8.csv",
+    f"Data/scale_df/{scale_method}-hotspot-8/{idx}-{scale_method}-hotspot-8.csv",
 )
 count_df = pd.read_csv(
     count_path,
@@ -92,6 +87,9 @@ count_df = pd.read_csv(
 coor_path = Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv")
 coor_df = pd.read_csv(coor_path, index_col=0, header=0)
 
+he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
+he_image = Image.open(he_path)
+
 global_moran = pd.read_csv(
     Path.joinpath(
         WORKDIR,
@@ -101,53 +99,18 @@ global_moran = pd.read_csv(
     header=0,
 )
 
-# %%
-n_components = 3
-i_values = global_moran["I_value"].dropna()
-i_values = exp_trans(i_values.to_frame(), -6)
-gmm = GaussianMixture(n_components=n_components)
-results = pd.Series(gmm.fit_predict(i_values), index=i_values.index)
-
-fig, ax = plt.subplots(figsize=(10, 10))
-ax.set_yticks([])
-ax.hist(i_values.to_numpy(), bins=100, density=True)
-x = np.linspace(i_values.min(), i_values.max(), 5000)
-ax.plot(x, np.exp(gmm.score_samples(x)), lw=2, label="GMM")
-for i in range(n_components):
-    ax.plot(
-        x,
-        stats.norm.pdf(
-            x,
-            gmm.means_[i, 0],
-            gmm.covariances_[i, 0]**(1 / 2),
-        ) * gmm.weights_[i],
-        lw=2,
-        ls="--",
-        label=f"Gaussian {i}, weight {gmm.weights_[i]:.3f}",
-    )
-ax.set_title(f"{idx} GMM PDF")
-plt.legend()
-fig.savefig(
-    Path.joinpath(
-        WORKDIR,
-        f"results/5/{idx}/pdf.jpg",
-    ))
-
-# %% pvalue
-global_moran_df = pd.read_csv(
-    Path.joinpath(WORKDIR, "Data/E165A_cpm_knn_gaussian_global_moran_999.csv"),
-    index_col=0,
-    header=0,
-).sort_values(by="knn8_I_value", ascending=False)
-count_sub_df = count_df.reindex(columns=global_moran_df.index[:1000])
+# %% filter genes
+selected_genes, ax, gmm = SpaGene.utils.filter_i(
+    global_moran["I_value"].dropna().to_frame())
+count_sub_df = count_df.reindex(columns=selected_genes)
+ax.figure.savefig(Path.joinpath(WORKDIR, f"results/5/{idx}/pdf.jpg"))
 
 # %% calculate distmat
-gene_distmat = sch.distance.pdist(count_sub_df.T, metric="jaccard")
-spot_distmat = sch.distance.pdist(count_sub_df, metric="jaccard")
-
-# %% cluster
 n_gene_clusters = 12
 n_spot_clusters = 12
+
+gene_distmat = sch.distance.pdist(count_sub_df.T, metric="jaccard")
+spot_distmat = sch.distance.pdist(count_sub_df, metric="jaccard")
 
 Z = sch.linkage(gene_distmat, method="ward")
 gene_result = pd.Series(
@@ -168,7 +131,7 @@ ax.imshow(
     cmap="Reds",
     aspect="auto",
 )
-ax.set_title("jaccard")
+ax.set_title(f"{idx}")
 ax.set_xticks([])
 ax.set_yticks([])
 ax.set_xlabel("Genes")
@@ -177,8 +140,10 @@ flag = 0
 for i in range(1, n_gene_clusters):
     flag += len(gene_result[gene_result == i])
     ax.plot([flag, flag], [0, count_df.shape[0] - 5])
-fig.savefig(Path.joinpath(WORKDIR, f"results/5/{idx}/jaccard/jaccard-0.jpg"),
-            bbox_inches="tight")
+fig.savefig(
+    Path.joinpath(WORKDIR, f"results/5/{idx}/{idx}-heatmap.jpg"),
+    bbox_inches="tight",
+)
 
 for i in range(1, n_gene_clusters + 1):
     fig, ax = plt.subplots(figsize=(10, 10))
@@ -193,26 +158,15 @@ for i in range(1, n_gene_clusters + 1):
         s=16,
         alpha=0.7,
     )
-    ax.set_title(f"Cluster {i} jaccard genes")
+    ax.set_title(f"Cluster {i} hotspot mean")
     fig.colorbar(sc, ax=ax)
     fig.savefig(
-        Path.joinpath(WORKDIR, f"results/5/{idx}/jaccard/jaccard-{i}.jpg"),
+        Path.joinpath(WORKDIR, f"results/5/{idx}/{idx}-{i}.jpg"),
         bbox_inches="tight",
     )
 
 # %%
-for gene in ["Gbx2", "Zbtb18", "Calb2", "Satb2", "Tbr1", "Sox5", "Sox2"]:
-    fig, ax = plt.subplots(figsize=(10, 10))
-    ax.scatter(
-        coor_df["X"],
-        coor_df["Y"],
-        c=count_df[gene],
-        cmap="Reds",
-        vmin=0,
-        vmax=1,
-    )
-    ax.imshow(he_image)
-    ax.set_title(gene)
-    ax.set_xticks([])
-    ax.set_yticks([])
-    fig.savefig(Path.joinpath(WORKDIR, f"results/5/{idx}/{gene}.jpg"))
+for i in range(1, n_gene_clusters + 1):
+    os.mkdir(f"results/5/{idx}/0/{i}")
+    for gene in gene_result[gene_result == i].index:
+        os.system(f"cp draw_genes/all/{gene}.jpg results/5/{idx}/0/{i}/")
