@@ -32,11 +32,12 @@
 import sys
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
-import scipy.stats as stats
 from matplotlib import pyplot as plt
-from sklearn.mixture import GaussianMixture
+from matplotlib_venn import venn2, venn3
+from PIL import Image
+
+import SpaGene
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 plt.rcParams.update({"font.size": 16})
@@ -62,60 +63,56 @@ colors = [
     "#8E804B", "#0089A7", "#CB1B45", "#FFB6C1", "#00FF00", "#800000",
     "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
 ]
+
 try:
     scale_method = sys.argv[1]
-    idx = sys.argv[2]
 except IndexError:
     scale_method = "cpm"
-    idx = "E165A"
 
+# %%
+tp_full = {
+    "E135": ["E135A", "E135B"],
+    "E155": ["E155A", "E155B"],
+    "E165": ["E165A", "E165B"],
+    "E175": ["E175A1", "E175A2", "E175B"],
+    "P0": ["P0A1", "P0A2"],
+}
 
-def exp_trans(x, gamma):
-    if gamma == 0:
-        return x
-    return (np.exp(gamma * x) - 1) / gamma
-
-
-# %% read
-for idx in idx_full:
-    global_moran = pd.read_csv(
-        Path.joinpath(
-            WORKDIR,
-            f"results/global_moran/{idx}-{scale_method}-8.csv",
-        ),
-        index_col=0,
-        header=0,
-    )
-
-    for n_components in [2, 3]:
-        i_values = global_moran["I_value"].dropna()
-        i_values = exp_trans(i_values.to_frame(), -6)
-        gmm = GaussianMixture(n_components=n_components)
-        results = pd.Series(gmm.fit_predict(i_values), index=i_values.index)
-
-        fig, ax = plt.subplots(figsize=(10, 10))
-        ax.set_yticks([])
-        ax.hist(i_values.to_numpy(), bins=100, density=True)
-        x = np.linspace(i_values.min(), i_values.max(), 5000)
-        ax.plot(x, np.exp(gmm.score_samples(x)), lw=2, label="GMM")
-        for i in range(n_components):
-            ax.plot(
-                x,
-                stats.norm.pdf(
-                    x,
-                    gmm.means_[i, 0],
-                    gmm.covariances_[i, 0]**(1 / 2),
-                ) * gmm.weights_[i],
-                lw=2,
-                ls="--",
-                label=f"Gaussian {i}, weight {gmm.weights_[i]:.3f}",
-            )
-        ax.set_title(f"{idx} GMM PDF")
-        plt.legend()
-        fig.savefig(
-            Path.joinpath(
+for n in [2, 3]:
+    ss = []
+    for tp in tp_full:
+        s = []
+        for idx in tp_full[tp]:
+            count_path = Path.joinpath(
                 WORKDIR,
-                f"results/3/{idx}-{n_components}-pdf.jpg",
-            ))
-        results.to_csv(
-            Path.joinpath(WORKDIR, f"results/3/{idx}-{n_components}.csv"))
+                f"Data/scale_df/{scale_method}-hotspot-8/{idx}-{scale_method}-hotspot-8.csv",
+            )
+            count_df = pd.read_csv(
+                count_path,
+                index_col=0,
+                header=0,
+            ).T
+
+            global_moran = pd.read_csv(
+                Path.joinpath(
+                    WORKDIR,
+                    f"results/global_moran/{idx}-{scale_method}-8.csv",
+                ),
+                index_col=0,
+                header=0,
+            )
+
+            selected_genes, ax, gmm = SpaGene.utils.filter_i(
+                global_moran["I_value"].dropna().to_frame(),
+                n_components=n,
+            )
+            s.append(selected_genes)
+            [ss.append(i) for i in selected_genes]
+        fig, ax = plt.subplots()
+        if len(s) == 2:
+            venn2([set(i) for i in s], tp_full[tp], ax=ax)
+        elif len(s) == 3:
+            venn3([set(i) for i in s], tp_full[tp], ax=ax)
+        ax.set_title(f"{tp} n_components = {n}")
+        fig.savefig(Path.joinpath(WORKDIR, f"results/1/{tp}-{n}.jpg"))
+    print(len(set(ss)))
