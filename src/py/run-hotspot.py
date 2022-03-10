@@ -62,39 +62,40 @@ colors = [
     "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
 ]
 try:
-    scale_method = sys.argv[1]
-    knn = sys.argv[2]
+    idx = sys.argv[1]
+    scale_method = sys.argv[2]
+    knn = sys.argv[3]
 except IndexError:
-    scale_method = "cpm"
+    idx = "E165A"
+    scale_method = "logcpm"
     knn = 8
 
 # %%
-for idx in idx_full:
-    count_path = Path.joinpath(
-        WORKDIR,
-        f"Data/scale_df/{scale_method}/{idx}-{scale_method}.csv",
-    )
-    count_df = pd.read_csv(
-        count_path,
-        index_col=0,
-        header=0,
-    ).T
+count_path = Path.joinpath(
+    WORKDIR,
+    f"Data/scale_df/{scale_method}/{idx}-{scale_method}.csv",
+)
+count_df = pd.read_csv(
+    count_path,
+    index_col=0,
+    header=0,
+).T
 
-    coor_path = Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv")
-    coor_df = pd.read_csv(coor_path, index_col=0, header=0)
-    count_df = count_df.reindex(index=coor_df.index)
-    points = np.array(coor_df[["X", "Y"]])
-    weights = libpysal.weights.KNN(points, k=knn)
-    hotspot_df = local_moran(
-        selected_genes=count_df.columns,
-        gene_expression_df=count_df,
-        weights=weights,
-        transform_moran='r',
-        permutation=999,
-        cores=40,
-    )
-    hotspot_df.T.to_csv(
-        Path.joinpath(
-            WORKDIR,
-            f"Data/scale_df/{scale_method}-hotspot-{knn}/{idx}-{scale_method}-hotspot-{knn}.csv"
-        ))
+coor_path = Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv")
+coor_df = pd.read_csv(coor_path, index_col=0, header=0)
+count_df = count_df.reindex(index=coor_df.index)
+points = np.array(coor_df[["X", "Y"]])
+weights = libpysal.weights.KNN(points, k=knn)
+hotspot_df = local_moran(
+    selected_genes=count_df.columns,
+    gene_expression_df=count_df,
+    weights=weights,
+    transform_moran='r',
+    permutation=999,
+    cores=40,
+)
+hotspot_df.T.to_csv(
+    Path.joinpath(
+        WORKDIR,
+        f"Data/scale_df/{scale_method}-hotspot-{knn}/{idx}-{scale_method}-hotspot-{knn}.csv"
+    ))

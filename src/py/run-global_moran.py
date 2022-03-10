@@ -33,7 +33,6 @@ import sys
 from pathlib import Path
 
 import libpysal
-import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 
@@ -64,46 +63,40 @@ colors = [
     "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
 ]
 try:
-    scale_method = sys.argv[1]
-    knn = sys.argv[2]
+    idx = sys.argv[1]
+    scale_method = sys.argv[2]
+    knn = int(sys.argv[3])
 except IndexError:
+    idx = "E165A"
     scale_method = "cpm"
     knn = 8
 
 # %% read counts
-count_dict = {}
-coor_dict = {}
-moran_dict = {}
-for idx in idx_full:
-    count_path = Path.joinpath(
+count_path = Path.joinpath(
+    WORKDIR,
+    f"Data/scale_df/{scale_method}/{idx}-{scale_method}.csv",
+)
+count_df = pd.read_csv(
+    count_path,
+    index_col=0,
+    header=0,
+).T
+
+coor_path = Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv")
+coor_df = pd.read_csv(coor_path, index_col=0, header=0)
+count_df = count_df.reindex(index=coor_df.index)
+
+weights = libpysal.weights.KNN(coor_df, k=knn)
+global_moran = SpaGene.moran.global_moran(
+    selected_genes=count_df.columns,
+    gene_expression_df=count_df,
+    weights=weights,
+    transform_moran="r",
+    permutation=999,
+    cores=20,
+)
+global_moran.to_csv(
+    Path.joinpath(
         WORKDIR,
-        f"Data/scale_df/{scale_method}/{idx}-{scale_method}.csv",
-    )
-    count_df = pd.read_csv(
-        count_path,
-        index_col=0,
-        header=0,
-    ).T
-
-    coor_path = Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv")
-    coor_df = pd.read_csv(coor_path, index_col=0, header=0)
-    count_df = count_df.reindex(index=coor_df.index)
-
-    weights = libpysal.weights.KNN(coor_df, k=knn)
-    global_moran = SpaGene.moran.global_moran(
-        selected_genes=count_df.columns,
-        gene_expression_df=count_df,
-        weights=weights,
-        transform_moran="r",
-        permutation=999,
-        cores=20,
-    )
-    global_moran.to_csv(
-        Path.joinpath(
-            WORKDIR,
-            f"results/global_moran/{idx}-{scale_method}-{knn}.csv",
-        ))
-    moran_dict[idx] = global_moran
-
-    count_dict[idx] = count_df
-    coor_dict[idx] = coor_df
+        f"results/global_moran/{idx}-{scale_method}-{knn}.csv",
+    ))

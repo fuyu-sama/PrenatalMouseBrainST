@@ -126,7 +126,6 @@ regions_path = Path.joinpath(
 with open(regions_path) as f:
     regions = json.load(f)["regions"]
 
-# %%
 in_regions = [
     i for i in count_df_all.index
     if cluster_df.loc[i, "sc3_clusters"] in regions[region]
@@ -136,14 +135,6 @@ count_df = count_df_all.reindex(index=in_regions, columns=de_df.index)
 coor_df = coor_df_all.reindex(index=count_df.index)
 
 # %%
-spagenes = Spagene(
-    coordinate_df=coor_df,
-    expression_df=count_df,
-    genes=count_df.columns,
-    cores=8,
-    k=8,
-)
-spagenes = spagenes[spagenes["adjusted_p_value"] < 0.05]
 
 # %%
 cluster_result = pd.DataFrame(index=coor_df.index)
