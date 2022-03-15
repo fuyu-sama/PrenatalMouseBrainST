@@ -66,7 +66,7 @@ colors = [
 try:
     scale_method = sys.argv[1]
 except IndexError:
-    scale_method = "logcpm"
+    scale_method = "combat"
 
 # %%
 tp_full = {
@@ -97,17 +97,26 @@ for n in [2, 3]:
             )
             s.append(selected_genes)
             [ss.append(i) for i in selected_genes]
+            ax.figure.savefig(
+                Path.joinpath(
+                    WORKDIR,
+                    f"results/5/{idx}/{scale_method}-{n}-pdf.jpg",
+                ))
         fig, ax = plt.subplots()
         if len(s) == 2:
             venn2([set(i) for i in s], tp_full[tp], ax=ax)
         elif len(s) == 3:
             venn3([set(i) for i in s], tp_full[tp], ax=ax)
         ax.set_title(f"{tp} n_components = {n}")
-        fig.savefig(Path.joinpath(WORKDIR, f"results/1/{tp}-{scale_method}-{n}.jpg"))
-    print(len(set(ss)))
+        fig.savefig(
+            Path.joinpath(
+                WORKDIR,
+                f"results/1/{tp}-{scale_method}-{n}.jpg",
+            ))
     with open(
-            Path.joinpath(WORKDIR,
-                          f"results/I-gmm/full-{scale_method}-{n}.csv"),
-            "w") as f:
-        for i in ss:
+            Path.joinpath(
+                WORKDIR,
+                f"results/I-gmm/full-{scale_method}-{n}.csv",
+            ), "w") as f:
+        for i in set(ss):
             f.write(f"{i}\n")
