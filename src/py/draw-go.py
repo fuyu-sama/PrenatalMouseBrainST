@@ -67,7 +67,7 @@ try:
     scale_method = sys.argv[1]
     cluster_method = sys.argv[2]
 except IndexError:
-    scale_method = "combat"
+    scale_method = "combat-gmm-2"
     cluster_method = "sc3"
 
 # %% read data
@@ -127,9 +127,12 @@ ax.set_yticks(range(pvalue_df.shape[0]))
 ax.set_xticklabels(pvalue_df.columns, rotation=45, ha="right")
 ax.set_yticklabels(pvalue_df.index)
 ax.yaxis.tick_right()
-cb = fig.colorbar(sc, location="top")
+ax_cb = fig.add_axes([0, 0.7, 0.05, 0.1])
+cb = fig.colorbar(sc, cax=ax_cb)
 cb.set_ticks([vmin, vmax])
 cb.set_ticklabels(["Low", "High"])
+cb.ax.yaxis.tick_left()
+cb.ax.yaxis.set_label_position("left")
 cb.ax.set_ylabel("-logP")
 ax_legend = fig.add_axes([0, 0.11, 0.1, 0.2])
 ax_legend.scatter(

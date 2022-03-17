@@ -85,7 +85,7 @@ try:
     scale_method = sys.argv[1]
     cluster_method = sys.argv[2]
 except IndexError:
-    scale_method = "combat-qq-logcpm"
+    scale_method = "combat-gmm-2"
     cluster_method = "sc3"
 
 # %% read count data
@@ -167,9 +167,13 @@ ax.set_yticks(range(draw_pvalue.shape[0]))
 ax.set_xticklabels(draw_pvalue.columns, rotation=45, ha="right")
 ax.set_yticklabels(draw_pvalue.index)
 ax.yaxis.tick_right()
-cb = fig.colorbar(sc, location="top")
+ax_cb = fig.add_axes([0, 0.7, 0.05, 0.1])
+cb = fig.colorbar(sc, cax=ax_cb)
 cb.set_ticks([vmin, vmax])
 cb.set_ticklabels(["Low", "High"])
+cb.ax.yaxis.tick_left()
+cb.ax.yaxis.set_label_position("left")
+cb.ax.set_ylabel("Expression")
 ax_legend = fig.add_axes([0, 0.11, 0.1, 0.2])
 ax_legend.scatter(
     [1, 1, 1],
