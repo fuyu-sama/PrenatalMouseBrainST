@@ -64,10 +64,10 @@ colors = [
 try:
     idx = sys.argv[1]
     scale_method = sys.argv[2]
-    knn = sys.argv[3]
+    knn = int(sys.argv[3])
 except IndexError:
     idx = "E165A"
-    scale_method = "logcpm"
+    scale_method = "combat-gmm-2"
     knn = 8
 
 # %%
