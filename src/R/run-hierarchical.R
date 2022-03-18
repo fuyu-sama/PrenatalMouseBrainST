@@ -36,6 +36,14 @@ library(dplyr)
 options(future.globals.maxSize = 1024 * 1024^2)
 sessionInfo()
 
+timepoints <- list(
+    E135 = c("E135A", "E135B"),
+    E155 = c("E155A", "E155B"),
+    E165 = c("E165A", "E165B"),
+    E175 = c("E175A1", "E175A2", "E175B"),
+    P0 = c("P0A1", "P0A2")
+)
+
 set.seed(42)
 args <- commandArgs(trailingOnly = TRUE)
 scale_method <- args[1]
@@ -66,9 +74,9 @@ regions <- jsonlite::read_json(
     paste0(WORKDIR, "results/cluster/", scale_method, "-", cluster_method, "/regions.json"),
     simplifyVector = TRUE
     )$regions
-
-# %% build mean_df
 regions <- regions[names(regions) != "amygdalar.olfactory"]
+
+# %% draw with clusters
 mean_df <- data.frame(row.names = rownames(read_df))
 for (cluster in unique(cluster_df[, 1])) {
     subset_df <- filter(cluster_df, clusters == cluster)
@@ -85,7 +93,6 @@ for (i in regions) {
 }
 mean_df <- mean_df[, in_regions]
 
-# %% draw
 regions_label <- list(
     cortex = 1,
     hippocampus = 2,
@@ -112,8 +119,61 @@ colors <- c("violet", "peru", "red", "blue", "green")
 hc <- hclust(dist(t(mean_df)))
 jpeg(
     paste0(
-        WORKDIR, "results/cluster/", scale_method, "-", cluster_method, "/hierarchical.jpg"
-        ),
+        WORKDIR, "results/cluster/", scale_method, "-", cluster_method,
+        "/hierarchical-1.jpg"),
+    width = 1500, height = 1500
+)
+par(cex = 1.5)
+plot(as.phylo(hc), type = "fan", tip.color = colors[tip_color], underscore = TRUE)
+par(cex = 2)
+legend(x = "topright", legend = names(regions_label), text.col = colors)
+dev.off()
+
+# %% draw with timepoint & region
+regions <- regions[names(regions) != "amygdalar.olfactory"]
+mean_df <- data.frame(row.names = rownames(read_df))
+for (tp in names(timepoints)) {
+    for (region in names(regions)) {
+        cluster <- paste(tp, region, sep="_")
+        clusters_name <- c()
+        if (cluster == "E135_hippocampus") next
+        for (i in regions[[region]]) {
+            for (j in timepoints[[tp]]) {
+                if (grepl(j, i)) clusters_name <- c(clusters_name, i)
+            }
+        }
+        subset_df <- filter(cluster_df, clusters %in% clusters_name)
+        subset_df <- read_df[, rownames(subset_df)]
+        if (is.null(dim(subset_df))) {
+            mean_df[, cluster] <- mean(subset_df)
+        } else {
+            mean_df[, cluster] <- rowMeans(subset_df)
+        }
+    }
+}
+
+regions_label <- list(
+    cortex = 1,
+    hippocampus = 2,
+    thalamus = 3,
+    hypothalamus = 4
+)
+tip_color <- c()
+for (i in colnames(mean_df)) {
+    i <- strsplit(i, "_")[[1]][2]
+    for (j in names(regions)) {
+            if (i == j) {
+                tip_color <- c(tip_color, regions_label[[j]])
+        }
+    }
+}
+names(tip_color) <- colnames(mean_df)
+colors <- c("violet", "peru", "red", "blue", "green")
+hc <- hclust(dist(t(mean_df)))
+jpeg(
+    paste0(
+        WORKDIR, "results/cluster/", scale_method, "-", cluster_method,
+        "/hierarchical-2.jpg"),
     width = 1500, height = 1500
 )
 par(cex = 1.5)
