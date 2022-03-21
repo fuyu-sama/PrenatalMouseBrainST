@@ -3,6 +3,21 @@
 #PBS -l walltime=240:00:00
 
 PYTHON_PATH=$HOME/workspace/mouse-brain-full/venv/bin/python
+idx_full=(
+    E135A E135B 
+    E155A E155B 
+    E165A E165B 
+    E175A1 E175A2 E175B 
+    P0A1 P0A2
+)
+scale_methods=(
+    raw 
+    cpm cpm-gmm-2 cpm-gmm-3 
+    logcpm logcpm-gmm-2 logcpm-gmm-3 
+    combat combat-gmm-2 combat-gmm-3 
+    combat-1000
+)
+regions=(cortex hippocampus hypothalamus thalamus "amygdalar.olfactory")
 
 cd $HOME/workspace/mouse-brain-full
 
@@ -11,7 +26,7 @@ for region in hypothalamus cortex; do
     if [ ! -d results/RCTD/${region} ]; then
         mkdir results/RCTD/${region}
     fi
-    for idx in E135A E135B E155A E155B E165A E165B E175A1 E175A2 E175B P0A1 P0A2; do
+    for idx in ${idx_full[@]}; do
         (
             if [ ! -d results/RCTD/${region}/${idx} ]; then
                 mkdir results/RCTD/${region}/${idx}
@@ -21,17 +36,17 @@ for region in hypothalamus cortex; do
 
             source hdf5-1.12.0.sh
             Rscript src/R/run-rctd-${region}.R \
-                ${idx} combat-zjq sc3 &>> log/pipeline-3.log;
+                ${idx} combat-gmm-2 sc3 &>> log/pipeline-3.log;
 
             ${PYTHON_PATH} src/py/draw-rctd.py \
-                ${idx} ${region} combat-zjq sc3 &>> log/pipeline-3.log;
+                ${idx} ${region} combat-gmm-2 sc3 &>> log/pipeline-3.log;
             #${PYTHON_PATH} src/py/draw-rctd-IE.py \
-                #${idx} ${region} combat-zjq sc3 &>> log/pipeline-3.log;
+                #${idx} ${region} combat-gmm-2 sc3 &>> log/pipeline-3.log;
         )&
     done
 done
 
-for scale_method in combat-zjq; do
+for scale_method in combat-gmm-2; do
     for cluster_method in sc3; do
         if [ ! -d results/cluster/${scale_method}-${cluster_method}/region ]; then
             mkdir results/cluster/${scale_method}-${cluster_method}/region
@@ -75,7 +90,7 @@ for scale_method in combat-zjq; do
         wait $!
 
         # homer
-        for region in cortex hippocampus hypothalamus thalamus "amygdalar.olfactory"; do
+        for region in regions; do
         (
             source homer-4.11.sh;
             ${PYTHON_PATH} src/py/run-id-transfer.py \

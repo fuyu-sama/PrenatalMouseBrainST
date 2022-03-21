@@ -100,7 +100,7 @@ for n in [2, 3]:
             ax.figure.savefig(
                 Path.joinpath(
                     WORKDIR,
-                    f"results/5/{idx}/{scale_method}-{n}-pdf.jpg",
+                    f"results/I-gmm/pdf/{scale_method}-{n}-pdf.jpg",
                 ))
         fig, ax = plt.subplots()
         if len(s) == 2:
@@ -111,7 +111,7 @@ for n in [2, 3]:
         fig.savefig(
             Path.joinpath(
                 WORKDIR,
-                f"results/1/{tp}-{scale_method}-{n}.jpg",
+                f"results/I-gmm/venn/{tp}-{scale_method}-{n}.jpg",
             ))
     with open(
             Path.joinpath(

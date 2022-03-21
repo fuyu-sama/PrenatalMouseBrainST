@@ -3,14 +3,27 @@
 #PBS -l walltime=240:00:00
 
 PYTHON_PATH=$HOME/workspace/mouse-brain-full/venv/bin/python
-idx_full=(E135A E135B E155A E155B E165A E165B E175A1 E175A2 E175B P0A1 P0A2)
+idx_full=(
+    E135A E135B 
+    E155A E155B 
+    E165A E165B 
+    E175A1 E175A2 E175B 
+    P0A1 P0A2
+)
+scale_methods=(
+    #raw 
+    #cpm cpm-gmm-2 cpm-gmm-3 
+    #logcpm logcpm-gmm-2 logcpm-gmm-3 
+    #combat combat-gmm-2 combat-gmm-3 
+    combat-1000
+)
 
 cd $HOME/workspace/mouse-brain-full
 
 # scale data
 if false; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Scaling data..."
-    for directory in raw logcpm cpm combat combat-zjq cpm-gmm-2 cpm-gmm-3 combat-gmm-2 combat-gmm-3 logcpm-gmm-2 logcpm-gmm-3; do
+    for directory in ${scale_methods[@]}; do
         if [ ! -d Data/scale_df/${directory} ]
         then
             mkdir Data/scale_df/${directory}
@@ -18,30 +31,33 @@ if false; then
     done
     ${PYTHON_PATH} src/py/run-cpm.py &>> log/pipeline-2.log
     ${PYTHON_PATH} src/py/run-combat.py &>> log/pipeline-2.log
-    for idx in ${idx_full[@]}; do
-        (${PYTHON_PATH} src/py/run-global_moran.py ${idx} cpm 8 &>> log/pipeline-2.log)&
-        (${PYTHON_PATH} src/py/run-global_moran.py ${idx} logcpm 8 &>> log/pipeline-2.log)&
-        (${PYTHON_PATH} src/py/run-global_moran.py ${idx} combat 8 &>> log/pipeline-2.log)&
-        wait
-    done
 fi
 
 # subsample
-# zjq
-# ${PYTHON_PATH} src/py/run-subsample.py &>> log/pipeline-2.log
-# I gmm
-${PYTHON_PATH} src/test-scripts/run-gmm.py cpm &>> log/pipeline-2.log
-${PYTHON_PATH} src/test-scripts/run-gmm.py logcpm &>> log/pipeline-2.log
-${PYTHON_PATH} src/test-scripts/run-gmm.py combat &>> log/pipeline-2.log
-${PYTHON_PATH} src/test-scripts/run-subsample-gmm.py cpm 2 &>> log/pipeline-2.log
-${PYTHON_PATH} src/test-scripts/run-subsample-gmm.py cpm 3 &>> log/pipeline-2.log
-${PYTHON_PATH} src/test-scripts/run-subsample-gmm.py logcpm 2 &>> log/pipeline-2.log
-${PYTHON_PATH} src/test-scripts/run-subsample-gmm.py logcpm 3 &>> log/pipeline-2.log
-${PYTHON_PATH} src/test-scripts/run-subsample-gmm.py combat 2 &>> log/pipeline-2.log
-${PYTHON_PATH} src/test-scripts/run-subsample-gmm.py combat 3 &>> log/pipeline-2.log
+if false; then
+    echo "[`date +%Y.%m.%d\ %H:%M:%S`] Subsampling data with I-value..."
+    ${PYTHON_PATH} src/py/run-subsample-I.py \
+        combat 1000 &>> log/pipeline-2.log
+fi
+
+if false; then
+    echo "[`date +%Y.%m.%d\ %H:%M:%S`] Subsampling data with I-value & GMM..."
+    for idx in ${idx_full[@]}; do
+        for scale_method in cpm logcpm combat; do
+            ${PYTHON_PATH} src/py/run-global_moran.py \
+                ${idx} ${scale_method} 8 &>> log/pipeline-2.log
+            ${PYTHON_PATH} src/py/run-gmm.py \
+                ${scale_method} &>> log/pipeline-2.log
+            ${PYTHON_PATH} src/py/run-subsample-gmm.py \
+                ${scale_method} 2 &>> log/pipeline-2.log
+            ${PYTHON_PATH} src/py/run-subsample-gmm.py \
+                ${scale_method} 3 &>> log/pipeline-2.log
+        done
+    done
+fi
 
 # cluster
-for scale_method in combat-gmm-2 combat-gmm-3 cpm-gmm-2 cpm-gmm-3 logcpm-gmm-2 logcpm-gmm-3; do
+for scale_method in ${scale_methods[@]}; do
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Clustering with SC3..."
     if [ ! -d results/cluster/${scale_method}-sc3 ]; then
         mkdir results/cluster/${scale_method}-sc3

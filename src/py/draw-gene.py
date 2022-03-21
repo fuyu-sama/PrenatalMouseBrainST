@@ -34,6 +34,7 @@ from pathlib import Path
 import pandas as pd
 import session_info
 from matplotlib import pyplot as plt
+from PIL import Image
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 session_info.show()
@@ -54,40 +55,47 @@ idx_full = {
     "P0A2": "V10M17-101-P0A2",
 }
 
-idx = "E165A"
+scale_method = "combat"
 genes = [
-    "Tbr1", "Sox5", "Satb2", "Neurod1", "Fgfr1", "Sox11", "Sox2", "Otp", "Lhx9"
+    "Calb2", "Nefm", "Neurod1", "Satb2", "Sox2", "Tbr1", "Zbtb20"
 ]
 
 # %% read data
-count_df = pd.read_csv(
-    Path.joinpath(WORKDIR, f"Data/scale_df/raw/{idx}-raw.csv"),
-    index_col=0,
-    header=0,
-).T
-coor_df = pd.read_csv(
-    Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv"),
-    index_col=0,
-    header=0,
-)
-
-# %% draw
-for gene in genes:
-    fig, ax = plt.subplots(figsize=(13, 10))
-    ax.axis("off")
-    ax.invert_yaxis()
-    ax.set_title(f"{idx} {gene}")
-    sc = ax.scatter(
-        coor_df["X"],
-        coor_df["Y"],
-        c=count_df[gene],
-        cmap='Reds',
-        s=16,
-        vmin=-4,
-        vmax=count_df[gene].quantile(0.99) + 1,
+for idx in ["E135A", "E155B", "E175A1", "P0A1"]:
+    count_df = pd.read_csv(
+        Path.joinpath(
+            WORKDIR,
+            f"Data/scale_df/{scale_method}/{idx}-{scale_method}.csv",
+        ),
+        index_col=0,
+        header=0,
+    ).T
+    coor_df = pd.read_csv(
+        Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv"),
+        index_col=0,
+        header=0,
     )
-    cb = fig.colorbar(sc, ax=ax)
-    cb.set_ticks([-4, count_df[gene].quantile(0.99) + 1])
-    cb.set_ticklabels(["Low", "High"])
-    fig.savefig(Path.joinpath(WORKDIR, f"draw_genes/bare/{idx}-{gene}.jpg"))
-    plt.close(fig)
+    he_image = Image.open(
+        Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif"))
+
+    for gene in genes:
+        fig, ax = plt.subplots(figsize=(13, 10))
+        ax.imshow(he_image)
+        ax.axis("off")
+        ax.set_title(f"{gene}")
+        sc = ax.scatter(
+            coor_df["X"],
+            coor_df["Y"],
+            c=count_df[gene],
+            cmap='autumn_r',
+            alpha=0.7,
+            s=16,
+        )
+        cb = fig.colorbar(sc, ax=ax)
+        fig.savefig(
+            Path.joinpath(
+                WORKDIR,
+                f"draw_genes/bare/{idx}-{gene}.jpg",
+            ))
+        plt.close(fig)
+    he_image.close()
