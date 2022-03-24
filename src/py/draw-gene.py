@@ -65,28 +65,41 @@ for idx in ["E135A", "E155B", "E175A1", "P0A1"]:
     count_df = pd.read_csv(
         Path.joinpath(
             WORKDIR,
+            f"Data/scale_df/raw/{idx}-raw.csv",
+        ),
+        index_col=0,
+        header=0,
+    ).T
+
+    scale_df = pd.read_csv(
+        Path.joinpath(
+            WORKDIR,
             f"Data/scale_df/{scale_method}/{idx}-{scale_method}.csv",
         ),
         index_col=0,
         header=0,
     ).T
+
     coor_df = pd.read_csv(
         Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv"),
         index_col=0,
         header=0,
     )
+
     he_image = Image.open(
         Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif"))
 
     for gene in genes:
+        draw_counts = scale_df[gene].loc[count_df[gene] > 0]
+        draw_coor = coor_df.reindex(draw_counts.index)
         fig, ax = plt.subplots(figsize=(13, 10))
         ax.imshow(he_image)
         ax.axis("off")
         ax.set_title(f"{gene}")
         sc = ax.scatter(
-            coor_df["X"],
-            coor_df["Y"],
-            c=count_df[gene],
+            draw_coor["X"],
+            draw_coor["Y"],
+            c=draw_counts,
             cmap='autumn_r',
             alpha=0.7,
             s=16,
