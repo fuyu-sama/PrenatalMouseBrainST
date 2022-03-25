@@ -50,14 +50,17 @@ idx_full = {
     "E175A1": "V10M17-101-E175A1",
     "E175A2": "V10M17-101-E175A2",
     "E175B": "V10M17-085-E175B",
-    "P0B": "V10M17-100-P0B",
+    # "P0B": "V10M17-100-P0B",
     "P0A1": "V10M17-101-P0A1",
     "P0A2": "V10M17-101-P0A2",
 }
 
-scale_method = "combat"
-genes = [
+scale_method = "logcpm"
+genes_1 = [
     "Calb2", "Nefm", "Neurod1", "Satb2", "Sox2", "Tbr1", "Zbtb20"
+]
+genes_2 = [
+    "Akt1s1", "Commd6", "Commd9", "Copz1", "Rpl36"
 ]
 
 # %% read data
@@ -89,7 +92,7 @@ for idx in ["E135A", "E155B", "E175A1", "P0A1"]:
     he_image = Image.open(
         Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif"))
 
-    for gene in genes:
+    for gene in genes_1:
         draw_counts = scale_df[gene].loc[count_df[gene] > 0]
         draw_coor = coor_df.reindex(draw_counts.index)
         fig, ax = plt.subplots(figsize=(13, 10))
