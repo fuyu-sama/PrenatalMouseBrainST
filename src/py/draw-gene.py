@@ -104,14 +104,14 @@ for idx in ["E135A", "E155B", "E175A1", "P0A1"]:
             draw_coor["Y"],
             c=draw_counts,
             cmap='autumn_r',
-            alpha=0.7,
+            alpha=0.8,
             s=16,
         )
         cb = fig.colorbar(sc, ax=ax)
         fig.savefig(
             Path.joinpath(
                 WORKDIR,
-                f"draw_genes/bare/{idx}-{gene}.jpg",
+                f"draw_genes/{scale_method}-1/{idx}-{gene}.jpg",
             ))
         plt.close(fig)
     he_image.close()
