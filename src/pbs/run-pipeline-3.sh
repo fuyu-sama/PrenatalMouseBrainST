@@ -11,11 +11,11 @@ idx_full=(
     P0A1 P0A2
 )
 scale_methods=(
-    raw 
-    cpm cpm-gmm-2 cpm-gmm-3 
-    logcpm logcpm-gmm-2 logcpm-gmm-3 
-    combat combat-gmm-2 combat-gmm-3 
-    combat-1000
+    #raw 
+    #cpm cpm-gmm-2 cpm-gmm-3 
+    #logcpm logcpm-gmm-2 logcpm-gmm-3 
+    #combat combat-gmm-2 combat-gmm-3 
+    combat-logcpm-1000
 )
 regions=(cortex hippocampus hypothalamus thalamus "amygdalar.olfactory")
 
@@ -36,17 +36,17 @@ for region in hypothalamus cortex; do
 
             source hdf5-1.12.0.sh
             Rscript src/R/run-rctd-${region}.R \
-                ${idx} combat-gmm-2 sc3 &>> log/pipeline-3.log;
+                ${idx} combat-logcpm-1000 sc3 &>> log/pipeline-3.log;
 
             ${PYTHON_PATH} src/py/draw-rctd.py \
-                ${idx} ${region} combat-gmm-2 sc3 &>> log/pipeline-3.log;
+                ${idx} ${region} combat-logcpm-1000 sc3 &>> log/pipeline-3.log;
             #${PYTHON_PATH} src/py/draw-rctd-IE.py \
                 #${idx} ${region} combat-gmm-2 sc3 &>> log/pipeline-3.log;
         )&
     done
 done
 
-for scale_method in combat-gmm-2; do
+for scale_method in combat-logcpm-1000; do
     for cluster_method in sc3; do
         if [ ! -d results/cluster/${scale_method}-${cluster_method}/region ]; then
             mkdir results/cluster/${scale_method}-${cluster_method}/region
@@ -90,7 +90,7 @@ for scale_method in combat-gmm-2; do
         wait $!
 
         # homer
-        for region in regions; do
+        for region in ${regions[@]}; do
         (
             source homer-4.11.sh;
             ${PYTHON_PATH} src/py/run-id-transfer.py \

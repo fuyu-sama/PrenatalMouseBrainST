@@ -15,45 +15,46 @@ scale_methods=(
     #cpm cpm-gmm-2 cpm-gmm-3 
     #logcpm logcpm-gmm-2 logcpm-gmm-3 
     #combat combat-gmm-2 combat-gmm-3 
-    combat-1000
+    combat-logcpm-1000
 )
 
 cd $HOME/workspace/mouse-brain-full
 
 # scale data
+for directory in ${scale_methods[@]}; do
+    if [ ! -d Data/scale_df/${directory} ]
+    then
+        mkdir Data/scale_df/${directory}
+    fi
+done
+
 if false; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Scaling data..."
-    for directory in ${scale_methods[@]}; do
-        if [ ! -d Data/scale_df/${directory} ]
-        then
-            mkdir Data/scale_df/${directory}
-        fi
-    done
     ${PYTHON_PATH} src/py/run-cpm.py &>> log/pipeline-2.log
     ${PYTHON_PATH} src/py/run-combat.py &>> log/pipeline-2.log
 fi
 
 # subsample
-if false; then
-    echo "[`date +%Y.%m.%d\ %H:%M:%S`] Subsampling data with I-value..."
-    ${PYTHON_PATH} src/py/run-subsample-I.py \
-        combat 1000 &>> log/pipeline-2.log
-fi
-
-if false; then
-    echo "[`date +%Y.%m.%d\ %H:%M:%S`] Subsampling data with I-value & GMM..."
+if true; then
+    echo "[`date +%Y.%m.%d\ %H:%M:%S`] Calculating global moran..."
     for idx in ${idx_full[@]}; do
         for scale_method in cpm logcpm combat; do
             ${PYTHON_PATH} src/py/run-global_moran.py \
                 ${idx} ${scale_method} 8 &>> log/pipeline-2.log
-            ${PYTHON_PATH} src/py/run-gmm.py \
-                ${scale_method} &>> log/pipeline-2.log
-            ${PYTHON_PATH} src/py/run-subsample-gmm.py \
-                ${scale_method} 2 &>> log/pipeline-2.log
-            ${PYTHON_PATH} src/py/run-subsample-gmm.py \
-                ${scale_method} 3 &>> log/pipeline-2.log
         done
     done
+fi
+
+if true; then
+    echo "[`date +%Y.%m.%d\ %H:%M:%S`] Subsampling data with I-value..."
+    ${PYTHON_PATH} src/py/run-subsample-I.py combat 1000 &>> log/pipeline-2.log
+fi
+
+if false; then
+    echo "[`date +%Y.%m.%d\ %H:%M:%S`] Subsampling data with I-value & GMM..."
+    ${PYTHON_PATH} src/py/run-gmm.py logcpm &>> log/pipeline-2.log
+    ${PYTHON_PATH} src/py/run-subsample-gmm.py combat 2 &>> log/pipeline-2.log
+    ${PYTHON_PATH} src/py/run-subsample-gmm.py combat 3 &>> log/pipeline-2.log
 fi
 
 # cluster
@@ -76,5 +77,7 @@ for scale_method in ${scale_methods[@]}; do
 done
 wait
 
-echo "[`date +%Y.%m.%d\ %H:%M:%S`] Pipeline-2 finished."
-echo "[`date +%Y.%m.%d\ %H:%M:%S`] Manually check clustering result and run merge-clusters.py"
+finish_time=`date +%Y.%m.%d\ %H:%M:%S`
+echo "[${finish_time}] Pipeline-2 finished."
+echo "[${finish_time}] Manually check clustering result"
+echo "[${finish_time}] and run merge-clusters.py"

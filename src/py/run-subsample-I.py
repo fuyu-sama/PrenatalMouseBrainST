@@ -68,7 +68,7 @@ full_df = pd.read_csv(full_path, index_col=0, header=0)
 gene_list = []
 for idx in idx_full:
     moran_df = pd.read_csv(
-        Path.joinpath(WORKDIR, f"results/global_moran/{idx}-{scale_method}-8.csv"),
+        Path.joinpath(WORKDIR, f"results/global_moran/{idx}-logcpm-8.csv"),
         header=0,
         index_col=0,
     ).sort_values(by="I_value", ascending=False)
@@ -80,12 +80,14 @@ full_df = full_df.reindex(index=set(gene_list))
 full_df.to_csv(
     Path.joinpath(
         WORKDIR,
-        f"Data/scale_df/{scale_method}-{n}/full-{scale_method}-{n}.csv",
+        f"Data/scale_df/{scale_method}-logcpm-{n}",
+        f"full-{scale_method}-logcpm-{n}.csv",
     ))
 for idx in idx_full:
     sub_df = full_df.reindex(columns=[i for i in full_df.columns if idx in i])
     sub_df.to_csv(
         Path.joinpath(
             WORKDIR,
-            f"Data/scale_df/{scale_method}-{n}/{idx}-{scale_method}-{n}.csv",
+            f"Data/scale_df/{scale_method}-logcpm-{n}",
+            f"{idx}-{scale_method}-logcpm-{n}.csv",
         ))
