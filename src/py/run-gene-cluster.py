@@ -29,13 +29,11 @@
 #
 
 # %% environment config
-import os
 import sys
 from pathlib import Path
 
 import pandas as pd
 from matplotlib import pyplot as plt
-from matplotlib_venn import venn2
 from PIL import Image
 from scipy.cluster import hierarchy as sch
 
