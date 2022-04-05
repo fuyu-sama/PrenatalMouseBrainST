@@ -35,10 +35,9 @@ from pathlib import Path
 
 import pandas as pd
 from matplotlib import pyplot as plt
+from matplotlib_venn import venn2
 from PIL import Image
 from scipy.cluster import hierarchy as sch
-
-import SpaGene
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 plt.rcParams.update({"font.size": 16})
@@ -68,9 +67,8 @@ colors = [
 try:
     scale_method = sys.argv[1]
     idx = sys.argv[2]
-
 except IndexError:
-    scale_method = "cpm"
+    scale_method = "logcpm"
     idx = "E165A"
 
 # %% read data
@@ -87,23 +85,18 @@ count_df = pd.read_csv(
 coor_path = Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv")
 coor_df = pd.read_csv(coor_path, index_col=0, header=0)
 
+moran_path = Path.joinpath(
+    WORKDIR,
+    f"results/global_moran/{idx}-{scale_method}-8.csv",
+)
+
+moran_df = pd.read_csv(moran_path, index_col=0, header=0)
 he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
 he_image = Image.open(he_path)
 
-global_moran = pd.read_csv(
-    Path.joinpath(
-        WORKDIR,
-        f"results/global_moran/{idx}-{scale_method}-8.csv",
-    ),
-    index_col=0,
-    header=0,
-)
-
-# %% filter genes
-selected_genes, ax, gmm = SpaGene.utils.filter_i(
-    global_moran["I_value"].dropna().to_frame())
-count_sub_df = count_df.reindex(columns=selected_genes)
-ax.figure.savefig(Path.joinpath(WORKDIR, f"results/5/{idx}/pdf.jpg"))
+# %% subset
+moran_df = moran_df.sort_values(by="I_value", ascending=False)
+count_sub_df = count_df.reindex(columns=moran_df.index[:1000])
 
 # %% calculate distmat
 n_gene_clusters = 12
@@ -139,9 +132,13 @@ ax.set_ylabel("Spots")
 flag = 0
 for i in range(1, n_gene_clusters):
     flag += len(gene_result[gene_result == i])
-    ax.plot([flag, flag], [0, count_df.shape[0] - 5])
+    ax.plot([flag, flag], [0, count_sub_df.shape[0] - 5])
+flag = 0
+for i in range(1, n_spot_clusters):
+    flag += len(spot_result[spot_result == i])
+    ax.plot([0, count_sub_df.shape[1] - 5], [flag, flag])
 fig.savefig(
-    Path.joinpath(WORKDIR, f"results/5/{idx}/{idx}-heatmap.jpg"),
+    Path.joinpath(WORKDIR, f"results/{scale_method}/{idx}-heatmap.jpg"),
     bbox_inches="tight",
 )
 
@@ -153,7 +150,7 @@ for i in range(1, n_gene_clusters + 1):
     sc = ax.scatter(
         coor_df["X"],
         coor_df["Y"],
-        c=count_df[gene_result[gene_result == i].index].T.mean(),
+        c=count_sub_df[gene_result[gene_result == i].index].T.mean(),
         cmap="autumn_r",
         s=16,
         alpha=0.7,
@@ -161,12 +158,13 @@ for i in range(1, n_gene_clusters + 1):
     ax.set_title(f"Cluster {i} hotspot mean")
     fig.colorbar(sc, ax=ax)
     fig.savefig(
-        Path.joinpath(WORKDIR, f"results/5/{idx}/{idx}-{i}.jpg"),
+        Path.joinpath(WORKDIR, f"results/{scale_method}/{idx}-{i}.jpg"),
         bbox_inches="tight",
     )
 
-# %%
-for i in range(1, n_gene_clusters + 1):
-    os.mkdir(f"results/5/{idx}/0/{i}")
-    for gene in gene_result[gene_result == i].index:
-        os.system(f"cp draw_genes/all/{gene}.jpg results/5/{idx}/0/{i}/")
+# %% save table
+gene_result.to_csv(
+    Path.joinpath(
+        WORKDIR,
+        f"results/{scale_method}/{idx}-genes.csv",
+    ))
