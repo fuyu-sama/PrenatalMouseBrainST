@@ -66,7 +66,7 @@ colors = [
 try:
     scale_method = sys.argv[1]
 except IndexError:
-    scale_method = "combat"
+    scale_method = "logcpm"
 
 # %%
 tp_full = {
@@ -90,8 +90,7 @@ for n in [2, 3]:
                 index_col=0,
                 header=0,
             )
-
-            selected_genes, ax, gmm = SpaGene.utils.filter_i(
+            selected_genes, ax = SpaGene.utils.filter_i(
                 global_moran["I_value"].dropna().to_frame(),
                 n_components=n,
             )
