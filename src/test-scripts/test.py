@@ -29,13 +29,11 @@
 #
 
 # %% environment config
-import os
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-from PIL import Image
-from scipy.cluster import hierarchy as sch
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 plt.rcParams.update({"font.size": 16})
@@ -63,8 +61,8 @@ colors = [
 ]
 
 # %% read data
+count_full_df = pd.DataFrame()
 for idx in idx_full:
-    count_full_df = pd.DataFrame()
     count_path = Path.joinpath(
         WORKDIR,
         f"spaceranger/{idx}/outs/filtered_feature_bc_matrix/{idx}.csv")
@@ -79,11 +77,18 @@ for idx in idx_full:
     coor_df.index = [f"{idx}_{i}" for i in coor_df.index]
     assert all(coor_df.index == count_df.index)
 
+    mt_genes = []
+    for i in count_df.columns:
+        if i[:3] == "mt-":
+            mt_genes.append(i)
+    count_df.drop(columns=mt_genes, inplace=True)
+
     temp_df = count_df.where(count_df < 1, 1)
     temp_series = temp_df.sum() / temp_df.shape[0]
     drop_genes = []
+    t = 0.05
     for i in temp_series.index:
-        if temp_series[i] > 0.99 or temp_series[i] < 0.01:
+        if temp_series[i] > 1 - t or temp_series[i] < t:
             drop_genes.append(i)
     count_df.drop(columns=drop_genes, inplace=True)
 
@@ -96,3 +101,38 @@ for idx in idx_full:
     count_full_df = pd.concat([count_full_df, count_df], axis=0, join="outer")
 
 count_full_df = count_full_df.dropna(axis="columns")
+
+# %% raw count
+count_full_df.T.to_csv(
+    Path.joinpath(WORKDIR, f"Data/scale_df/raw-test/full-raw-test.csv"))
+for idx in idx_full:
+    spots = [i for i in count_full_df.index if idx in i]
+    count_full_df.T.reindex(columns=spots).to_csv(
+        Path.joinpath(WORKDIR, f"Data/scale_df/raw-test/{idx}-raw-test.csv"))
+
+# %% logcpm
+scale_full_df = np.log(count_full_df.T * 10000 / count_full_df.T.sum() + 1)
+scale_full_df.to_csv(
+    Path.joinpath(WORKDIR, f"Data/scale_df/logcpm-test/full-logcpm-test.csv"))
+for idx in idx_full:
+    spots = [i for i in scale_full_df.columns if idx in i]
+    scale_full_df.reindex(columns=spots).to_csv(
+        Path.joinpath(
+            WORKDIR,
+            f"Data/scale_df/logcpm-test/{idx}-logcpm-test.csv",
+        ))
+
+# %% cpm
+scale_full_df = count_full_df.T * 10000 / count_full_df.T.sum()
+scale_full_df.to_csv(
+    Path.joinpath(
+        WORKDIR,
+        f"Data/scale_df/cpm-test/full-cpm-test.csv",
+    ))
+for idx in idx_full:
+    spots = [i for i in scale_full_df.columns if idx in i]
+    scale_full_df.reindex(columns=spots).to_csv(
+        Path.joinpath(
+            WORKDIR,
+            f"Data/scale_df/cpm-test/{idx}-cpm-test.csv",
+        ))
