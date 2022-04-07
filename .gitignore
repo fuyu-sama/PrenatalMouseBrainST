@@ -3,6 +3,7 @@ mnt
 results
 Data
 draw_genes
+spaceranger
 .Rprofile
 renv.lock
 !.gitignore
