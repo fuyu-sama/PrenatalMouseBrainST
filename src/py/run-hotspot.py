@@ -67,7 +67,7 @@ try:
     knn = int(sys.argv[3])
 except IndexError:
     idx = "E165A"
-    scale_method = "combat-logcpm-1000"
+    scale_method = "logcpm"
     knn = 8
 
 # %%

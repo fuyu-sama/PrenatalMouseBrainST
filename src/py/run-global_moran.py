@@ -68,7 +68,7 @@ try:
     knn = int(sys.argv[3])
 except IndexError:
     idx = "E165A"
-    scale_method = "cpm"
+    scale_method = "logcpm"
     knn = 8
 
 # %% read counts
