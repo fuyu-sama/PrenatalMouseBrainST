@@ -166,6 +166,7 @@ R_top = sch.dendrogram(
 )
 ax_dend_top.set_xticks([])
 ax_dend_top.set_yticks([])
+ax_dend_top.set_title(f"{idx}")
 
 R_right = sch.dendrogram(
     Z_spot,
@@ -182,7 +183,6 @@ ax_heatmap.imshow(
     cmap="Reds",
     aspect="auto",
 )
-ax_heatmap.set_title(f"{idx}")
 ax_heatmap.set_xticks([])
 ax_heatmap.set_yticks([])
 ax_heatmap.set_xlabel("Genes")

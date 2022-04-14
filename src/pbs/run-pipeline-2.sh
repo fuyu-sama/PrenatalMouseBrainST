@@ -83,7 +83,7 @@ if true; then
             mkdir results/gene-cluster/${idx}
         fi
         (${PYTHON_PATH} src/py/run-gene-cluster.py \
-            logcpm ${idx} &>> log/pipeline-2.log)&
+            logcpm ${idx} &>> log/pipeline-2.log)
     done
     wait
 fi
