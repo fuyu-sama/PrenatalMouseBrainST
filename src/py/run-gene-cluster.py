@@ -140,7 +140,7 @@ for i in range(1, n_spot_clusters):
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        f"results/gene-cluster/{scale_method}/{idx}/{idx}-heatmap-1.jpg",
+        f"results/gene-cluster/{idx}/{idx}-heatmap-1.jpg",
     ),
     bbox_inches="tight",
 )
@@ -191,7 +191,7 @@ ax_heatmap.set_ylabel("Spots")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        f"results/gene-cluster/{scale_method}/{idx}/{idx}-heatmap-2.jpg",
+        f"results/gene-cluster/{idx}/{idx}-heatmap-2.jpg",
     ),
     bbox_inches="tight",
 )
@@ -215,7 +215,7 @@ for i in range(1, n_gene_clusters + 1):
     fig.savefig(
         Path.joinpath(
             WORKDIR,
-            f"results/gene-cluster/{scale_method}/{idx}/{idx}-{i}.jpg",
+            f"results/gene-cluster/{idx}/{idx}-{i}.jpg",
         ),
         bbox_inches="tight",
     )
@@ -224,5 +224,5 @@ for i in range(1, n_gene_clusters + 1):
 gene_result.to_csv(
     Path.joinpath(
         WORKDIR,
-        f"results/gene-cluster/{scale_method}/{idx}/{idx}-genes.csv",
+        f"results/gene-cluster/{idx}/{idx}-genes.csv",
     ))

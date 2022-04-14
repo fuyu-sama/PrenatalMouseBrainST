@@ -75,6 +75,19 @@ if true; then
     done
 fi
 
+# %% gene cluster
+if true; then
+    echo "[`date +%Y.%m.%d\ %H:%M:%S`] Clustering genes..."
+    for idx in ${idx_full[@]}; do
+        if [ ! -d results/gene-cluster/${idx} ]; then
+            mkdir results/gene-cluster/${idx}
+        fi
+        (${PYTHON_PATH} src/py/run-gene-cluster.py \
+            logcpm ${idx} &>> log/pipeline-2.log)&
+    done
+    wait
+fi
+
 # %% cluster
 echo "[`date +%Y.%m.%d\ %H:%M:%S`] Clustering with SC3..."
 for scale_method in ${scale_methods[@]}; do
