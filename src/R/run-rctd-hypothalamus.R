@@ -30,7 +30,7 @@
 # %% environment config
 WORKDIR <- paste0(Sys.getenv("HOME"), "/workspace/mouse-brain-full/")
 renv::activate(WORKDIR)
-library(RCTD)
+library(spacexr)
 library(Seurat)
 library(dplyr)
 
