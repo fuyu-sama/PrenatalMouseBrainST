@@ -31,8 +31,10 @@
 WORKDIR <- paste0(Sys.getenv("HOME"), "/workspace/mouse-brain-full/")
 renv::activate(WORKDIR)
 library(dplyr)
+library(GSEABase)
 library(GSVA)
 library(msigdb)
+library(pheatmap)
 library(plyr)
 
 args <- commandArgs(trailingOnly = TRUE)
@@ -56,7 +58,7 @@ count_df <- read.csv(
 )
 
 # %% get Msigdb
-load_from_file <- FALSE
+load_from_file <- TRUE
 if (load_from_file) {
     load(paste0(WORKDIR, "Data/msigdb.mmu.rda"))
 } else {
@@ -64,8 +66,9 @@ if (load_from_file) {
     save(msigdb.mmu, file=paste0(WORKDIR, "Data/msigdb.mmu.rda"))
 }
 
-# %%
-msigdb.mmu.ha <- msigdb.mmu[names(msigdb.mmu)[grepl('HALLMARK', names(msigdb.mmu))]]
+# %% hallmark subset
+#msigdb.mmu.ha.1 <- msigdb.mmu[names(msigdb.mmu)[grepl("HALLMARK", names(msigdb.mmu))]]
+msigdb.mmu.ha <- subsetCollection(msigdb.mmu, "h")
 myhallmark <- data.frame(set1 = msigdb.mmu.ha[[names(msigdb.mmu.ha)[1]]]@geneIds) %>%
     t(.) %>% data.frame(., check.names = FALSE)
 for (i in names(msigdb.mmu.ha)[-1]){
@@ -79,7 +82,7 @@ write.table(
     sep = '\t', quote = FALSE, row.names = TRUE, col.names = FALSE, na = ""
 )
 
-# %% perform GSVA
+# %% perform GSVA on hallmark
 hallmark_gmt <- getGmt(paste0(WORKDIR, "Data/mouse_hallmark.gmt"))
 gsva.es <- gsva(
     as.matrix(count_df),
@@ -89,6 +92,41 @@ gsva.es <- gsva(
 )
 gsva.es <- rbind(id = colnames(gsva.es), gsva.es)
 write.table(
-    gsva.es, paste0(WORKDIR, "results/gsva/", idx, "-hallmark.csv"),
+    gsva.es, paste0(WORKDIR, "results/GSVA/tables/", idx, "-hallmark.csv"),
     quote = FALSE, col.names = FALSE
 )
+
+# %% draw hallmarks
+
+# %% GO subset
+if (FALSE) {
+    msigdb.mmu.go <- subsetCollection(msigdb.mmu, "c5", c("GO:BP", "GO:CC", "GO:MF"))
+    mygo <- data.frame(set1 = msigdb.mmu.go[[names(msigdb.mmu.go)[1]]]@geneIds) %>%
+        t(.) %>% data.frame(., check.names = FALSE)
+    for (i in names(msigdb.mmu.go)[-1]){
+        tmp <- data.frame(msigdb.mmu.go[[i]]@geneIds) %>%
+            t(.) %>% data.frame(., check.names = FALSE)
+        mygo <- rbind.fill(mygo, tmp)
+    }
+    rownames(mygo) <- names(msigdb.mmu.go)
+    write.table(
+        mygo, paste0(WORKDIR, "Data/mouse_go.gmt"),
+        sep = '\t', quote = FALSE, row.names = TRUE, col.names = FALSE, na = ""
+    )
+}
+
+# %% perform GSVA on GO
+if (FALSE) {
+    go_gmt <- getGmt(paste0(WORKDIR, "Data/mouse_go.gmt"))
+    gsva.es <- gsva(
+        as.matrix(count_df),
+        go_gmt,
+        parallel.sz = 10,
+        verbose = FALSE
+    )
+    gsva.es <- rbind(id = colnames(gsva.es), gsva.es)
+    write.table(
+        gsva.es, paste0(WORKDIR, "results/GSVA/tables/", idx, "-go.csv"),
+        quote = FALSE, col.names = FALSE
+    )
+}

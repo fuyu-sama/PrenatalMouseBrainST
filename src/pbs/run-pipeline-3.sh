@@ -1,7 +1,8 @@
 #PBS -N pipeline-3
-#PBS -l nodes=1:ppn=20
+#PBS -l nodes=1:ppn=40
 #PBS -l walltime=240:00:00
 
+# %% environment config
 PYTHON_PATH=$HOME/workspace/mouse-brain-full/venv/bin/python
 idx_full=(
     E135A E135B 
@@ -11,17 +12,47 @@ idx_full=(
     P0A1 P0A2
 )
 scale_methods=(
-    #raw 
-    #cpm cpm-gmm-2 cpm-gmm-3 
-    #logcpm logcpm-gmm-2 logcpm-gmm-3 
-    #combat combat-gmm-2 combat-gmm-3 
+    combat
+    combat-logcpm-gmm-2
+    combat-logcpm-gmm-3 
     combat-logcpm-1000
+    logcpm
+    cpm
+    raw
 )
 regions=(cortex hippocampus hypothalamus thalamus "amygdalar.olfactory")
 
 cd $HOME/workspace/mouse-brain-full
 
-# RCTD
+# %% hotspot
+if true; then
+    echo "[`date +%Y.%m.%d\ %H:%M:%S`] Running hotspot..."
+    for scale_method in raw logcpm cpm combat; do
+        if [ ! -d Data/scale_df/${scale_method}-hotspot-8 ]; then
+            mkdir Data/scale_df/${scale_method}-hotspot-8
+        fi
+        for idx in ${idx_full[@]}; do
+            (${PYTHON_PATH} src/py/run-hotspot.py \
+                ${idx} ${scale_method} 8 &>> log/pipeline-2.log)&
+        done
+        wait
+    done
+fi
+
+# %% gene cluster
+if true; then
+    echo "[`date +%Y.%m.%d\ %H:%M:%S`] Clustering genes..."
+    for idx in ${idx_full[@]}; do
+        if [ ! -d results/gene-cluster/${idx} ]; then
+            mkdir results/gene-cluster/${idx}
+        fi
+        (${PYTHON_PATH} src/py/run-gene-cluster.py \
+            logcpm ${idx} &>> log/pipeline-2.log)
+    done
+    wait
+fi
+
+# %% RCTD
 for region in hypothalamus cortex; do
     if [ ! -d results/RCTD/${region} ]; then
         mkdir results/RCTD/${region}
@@ -46,6 +77,7 @@ for region in hypothalamus cortex; do
     done
 done
 
+# %%
 for scale_method in combat-logcpm-1000; do
     for cluster_method in sc3; do
         if [ ! -d results/cluster/${scale_method}-${cluster_method}/region ]; then
