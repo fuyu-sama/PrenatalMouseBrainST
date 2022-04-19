@@ -30,6 +30,7 @@
 
 # %% environment config
 import sys
+from math import ceil
 from multiprocessing import Pool
 from pathlib import Path
 
@@ -169,7 +170,7 @@ def main(idx):
             alpha=0.7,
         )
 
-    ii = n_gene_clusters // 3
+    ii = ceil(n_gene_clusters / 3)
     rect_cb = [
         left + width + spacing * (ii + 2) + cluster_width * ii,
         bottom + spacing * 2,
