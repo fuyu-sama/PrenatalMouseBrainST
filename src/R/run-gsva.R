@@ -34,7 +34,6 @@ library(dplyr)
 library(GSEABase)
 library(GSVA)
 library(msigdb)
-library(pheatmap)
 library(plyr)
 
 args <- commandArgs(trailingOnly = TRUE)
@@ -93,10 +92,8 @@ gsva.es <- gsva(
 gsva.es <- rbind(id = colnames(gsva.es), gsva.es)
 write.table(
     gsva.es, paste0(WORKDIR, "results/GSVA/tables/", idx, "-hallmark.csv"),
-    quote = FALSE, col.names = FALSE
+    sep = ",", quote = FALSE, col.names = FALSE
 )
-
-# %% draw hallmarks
 
 # %% GO subset
 if (FALSE) {
@@ -127,6 +124,6 @@ if (FALSE) {
     gsva.es <- rbind(id = colnames(gsva.es), gsva.es)
     write.table(
         gsva.es, paste0(WORKDIR, "results/GSVA/tables/", idx, "-go.csv"),
-        quote = FALSE, col.names = FALSE
+        set = ",", quote = FALSE, col.names = FALSE
     )
 }

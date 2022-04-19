@@ -65,9 +65,11 @@ colors = [
 try:
     scale_method = sys.argv[1]
     idx = sys.argv[2]
+    n_gene_clusters = int(sys.argv[3])
 except IndexError:
     scale_method = "logcpm"
     idx = "E165A"
+    n_gene_clusters = 9
 
 # %% read data
 count_path = Path.joinpath(
@@ -94,11 +96,10 @@ he_image = Image.open(he_path)
 
 # %% subset
 moran_df = moran_df.sort_values(by="I_value", ascending=False)
-count_sub_df = count_df.reindex(columns=moran_df.index[:1000])
+count_sub_df = count_df.reindex(columns=moran_df.index[:1500])
 
 # %% calculate distmat
-n_gene_clusters = 8
-n_spot_clusters = 8
+n_spot_clusters = 9
 
 gene_distmat = sch.distance.pdist(count_sub_df.T, metric="jaccard")
 spot_distmat = sch.distance.pdist(count_sub_df, metric="jaccard")
@@ -144,6 +145,7 @@ fig.savefig(
     ),
     bbox_inches="tight",
 )
+plt.close(fig)
 
 # %% draw heatmap version 2
 left, bottom = 0.1, 0.1
@@ -195,6 +197,7 @@ fig.savefig(
     ),
     bbox_inches="tight",
 )
+plt.close(fig)
 
 # %% draw distribution
 for i in range(1, n_gene_clusters + 1):
@@ -202,11 +205,14 @@ for i in range(1, n_gene_clusters + 1):
     ax.set_xticks([])
     ax.set_yticks([])
     ax.imshow(he_image)
+    ax.axis("off")
     sc = ax.scatter(
         coor_df["X"],
         coor_df["Y"],
         c=count_sub_df[gene_result[gene_result == i].index].T.mean(),
         cmap="autumn_r",
+        vmin=0,
+        vmax=0.8,
         s=16,
         alpha=0.7,
     )
@@ -219,6 +225,79 @@ for i in range(1, n_gene_clusters + 1):
         ),
         bbox_inches="tight",
     )
+    plt.close(fig)
+
+# %% draw together
+left, bottom = 0.1, 0.1
+width, height = 0.66, 0.66
+spacing, cluster_width = 0.03, 0.22
+rect_heatmap = [left + spacing, bottom + spacing * 2, width, height]
+
+fig = plt.figure(figsize=(15, 15))
+ax_heatmap = fig.add_axes(rect_heatmap)
+
+for i in range(n_gene_clusters):
+    rect_cluster = [
+        left + width + spacing * (2 + i // 3) + cluster_width * (i // 3),
+        bottom + spacing * (3 - i % 3) + cluster_width * (2 - i % 3),
+        cluster_width,
+        cluster_width,
+    ]
+    ax_cluster = fig.add_axes(rect_cluster)
+    ax_cluster.set_title(f"Cluster {i + 1} hotspot mean", fontsize=10)
+    ax_cluster.set_xticks([])
+    ax_cluster.set_yticks([])
+    ax_cluster.imshow(he_image)
+    ax_cluster.axis("off")
+    sc = ax_cluster.scatter(
+        coor_df["X"],
+        coor_df["Y"],
+        c=count_sub_df[gene_result[gene_result == i + 1].index].T.mean(),
+        cmap="autumn_r",
+        vmin=0,
+        vmax=0.8,
+        s=4,
+        alpha=0.7,
+    )
+
+ii = n_gene_clusters // 3
+rect_cb = [
+    left + width + spacing * (ii + 2) + cluster_width * ii,
+    bottom + spacing * 2,
+    0.02,
+    height,
+]
+ax_cb = fig.add_axes(rect_cb)
+fig.colorbar(sc, cax=ax_cb)
+
+ax_heatmap.imshow(
+    count_sub_df.reindex(columns=gene_result.index, index=spot_result.index),
+    cmap="Reds",
+    aspect="auto",
+)
+
+flag = 0
+for i in range(1, n_gene_clusters):
+    flag += len(gene_result[gene_result == i])
+    ax_heatmap.plot([flag, flag], [0, count_sub_df.shape[0] - 5])
+flag = 0
+for i in range(1, n_spot_clusters):
+    flag += len(spot_result[spot_result == i])
+    ax_heatmap.plot([0, count_sub_df.shape[1] - 5], [flag, flag])
+
+ax_heatmap.set_title(f"{idx}")
+ax_heatmap.set_xticks([])
+ax_heatmap.set_yticks([])
+ax_heatmap.set_xlabel("Genes")
+ax_heatmap.set_ylabel("Spots")
+fig.savefig(
+    Path.joinpath(
+        WORKDIR,
+        f"results/gene-cluster/{idx}/{idx}-full.jpg",
+    ),
+    bbox_inches="tight",
+)
+plt.close(fig)
 
 # %% save table
 gene_result.to_csv(
@@ -226,3 +305,9 @@ gene_result.to_csv(
         WORKDIR,
         f"results/gene-cluster/{idx}/{idx}-genes.csv",
     ))
+for i in range(1, n_gene_clusters + 1):
+    gene_result[gene_result == i].to_csv(
+        Path.joinpath(
+            WORKDIR,
+            f"results/gene-cluster/{idx}/tables/{idx}-genes-{i}.csv",
+        ))

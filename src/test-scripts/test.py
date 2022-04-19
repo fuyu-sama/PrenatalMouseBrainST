@@ -29,11 +29,12 @@
 #
 
 # %% environment config
+import sys
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+from matplotlib_venn import venn2, venn3
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 plt.rcParams.update({"font.size": 16})
@@ -60,79 +61,48 @@ colors = [
     "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
 ]
 
-# %% read data
-count_full_df = pd.DataFrame()
-for idx in idx_full:
-    count_path = Path.joinpath(
-        WORKDIR,
-        f"spaceranger/{idx}/outs/filtered_feature_bc_matrix/{idx}.csv")
-    coor_path = Path.joinpath(
-        WORKDIR,
-        f"spaceranger/{idx}/outs/spatial/coor-{idx}.csv",
-    )
+try:
+    scale_method = sys.argv[1]
+except IndexError:
+    scale_method = "logcpm"
 
-    count_df = pd.read_csv(count_path, index_col=0, header=0).T
-    coor_df = pd.read_csv(coor_path, index_col=0, header=0)
-    count_df.index = [f"{idx}_{i}" for i in count_df.index]
-    coor_df.index = [f"{idx}_{i}" for i in coor_df.index]
-    assert all(coor_df.index == count_df.index)
+# %%
+tp_full = {
+    "E135": ["E135A", "E135B"],
+    "E155": ["E155A", "E155B"],
+    "E165": ["E165A", "E165B"],
+    "E175": ["E175A1", "E175A2", "E175B"],
+    "P0": ["P0A1", "P0A2"],
+}
 
-    mt_genes = []
-    for i in count_df.columns:
-        if i[:3] == "mt-":
-            mt_genes.append(i)
-    count_df.drop(columns=mt_genes, inplace=True)
+for tp in tp_full:
+    s = []
+    for idx in tp_full[tp]:
+        moran_path = Path.joinpath(
+            WORKDIR,
+            f"results/global_moran/{idx}-{scale_method}-8.csv",
+        )
 
-    temp_df = count_df.where(count_df < 1, 1)
-    temp_series = temp_df.sum() / temp_df.shape[0]
-    drop_genes = []
-    t = 0.05
-    for i in temp_series.index:
-        if temp_series[i] > 1 - t or temp_series[i] < t:
-            drop_genes.append(i)
-    count_df.drop(columns=drop_genes, inplace=True)
-
-    drop_genes = []
-    for i in count_df.columns:
-        if sum(count_df[i]) <= 10:
-            drop_genes.append(i)
-    count_df.drop(columns=drop_genes, inplace=True)
-
-    count_full_df = pd.concat([count_full_df, count_df], axis=0, join="outer")
-
-count_full_df = count_full_df.dropna(axis="columns")
-
-# %% raw count
-count_full_df.T.to_csv(
-    Path.joinpath(WORKDIR, f"Data/scale_df/raw-test/full-raw-test.csv"))
-for idx in idx_full:
-    spots = [i for i in count_full_df.index if idx in i]
-    count_full_df.T.reindex(columns=spots).to_csv(
-        Path.joinpath(WORKDIR, f"Data/scale_df/raw-test/{idx}-raw-test.csv"))
-
-# %% logcpm
-scale_full_df = np.log(count_full_df.T * 10000 / count_full_df.T.sum() + 1)
-scale_full_df.to_csv(
-    Path.joinpath(WORKDIR, f"Data/scale_df/logcpm-test/full-logcpm-test.csv"))
-for idx in idx_full:
-    spots = [i for i in scale_full_df.columns if idx in i]
-    scale_full_df.reindex(columns=spots).to_csv(
+        moran_df = pd.read_csv(moran_path, index_col=0, header=0)
+        moran_df = moran_df.sort_values(by="I_value", ascending=False)[:1500]
+        s.append(moran_df.index)
+    fig, ax = plt.subplots()
+    if len(s) == 2:
+        venn2([set(i) for i in s], tp_full[tp], ax=ax)
+    elif len(s) == 3:
+        venn3([set(i) for i in s], tp_full[tp], ax=ax)
+    ax.set_title(f"{tp} total gene: 1500")
+    fig.savefig(
         Path.joinpath(
             WORKDIR,
-            f"Data/scale_df/logcpm-test/{idx}-logcpm-test.csv",
+            f"results/1/{tp}.jpg",
         ))
-
-# %% cpm
-scale_full_df = count_full_df.T * 10000 / count_full_df.T.sum()
-scale_full_df.to_csv(
-    Path.joinpath(
-        WORKDIR,
-        f"Data/scale_df/cpm-test/full-cpm-test.csv",
-    ))
-for idx in idx_full:
-    spots = [i for i in scale_full_df.columns if idx in i]
-    scale_full_df.reindex(columns=spots).to_csv(
-        Path.joinpath(
-            WORKDIR,
-            f"Data/scale_df/cpm-test/{idx}-cpm-test.csv",
-        ))
+    with open(Path.joinpath(WORKDIR, f"results/1/{tp}.csv"), "w") as f:
+        ss = set([])
+        for i in range(len(s)):
+            if i == 0:
+                ss = set(list(s[i]))
+            else:
+                ss = ss & set(list(s[i]))
+        for i in ss:
+            f.write(f"{i}\n")

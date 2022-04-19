@@ -34,7 +34,7 @@ library(SC3)
 library(SingleCellExperiment)
 
 args <- commandArgs(trailingOnly = TRUE)
-set.seed(42)
+set.seed(16)
 sessionInfo()
 
 idx <- args[1]

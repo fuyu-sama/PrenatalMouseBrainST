@@ -33,7 +33,7 @@ if true; then
         fi
         for idx in ${idx_full[@]}; do
             (${PYTHON_PATH} src/py/run-hotspot.py \
-                ${idx} ${scale_method} 8 &>> log/pipeline-2.log)&
+                ${idx} ${scale_method} 8 &>> log/pipeline-3.log)&
         done
         wait
     done
@@ -45,9 +45,39 @@ if true; then
     for idx in ${idx_full[@]}; do
         if [ ! -d results/gene-cluster/${idx} ]; then
             mkdir results/gene-cluster/${idx}
+            mkdir results/gene-cluster/${idx}/tables
         fi
-        (${PYTHON_PATH} src/py/run-gene-cluster.py \
-            logcpm ${idx} &>> log/pipeline-2.log)
+        (
+            ${PYTHON_PATH} src/py/run-gene-cluster.py \
+                logcpm ${idx} 15 &>> log/pipeline-3.log
+            for i in {1..15}; do
+                ${PYTHON_PATH} src/py/run-id-transfer.py \
+                    results/gene-cluster/${idx}/tables/${idx}-genes-${i}.csv \
+                    &>> log/pipeline-3.log
+            done
+        )&
+    done
+    wait
+fi
+
+# %% gene cluster homer
+if true; then
+    for idx in ${idx_full[@]}; do
+        for i in {1..15}; do
+            (
+                source homer-4.11.sh;
+                findMotifs.pl \
+                    results/gene-cluster/${idx}/tables/${idx}-genes-${i}.csv.out \
+                    mouse results/motifResults/gene-cluster/${idx}-${i} \
+                    -start -1000 -end 1000 &>> log/pipeline-3.log
+            )&
+        done
+    done
+    wait
+
+    for idx in ${idx_full[@]}; do
+        (${PYTHON_PATH} src/py/draw-genes-homer.py ${idx} 9 &>> log/pipeline-3.log)&
+        (${PYTHON_PATH} src/py/draw-genes-go.py ${idx} 9 &>> log/pipeline-3.log)&
     done
     wait
 fi

@@ -13,12 +13,12 @@ idx_full=(
 )
 scale_methods=(
     combat
-    combat-logcpm-gmm-2
-    combat-logcpm-gmm-3 
-    combat-logcpm-1000
-    logcpm
-    cpm
-    raw
+    #combat-logcpm-gmm-2
+    #combat-logcpm-gmm-3 
+    #combat-logcpm-1000
+    #logcpm
+    #cpm
+    #raw
 )
 
 cd $HOME/workspace/mouse-brain-full
@@ -30,14 +30,14 @@ for directory in ${scale_methods[@]}; do
     fi
 done
 
-if true; then
+if false; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Scaling data..."
     ${PYTHON_PATH} src/py/run-cpm.py &>> log/pipeline-2.log
     ${PYTHON_PATH} src/py/run-combat.py &>> log/pipeline-2.log
 fi
 
 # %% subsample
-if true; then
+if false; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Calculating global moran..."
     for scale_method in raw logcpm cpm combat; do
         for idx in ${idx_full[@]}; do
@@ -48,12 +48,12 @@ if true; then
     done
 fi
 
-if true; then
+if false; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Subsampling data with I-value..."
     ${PYTHON_PATH} src/py/run-subsample-I.py combat 1000 &>> log/pipeline-2.log
 fi
 
-if true; then
+if false; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Subsampling data with I-value & GMM..."
     ${PYTHON_PATH} src/py/run-gmm.py logcpm &>> log/pipeline-2.log
     ${PYTHON_PATH} src/py/run-subsample-gmm.py combat 2 &>> log/pipeline-2.log
