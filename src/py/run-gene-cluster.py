@@ -54,6 +54,14 @@ idx_full = {
     "P0A1": "V10M17-101-P0A1",
     "P0A2": "V10M17-101-P0A2",
 }
+tp_full = {
+    "E135": ["E135A", "E135B"],
+    "E155": ["E155A", "E155B"],
+    "E165": ["E165A", "E165B"],
+    "E175": ["E175A1", "E175A2"],
+    # "E175": ["E175A1", "E175A2", "E175B"],
+    "P0": ["P0A1", "P0A2"],
+}
 colors = [
     "#FAEBD7", "#00FFFF", "#FFD700", "#0000FF", "#FF8C00", "#EE82EE",
     "#9ACD32", "#5F9EA0", "#7FFF00", "#7FFFD4", "#6495ED", "#008B8B",
@@ -71,6 +79,11 @@ except IndexError:
     idx = "E165A"
     n_gene_clusters = 9
 
+for i in tp_full:
+    for j in tp_full[i]:
+        if j == idx:
+            tp = j
+
 # %% read data
 count_path = Path.joinpath(
     WORKDIR,
@@ -85,18 +98,19 @@ count_df = pd.read_csv(
 coor_path = Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv")
 coor_df = pd.read_csv(coor_path, index_col=0, header=0)
 
-moran_path = Path.joinpath(
-    WORKDIR,
-    f"results/global_moran/{idx}-{scale_method}-8.csv",
-)
-
-moran_df = pd.read_csv(moran_path, index_col=0, header=0)
 he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
 he_image = Image.open(he_path)
 
 # %% subset
-moran_df = moran_df.sort_values(by="I_value", ascending=False)
-count_sub_df = count_df.reindex(columns=moran_df.index[:1500])
+selected_genes = []
+with open(Path.joinpath(
+        WORKDIR,
+        f"results/I-gmm/{tp}-{scale_method}-3.csv",
+)) as f:
+    for line in f:
+        line = line.strip()
+        selected_genes.append(line)
+count_sub_df = count_df.reindex(columns=selected_genes)
 
 # %% calculate distmat
 n_spot_clusters = 9
