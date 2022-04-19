@@ -74,7 +74,7 @@ colors = [
 try:
     n_gene_clusters = int(sys.argv[1])
 except IndexError:
-    n_gene_clusters = 21
+    n_gene_clusters = 12
 
 
 # %%
@@ -83,7 +83,7 @@ def main(idx):
     for i in tp_full:
         for j in tp_full[i]:
             if j == idx:
-                tp = j
+                tp = i
     count_path = Path.joinpath(
         WORKDIR,
         f"Data/scale_df/{scale_method}-hotspot-8/{idx}-{scale_method}-hotspot-8.csv",

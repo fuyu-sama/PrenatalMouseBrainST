@@ -82,7 +82,7 @@ except IndexError:
 for i in tp_full:
     for j in tp_full[i]:
         if j == idx:
-            tp = j
+            tp = i
 
 # %% read data
 count_path = Path.joinpath(
