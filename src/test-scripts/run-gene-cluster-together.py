@@ -63,6 +63,20 @@ tp_full = {
     # "E175": ["E175A1", "E175A2", "E175B"],
     "P0": ["P0A1", "P0A2"],
 }
+idx_tp = {
+    "E135A": "E135",
+    "E135B": "E135",
+    "E155A": "E155",
+    "E155B": "E155",
+    "E165A": "E165",
+    "E165B": "E165",
+    "E175A1": "E175",
+    "E175A2": "E175",
+    "E175B": "E175",
+    # "P0B": "P0",
+    "P0A1": "P0",
+    "P0A2": "P0",
+}
 colors = [
     "#FAEBD7", "#00FFFF", "#FFD700", "#0000FF", "#FF8C00", "#EE82EE",
     "#9ACD32", "#5F9EA0", "#7FFF00", "#7FFFD4", "#6495ED", "#008B8B",
@@ -80,10 +94,6 @@ except IndexError:
 # %%
 def main(idx):
     scale_method = "logcpm"
-    for i in tp_full:
-        for j in tp_full[i]:
-            if j == idx:
-                tp = i
     count_path = Path.joinpath(
         WORKDIR,
         f"Data/scale_df/{scale_method}-hotspot-8/{idx}-{scale_method}-hotspot-8.csv",
@@ -103,7 +113,7 @@ def main(idx):
     selected_genes = []
     with open(Path.joinpath(
             WORKDIR,
-            f"results/I-gmm/{tp}-{scale_method}-3.csv",
+            f"results/I-gmm/{idx_tp[idx]}-{scale_method}-3.csv",
     )) as f:
         for line in f:
             line = line.strip()
@@ -200,7 +210,7 @@ def main(idx):
 
 
 if __name__ == "__main__":
-    pool = Pool(12)
+    pool = Pool(6)
     pool.map(main, idx_full.keys())
     pool.close()
     pool.join()
