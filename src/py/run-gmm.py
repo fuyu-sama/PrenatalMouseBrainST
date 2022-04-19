@@ -73,14 +73,15 @@ tp_full = {
     "E135": ["E135A", "E135B"],
     "E155": ["E155A", "E155B"],
     "E165": ["E165A", "E165B"],
-    "E175": ["E175A1", "E175A2", "E175B"],
+    "E175": ["E175A1", "E175A2"],
+    # "E175": ["E175A1", "E175A2", "E175B"],
     "P0": ["P0A1", "P0A2"],
 }
 
 for n in [2, 3]:
-    ss = []
+    sss = []  # set of selected genes' name, i.e., union of genes in all samples
     for tp in tp_full:
-        s = []
+        s = []  # list of selected_genes list
         for idx in tp_full[tp]:
             global_moran = pd.read_csv(
                 Path.joinpath(
@@ -95,12 +96,15 @@ for n in [2, 3]:
                 n_components=n,
             )
             s.append(selected_genes)
-            [ss.append(i) for i in selected_genes]
+            [sss.append(i) for i in selected_genes]
             ax.figure.savefig(
                 Path.joinpath(
                     WORKDIR,
-                    f"results/I-gmm/pdf/{scale_method}-{n}-pdf.jpg",
+                    f"results/I-gmm/pdf/{idx}-{scale_method}-{n}-pdf.jpg",
                 ))
+        # end of for idx in tp_full[tp]
+
+        # draw venn map
         fig, ax = plt.subplots()
         if len(s) == 2:
             venn2([set(i) for i in s], tp_full[tp], ax=ax)
@@ -112,10 +116,28 @@ for n in [2, 3]:
                 WORKDIR,
                 f"results/I-gmm/venn/{tp}-{scale_method}-{n}.jpg",
             ))
+
+        # write intersection genes
+        ss = set()  # intersection of genes in same timepoint
+        for i in range(len(s)):
+            if i == 0:
+                ss = set(s[i])
+            else:
+                ss = set(s[i]) & ss
+        with open(
+                Path.joinpath(
+                    WORKDIR,
+                    f"results/I-gmm/{tp}-{scale_method}-{n}.csv",
+                ), "w") as f:
+            for i in ss:
+                f.write(f"{i}\n")
+    # end of for tp in tp_full
+
     with open(
             Path.joinpath(
                 WORKDIR,
                 f"results/I-gmm/full-{scale_method}-{n}.csv",
             ), "w") as f:
-        for i in set(ss):
+        for i in set(sss):
             f.write(f"{i}\n")
+# end of for n in [2, 3]
