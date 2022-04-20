@@ -52,10 +52,8 @@ idx_full = {
 }
 try:
     scale_method = sys.argv[1]
-    n = sys.argv[2]
 except IndexError:
     scale_method = "logcpm"
-    n = 2
 
 # %% read data
 full_path = Path.joinpath(
@@ -65,7 +63,7 @@ full_path = Path.joinpath(
 full_df = pd.read_csv(full_path, index_col=0, header=0)
 
 gene_list = []
-with open(Path.joinpath(WORKDIR, f"results/I-gmm/full-logcpm-{n}.csv")) as f:
+with open(Path.joinpath(WORKDIR, f"results/I-gmm/full-logcpm-3.csv")) as f:
     for line in f:
         gene_list.append(line.strip())
 
@@ -74,14 +72,14 @@ full_df = full_df.reindex(index=set(gene_list))
 full_df.to_csv(
     Path.joinpath(
         WORKDIR,
-        f"Data/scale_df/{scale_method}-logcpm-gmm-{n}",
-        f"full-{scale_method}-logcpm-gmm-{n}.csv",
+        f"Data/scale_df/{scale_method}-gmm",
+        f"full-{scale_method}-gmm.csv",
     ))
 for idx in idx_full:
     sub_df = full_df.reindex(columns=[i for i in full_df.columns if idx in i])
     sub_df.to_csv(
         Path.joinpath(
             WORKDIR,
-            f"Data/scale_df/{scale_method}-logcpm-gmm-{n}",
-            f"{idx}-{scale_method}-logcpm-gmm-{n}.csv",
+            f"Data/scale_df/{scale_method}-gmm",
+            f"{idx}-{scale_method}-gmm.csv",
         ))

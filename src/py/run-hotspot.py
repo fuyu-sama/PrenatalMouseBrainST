@@ -97,5 +97,5 @@ hotspot_df = local_moran(
 hotspot_df.T.to_csv(
     Path.joinpath(
         WORKDIR,
-        f"Data/scale_df/{scale_method}-hotspot-{knn}/{idx}-{scale_method}-hotspot-{knn}.csv"
+        f"Data/scale_df/{scale_method}-hotspot/{idx}-{scale_method}-hotspot.csv"
     ))

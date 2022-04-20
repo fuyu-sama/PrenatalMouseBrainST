@@ -1,5 +1,5 @@
 #PBS -N pipeline-2
-#PBS -l nodes=comput2:ppn=60
+#PBS -l nodes=1:ppn=60
 #PBS -l walltime=240:00:00
 
 # %% environment config
@@ -13,8 +13,7 @@ idx_full=(
 )
 scale_methods=(
     combat
-    combat-logcpm-gmm-2
-    combat-logcpm-gmm-3 
+    combat-gmm
     logcpm
     cpm
     raw
@@ -29,14 +28,14 @@ for directory in ${scale_methods[@]}; do
     fi
 done
 
-if false; then
+if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Scaling data..."
     ${PYTHON_PATH} src/py/run-cpm.py &>> log/pipeline-2.log
     ${PYTHON_PATH} src/py/run-combat.py &>> log/pipeline-2.log
 fi
 
 # %% subsample
-if false; then
+if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Calculating global moran..."
     for scale_method in raw logcpm cpm combat; do
         for idx in ${idx_full[@]}; do
@@ -47,24 +46,18 @@ if false; then
     done
 fi
 
-if false; then
-    echo "[`date +%Y.%m.%d\ %H:%M:%S`] Subsampling data with I-value..."
-    ${PYTHON_PATH} src/py/run-subsample-I.py combat 1000 &>> log/pipeline-2.log
-fi
-
-if false; then
+if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Subsampling data with I-value & GMM..."
     ${PYTHON_PATH} src/py/run-gmm.py logcpm &>> log/pipeline-2.log
-    ${PYTHON_PATH} src/py/run-subsample-gmm.py combat 2 &>> log/pipeline-2.log
-    ${PYTHON_PATH} src/py/run-subsample-gmm.py combat 3 &>> log/pipeline-2.log
+    ${PYTHON_PATH} src/py/run-subsample-gmm.py combat &>> log/pipeline-2.log
 fi
 
 # %% hotspot
-if false; then
+if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Running hotspot..."
     for scale_method in raw logcpm cpm combat; do
-        if [ ! -d Data/scale_df/${scale_method}-hotspot-8 ]; then
-            mkdir Data/scale_df/${scale_method}-hotspot-8
+        if [ ! -d Data/scale_df/${scale_method}-hotspot ]; then
+            mkdir Data/scale_df/${scale_method}-hotspot
         fi
         for idx in ${idx_full[@]}; do
             (${PYTHON_PATH} src/py/run-hotspot.py \
@@ -77,18 +70,18 @@ fi
 # %% gene cluster
 if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Clustering genes..."
-    n_gene_clusters=12
     for idx in ${idx_full[@]}; do
-        if [ ! -d results/gene-cluster/${idx}-${n_gene_clusters} ]; then
-            mkdir results/gene-cluster/${idx}-${n_gene_clusters}
-            mkdir results/gene-cluster/${idx}-${n_gene_clusters}/tables
-        fi
-        (
-            ${PYTHON_PATH} src/py/run-gene-cluster.py \
-                logcpm ${idx} ${n_gene_clusters} &>> log/pipeline-2.log
-        )&
+        for n_gene_clusters in {8..12}; do
+            if [ ! -d results/gene-cluster/${idx}-${n_gene_clusters} ]; then
+                mkdir results/gene-cluster/${idx}-${n_gene_clusters}
+                mkdir results/gene-cluster/${idx}-${n_gene_clusters}/tables
+            fi
+            (
+                ${PYTHON_PATH} src/py/run-gene-cluster.py \
+                    logcpm ${idx} ${n_gene_clusters} &>> log/pipeline-2.log
+            )&
+        done
     done
-    wait
 fi
 
 # %% cluster
