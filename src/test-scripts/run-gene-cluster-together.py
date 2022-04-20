@@ -203,7 +203,7 @@ def main(idx):
     fig.savefig(
         Path.joinpath(
             WORKDIR,
-            f"results/1/{n_gene_clusters}-{idx}.jpg",
+            f"results/1/{idx}-{n_gene_clusters}.jpg",
         ),
         bbox_inches="tight",
     )
