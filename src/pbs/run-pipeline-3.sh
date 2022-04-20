@@ -42,19 +42,15 @@ fi
 # %% gene cluster
 if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Clustering genes..."
+    n_gene_clusters=12
     for idx in ${idx_full[@]}; do
-        if [ ! -d results/gene-cluster/${idx} ]; then
-            mkdir results/gene-cluster/${idx}
-            mkdir results/gene-cluster/${idx}/tables
+        if [ ! -d results/gene-cluster/${idx}-${n_gene_clusters} ]; then
+            mkdir results/gene-cluster/${idx}-${n_gene_clusters}
+            mkdir results/gene-cluster/${idx}-${n_gene_clusters}/tables
         fi
         (
             ${PYTHON_PATH} src/py/run-gene-cluster.py \
-                logcpm ${idx} 15 &>> log/pipeline-3.log
-            for i in {1..15}; do
-                ${PYTHON_PATH} src/py/run-id-transfer.py \
-                    results/gene-cluster/${idx}/tables/${idx}-genes-${i}.csv \
-                    &>> log/pipeline-3.log
-            done
+                logcpm ${idx} ${n_gene_clusters} &>> log/pipeline-3.log
         )&
     done
     wait
@@ -63,9 +59,12 @@ fi
 # %% gene cluster homer
 if true; then
     for idx in ${idx_full[@]}; do
-        for i in {1..15}; do
+        for i in {1..$n_gene_clusters}; do
             (
                 source homer-4.11.sh;
+                ${PYTHON_PATH} src/py/run-id-transfer.py \
+                    results/gene-cluster/${idx}/tables/${idx}-genes-${i}.csv \
+                    &>> log/pipeline-3.log
                 findMotifs.pl \
                     results/gene-cluster/${idx}/tables/${idx}-genes-${i}.csv.out \
                     mouse results/motifResults/gene-cluster/${idx}-${i} \

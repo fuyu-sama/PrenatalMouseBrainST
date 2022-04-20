@@ -30,6 +30,7 @@
 
 # %% environment config
 import sys
+from math import ceil
 from pathlib import Path
 
 import pandas as pd
@@ -62,6 +63,20 @@ tp_full = {
     # "E175": ["E175A1", "E175A2", "E175B"],
     "P0": ["P0A1", "P0A2"],
 }
+idx_tp = {
+    "E135A": "E135",
+    "E135B": "E135",
+    "E155A": "E155",
+    "E155B": "E155",
+    "E165A": "E165",
+    "E165B": "E165",
+    "E175A1": "E175",
+    "E175A2": "E175",
+    "E175B": "E175",
+    # "P0B": "P0",
+    "P0A1": "P0",
+    "P0A2": "P0",
+}
 colors = [
     "#FAEBD7", "#00FFFF", "#FFD700", "#0000FF", "#FF8C00", "#EE82EE",
     "#9ACD32", "#5F9EA0", "#7FFF00", "#7FFFD4", "#6495ED", "#008B8B",
@@ -78,11 +93,6 @@ except IndexError:
     scale_method = "logcpm"
     idx = "E165A"
     n_gene_clusters = 9
-
-for i in tp_full:
-    for j in tp_full[i]:
-        if j == idx:
-            tp = i
 
 # %% read data
 count_path = Path.joinpath(
@@ -105,7 +115,7 @@ he_image = Image.open(he_path)
 selected_genes = []
 with open(Path.joinpath(
         WORKDIR,
-        f"results/I-gmm/{tp}-{scale_method}-3.csv",
+        f"results/I-gmm/{idx_tp[idx]}-{scale_method}-3.csv",
 )) as f:
     for line in f:
         line = line.strip()
@@ -155,7 +165,7 @@ for i in range(1, n_spot_clusters):
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        f"results/gene-cluster/{idx}/{idx}-heatmap-1.jpg",
+        f"results/gene-cluster/{idx}-{n_gene_clusters}/{idx}-heatmap-1.jpg",
     ),
     bbox_inches="tight",
 )
@@ -207,7 +217,7 @@ ax_heatmap.set_ylabel("Spots")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        f"results/gene-cluster/{idx}/{idx}-heatmap-2.jpg",
+        f"results/gene-cluster/{idx}-{n_gene_clusters}/{idx}-heatmap-2.jpg",
     ),
     bbox_inches="tight",
 )
@@ -235,7 +245,7 @@ for i in range(1, n_gene_clusters + 1):
     fig.savefig(
         Path.joinpath(
             WORKDIR,
-            f"results/gene-cluster/{idx}/{idx}-{i}.jpg",
+            f"results/gene-cluster/{idx}-{n_gene_clusters}/{idx}-{i}.jpg",
         ),
         bbox_inches="tight",
     )
@@ -274,7 +284,7 @@ for i in range(n_gene_clusters):
         alpha=0.7,
     )
 
-ii = n_gene_clusters // 3
+ii = ceil(n_gene_clusters // 3)
 rect_cb = [
     left + width + spacing * (ii + 2) + cluster_width * ii,
     bottom + spacing * 2,
@@ -307,7 +317,7 @@ ax_heatmap.set_ylabel("Spots")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        f"results/gene-cluster/{idx}/{idx}-full.jpg",
+        f"results/gene-cluster/{idx}-{n_gene_clusters}/{idx}-full.jpg",
     ),
     bbox_inches="tight",
 )
@@ -317,11 +327,11 @@ plt.close(fig)
 gene_result.to_csv(
     Path.joinpath(
         WORKDIR,
-        f"results/gene-cluster/{idx}/{idx}-genes.csv",
+        f"results/gene-cluster/{idx}-{n_gene_clusters}/{idx}-genes.csv",
     ))
 for i in range(1, n_gene_clusters + 1):
     gene_result[gene_result == i].to_csv(
         Path.joinpath(
             WORKDIR,
-            f"results/gene-cluster/{idx}/tables/{idx}-genes-{i}.csv",
+            f"results/gene-cluster/{idx}-{n_gene_clusters}/tables/{idx}-genes-{i}.csv",
         ))
