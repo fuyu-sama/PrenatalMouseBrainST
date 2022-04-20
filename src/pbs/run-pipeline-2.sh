@@ -13,12 +13,11 @@ idx_full=(
 )
 scale_methods=(
     combat
-    #combat-logcpm-gmm-2
-    #combat-logcpm-gmm-3 
-    #combat-logcpm-1000
-    #logcpm
-    #cpm
-    #raw
+    combat-logcpm-gmm-2
+    combat-logcpm-gmm-3 
+    logcpm
+    cpm
+    raw
 )
 
 cd $HOME/workspace/mouse-brain-full
@@ -58,6 +57,38 @@ if false; then
     ${PYTHON_PATH} src/py/run-gmm.py logcpm &>> log/pipeline-2.log
     ${PYTHON_PATH} src/py/run-subsample-gmm.py combat 2 &>> log/pipeline-2.log
     ${PYTHON_PATH} src/py/run-subsample-gmm.py combat 3 &>> log/pipeline-2.log
+fi
+
+# %% hotspot
+if false; then
+    echo "[`date +%Y.%m.%d\ %H:%M:%S`] Running hotspot..."
+    for scale_method in raw logcpm cpm combat; do
+        if [ ! -d Data/scale_df/${scale_method}-hotspot-8 ]; then
+            mkdir Data/scale_df/${scale_method}-hotspot-8
+        fi
+        for idx in ${idx_full[@]}; do
+            (${PYTHON_PATH} src/py/run-hotspot.py \
+                ${idx} ${scale_method} 8 &>> log/pipeline-2.log)&
+        done
+        wait
+    done
+fi
+
+# %% gene cluster
+if true; then
+    echo "[`date +%Y.%m.%d\ %H:%M:%S`] Clustering genes..."
+    n_gene_clusters=12
+    for idx in ${idx_full[@]}; do
+        if [ ! -d results/gene-cluster/${idx}-${n_gene_clusters} ]; then
+            mkdir results/gene-cluster/${idx}-${n_gene_clusters}
+            mkdir results/gene-cluster/${idx}-${n_gene_clusters}/tables
+        fi
+        (
+            ${PYTHON_PATH} src/py/run-gene-cluster.py \
+                logcpm ${idx} ${n_gene_clusters} &>> log/pipeline-2.log
+        )&
+    done
+    wait
 fi
 
 # %% cluster
