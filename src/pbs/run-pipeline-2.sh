@@ -1,5 +1,5 @@
 #PBS -N pipeline-2
-#PBS -l nodes=1:ppn=60
+#PBS -l nodes=comput2:ppn=40
 #PBS -l walltime=240:00:00
 
 # %% environment config
@@ -28,42 +28,36 @@ for directory in ${scale_methods[@]}; do
     fi
 done
 
-if true; then
+if false; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Scaling data..."
     ${PYTHON_PATH} src/py/run-cpm.py &>> log/pipeline-2.log
     ${PYTHON_PATH} src/py/run-combat.py &>> log/pipeline-2.log
 fi
 
 # %% subsample
-if true; then
+if false; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Calculating global moran..."
-    for scale_method in raw logcpm cpm combat; do
-        for idx in ${idx_full[@]}; do
-            (${PYTHON_PATH} src/py/run-global_moran.py \
-                ${idx} ${scale_method} 8 &>> log/pipeline-2.log)&
-        done
-        wait
+    for idx in ${idx_full[@]}; do
+        ${PYTHON_PATH} src/py/run-global_moran.py \
+            ${idx} logcpm 8 &>> log/pipeline-2.log
     done
 fi
 
-if true; then
+if false; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Subsampling data with I-value & GMM..."
     ${PYTHON_PATH} src/py/run-gmm.py logcpm &>> log/pipeline-2.log
     ${PYTHON_PATH} src/py/run-subsample-gmm.py combat &>> log/pipeline-2.log
 fi
 
 # %% hotspot
-if true; then
+if false; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Running hotspot..."
-    for scale_method in raw logcpm cpm combat; do
-        if [ ! -d Data/scale_df/${scale_method}-hotspot ]; then
-            mkdir Data/scale_df/${scale_method}-hotspot
-        fi
-        for idx in ${idx_full[@]}; do
-            (${PYTHON_PATH} src/py/run-hotspot.py \
-                ${idx} ${scale_method} 8 &>> log/pipeline-2.log)&
-        done
-        wait
+    if [ ! -d Data/scale_df/logcpm-hotspot ]; then
+        mkdir Data/scale_df/logcpm-hotspot
+    fi
+    for idx in ${idx_full[@]}; do
+        ${PYTHON_PATH} src/py/run-hotspot.py \
+            ${idx} logcpm 8 &>> log/pipeline-2.log
     done
 fi
 
@@ -81,6 +75,7 @@ if true; then
                     logcpm ${idx} ${n_gene_clusters} &>> log/pipeline-2.log
             )&
         done
+        wait
     done
 fi
 

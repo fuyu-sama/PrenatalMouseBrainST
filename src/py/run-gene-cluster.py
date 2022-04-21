@@ -97,7 +97,7 @@ except IndexError:
 # %% read data
 count_path = Path.joinpath(
     WORKDIR,
-    f"Data/scale_df/{scale_method}-hotspot-8/{idx}-{scale_method}-hotspot-8.csv",
+    f"Data/scale_df/{scale_method}-hotspot/{idx}-{scale_method}-hotspot.csv",
 )
 count_df = pd.read_csv(
     count_path,
@@ -284,7 +284,7 @@ for i in range(n_gene_clusters):
         alpha=0.7,
     )
 
-ii = ceil(n_gene_clusters // 3)
+ii = ceil(n_gene_clusters / 3)
 rect_cb = [
     left + width + spacing * (ii + 2) + cluster_width * ii,
     bottom + spacing * 2,
