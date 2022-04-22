@@ -12,8 +12,8 @@ idx_full=(
     P0A1 P0A2
 )
 scale_methods=(
-    combat
     combat-gmm
+    combat
     logcpm
     cpm
     raw
@@ -28,36 +28,36 @@ for directory in ${scale_methods[@]}; do
     fi
 done
 
-if false; then
+if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Scaling data..."
     ${PYTHON_PATH} src/py/run-cpm.py &>> log/pipeline-2.log
     ${PYTHON_PATH} src/py/run-combat.py &>> log/pipeline-2.log
 fi
 
 # %% subsample
-if false; then
+if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Calculating global moran..."
     for idx in ${idx_full[@]}; do
         ${PYTHON_PATH} src/py/run-global_moran.py \
-            ${idx} logcpm 8 &>> log/pipeline-2.log
+            ${idx} logcpm 6 &>> log/pipeline-2.log
     done
 fi
 
-if false; then
+if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Subsampling data with I-value & GMM..."
     ${PYTHON_PATH} src/py/run-gmm.py logcpm &>> log/pipeline-2.log
     ${PYTHON_PATH} src/py/run-subsample-gmm.py combat &>> log/pipeline-2.log
 fi
 
 # %% hotspot
-if false; then
+if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Running hotspot..."
     if [ ! -d Data/scale_df/logcpm-hotspot ]; then
         mkdir Data/scale_df/logcpm-hotspot
     fi
     for idx in ${idx_full[@]}; do
         ${PYTHON_PATH} src/py/run-hotspot.py \
-            ${idx} logcpm 8 &>> log/pipeline-2.log
+            ${idx} logcpm 6 &>> log/pipeline-2.log
     done
 fi
 
