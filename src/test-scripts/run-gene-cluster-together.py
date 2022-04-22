@@ -29,7 +29,6 @@
 #
 
 # %% environment config
-import sys
 from math import ceil
 from multiprocessing import Pool
 from pathlib import Path
@@ -38,6 +37,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from PIL import Image
 from scipy.cluster import hierarchy as sch
+from sklearn.cluster import KMeans
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 plt.rcParams.update({"font.size": 16})
@@ -86,18 +86,13 @@ colors = [
     "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
 ]
 
-try:
-    n_gene_clusters = int(sys.argv[1])
-except IndexError:
-    n_gene_clusters = 12
-
 
 # %%
 def main(idx):
     scale_method = "logcpm"
     count_path = Path.joinpath(
         WORKDIR,
-        f"Data/scale_df/{scale_method}-hotspot-8/{idx}-{scale_method}-hotspot-8.csv",
+        f"Data/scale_df/{scale_method}-hotspot/{idx}-{scale_method}-hotspot.csv",
     )
     count_df = pd.read_csv(
         count_path,
@@ -112,10 +107,11 @@ def main(idx):
     he_image = Image.open(he_path)
 
     selected_genes = []
-    with open(Path.joinpath(
-            WORKDIR,
-            f"results/I-gmm/{idx_tp[idx]}-{scale_method}-3.csv",
-    )) as f:
+    with open(
+            Path.joinpath(
+                WORKDIR,
+                f"results/I-gmm/{idx_tp[idx]}-{scale_method}-3.csv",
+            )) as f:
         for line in f:
             line = line.strip()
             selected_genes.append(line)
@@ -125,18 +121,25 @@ def main(idx):
 
     gene_distmat = sch.distance.pdist(count_sub_df.T, metric="jaccard")
     spot_distmat = sch.distance.pdist(count_sub_df, metric="jaccard")
-
     Z_gene = sch.linkage(gene_distmat, method="ward")
     gene_result = pd.Series(
         sch.fcluster(Z_gene, t=n_gene_clusters, criterion="maxclust"),
         index=count_sub_df.columns,
     ).sort_values()
-
     Z_spot = sch.linkage(spot_distmat, method="ward")
     spot_result = pd.Series(
         sch.fcluster(Z_spot, t=n_spot_clusters, criterion="maxclust"),
         index=count_sub_df.index,
     ).sort_values()
+
+    # gene_result = pd.Series(
+    # KMeans(n_gene_clusters).fit_predict(count_sub_df.T),
+    # index=count_sub_df.columns,
+    # ).sort_values() + 1
+    # spot_result = pd.Series(
+    # KMeans(n_spot_clusters).fit_predict(count_sub_df),
+    # index=count_sub_df.index,
+    # ).sort_values() + 1
 
     left, bottom = 0.1, 0.1
     width, height = 0.66, 0.66
@@ -181,7 +184,10 @@ def main(idx):
     fig.colorbar(sc, cax=ax_cb)
 
     ax_heatmap.imshow(
-        count_sub_df.reindex(columns=gene_result.index, index=spot_result.index),
+        count_sub_df.reindex(
+            columns=gene_result.index,
+            index=spot_result.index,
+        ),
         cmap="Reds",
         aspect="auto",
     )
@@ -203,15 +209,22 @@ def main(idx):
     fig.savefig(
         Path.joinpath(
             WORKDIR,
-            f"results/1/{idx}-{n_gene_clusters}.jpg",
+            f"results/hierarchical/{idx}-{n_gene_clusters}.jpg",
         ),
         bbox_inches="tight",
     )
     plt.close(fig)
 
+    gene_result.to_csv(
+        Path.joinpath(
+            WORKDIR,
+            f"results/hierarchical/{idx}-{n_gene_clusters}-genes.csv",
+        ))
+
 
 if __name__ == "__main__":
-    pool = Pool(6)
-    pool.map(main, idx_full.keys())
-    pool.close()
-    pool.join()
+    for n_gene_clusters in range(6, 15):
+        pool = Pool(6)
+        pool.map(main, idx_full.keys())
+        pool.close()
+        pool.join()

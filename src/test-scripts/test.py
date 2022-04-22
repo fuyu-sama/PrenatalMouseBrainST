@@ -29,12 +29,9 @@
 #
 
 # %% environment config
-import sys
 from pathlib import Path
 
-import pandas as pd
 from matplotlib import pyplot as plt
-from matplotlib_venn import venn2, venn3
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 plt.rcParams.update({"font.size": 16})
@@ -61,48 +58,32 @@ colors = [
     "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
 ]
 
-try:
-    scale_method = sys.argv[1]
-except IndexError:
-    scale_method = "logcpm"
-
 # %%
-tp_full = {
-    "E135": ["E135A", "E135B"],
-    "E155": ["E155A", "E155B"],
-    "E165": ["E165A", "E165B"],
-    "E175": ["E175A1", "E175A2", "E175B"],
-    "P0": ["P0A1", "P0A2"],
+iii = {
+    "E165A": [11, 5],
+    "E165B": [11, 11],
+    "E175A1": [12, 10],
+    "E175A2": [12, 10],
+    "E175B": [12, 4],
+    "P0A1": [12, 5],
+    "P0A2": [12, 9],
 }
 
-for tp in tp_full:
-    s = []
-    for idx in tp_full[tp]:
-        moran_path = Path.joinpath(
-            WORKDIR,
-            f"results/global_moran/{idx}-{scale_method}-8.csv",
-        )
-
-        moran_df = pd.read_csv(moran_path, index_col=0, header=0)
-        moran_df = moran_df.sort_values(by="I_value", ascending=False)[:1500]
-        s.append(moran_df.index)
-    fig, ax = plt.subplots()
-    if len(s) == 2:
-        venn2([set(i) for i in s], tp_full[tp], ax=ax)
-    elif len(s) == 3:
-        venn3([set(i) for i in s], tp_full[tp], ax=ax)
-    ax.set_title(f"{tp} total gene: 1500")
-    fig.savefig(
-        Path.joinpath(
-            WORKDIR,
-            f"results/1/{tp}.jpg",
-        ))
-    with open(Path.joinpath(WORKDIR, f"results/1/{tp}.csv"), "w") as f:
-        ss = set([])
-        for i in range(len(s)):
-            if i == 0:
-                ss = set(list(s[i]))
-            else:
-                ss = ss & set(list(s[i]))
-        for i in ss:
-            f.write(f"{i}\n")
+ii = set()
+for _, idx in enumerate(iii):
+    gene_list_path = Path.joinpath(
+        WORKDIR,
+        f"results/gene-cluster/{idx}-{iii[idx][0]}/tables",
+        f"{idx}-genes-{iii[idx][1]}.csv",
+    )
+    gene_list = []
+    with open(gene_list_path) as f:
+        for line in f:
+            line = line.strip()
+            if line[0] == ",":
+                continue
+            gene_list.append(line.split(",")[0])
+    if _ == 0:
+        ii = set(gene_list)
+    else:
+        ii = set(gene_list) & ii
