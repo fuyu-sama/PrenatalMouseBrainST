@@ -84,7 +84,7 @@ for tp in tp_full:
         global_moran = pd.read_csv(
             Path.joinpath(
                 WORKDIR,
-                f"results/global_moran/{idx}-{scale_method}-8.csv",
+                f"results/global_moran/{idx}-{scale_method}-6.csv",
             ),
             index_col=0,
             header=0,
