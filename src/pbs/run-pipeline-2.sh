@@ -74,7 +74,7 @@ knn=8
 if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Clustering genes..."
     for idx in ${idx_full[@]}; do
-        for n_gene_clusters in {2..12}; do
+        for n_gene_clusters in {6..12}; do
             if [ ! -d results/gene-cluster/${idx}-${n_gene_clusters} ]; then
                 mkdir results/gene-cluster/${idx}-${n_gene_clusters}
                 mkdir results/gene-cluster/${idx}-${n_gene_clusters}/tables
