@@ -88,16 +88,19 @@ colors = [
 try:
     scale_method = sys.argv[1]
     idx = sys.argv[2]
-    n_gene_clusters = int(sys.argv[3])
+    knn = sys.argv[3]
+    n_gene_clusters = int(sys.argv[4])
 except IndexError:
     scale_method = "logcpm"
     idx = "E165A"
+    knn = 6
     n_gene_clusters = 9
 
 # %% read data
 count_path = Path.joinpath(
     WORKDIR,
-    f"Data/scale_df/{scale_method}-hotspot/{idx}-{scale_method}-hotspot.csv",
+    f"Data/scale_df/{scale_method}-hotspot-{knn}/",
+    "{idx}-{scale_method}-hotspot-{knn}.csv",
 )
 count_df = pd.read_csv(
     count_path,
@@ -113,10 +116,12 @@ he_image = Image.open(he_path)
 
 # %% subset
 selected_genes = []
-with open(Path.joinpath(
-        WORKDIR,
-        f"results/I-gmm/{idx_tp[idx]}-{scale_method}-3.csv",
-)) as f:
+with open(
+        Path.joinpath(
+            WORKDIR,
+            f"results/I-gmm/{scale_method}-{knn}/",
+            "{idx_tp[idx]}-{scale_method}-{knn}-3.csv",
+        )) as f:
     for line in f:
         line = line.strip()
         selected_genes.append(line)

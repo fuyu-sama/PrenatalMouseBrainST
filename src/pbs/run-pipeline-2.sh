@@ -13,10 +13,10 @@ idx_full=(
 )
 scale_methods=(
     combat-gmm
-    combat
-    logcpm
-    cpm
-    raw
+    #combat
+    #logcpm
+    #cpm
+    #raw
 )
 
 cd $HOME/workspace/mouse-brain-full
@@ -34,45 +34,54 @@ if true; then
     ${PYTHON_PATH} src/py/run-combat.py &>> log/pipeline-2.log
 fi
 
-# %% subsample
+# %% global moran
 if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Calculating global moran..."
     for idx in ${idx_full[@]}; do
         ${PYTHON_PATH} src/py/run-global_moran.py \
-            ${idx} logcpm 6 &>> log/pipeline-2.log
+            ${idx} logcpm 8 &>> log/pipeline-2.log
     done
 fi
 
+# %% subsample
+knn=8
 if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Subsampling data with I-value & GMM..."
-    ${PYTHON_PATH} src/py/run-gmm.py logcpm &>> log/pipeline-2.log
-    ${PYTHON_PATH} src/py/run-subsample-gmm.py combat &>> log/pipeline-2.log
+    if [ ! -d results/I-gmm/logcpm-${knn} ]; then
+        mkdir results/I-gmm/logcpm-${knn}
+        mkdir results/I-gmm/logcpm-${knn}/venn
+        mkdir results/I-gmm/logcpm-${knn}/pdf
+    fi
+    ${PYTHON_PATH} src/py/run-gmm.py logcpm ${knn}&>> log/pipeline-2.log
+    ${PYTHON_PATH} src/py/run-subsample-gmm.py combat ${knn} &>> log/pipeline-2.log
 fi
 
 # %% hotspot
+knn=8
 if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Running hotspot..."
-    if [ ! -d Data/scale_df/logcpm-hotspot ]; then
-        mkdir Data/scale_df/logcpm-hotspot
+    if [ ! -d Data/scale_df/logcpm-hotspot-${knn} ]; then
+        mkdir Data/scale_df/logcpm-hotspot-${knn}
     fi
     for idx in ${idx_full[@]}; do
         ${PYTHON_PATH} src/py/run-hotspot.py \
-            ${idx} logcpm 6 &>> log/pipeline-2.log
+            ${idx} logcpm ${knn} &>> log/pipeline-2.log
     done
 fi
 
 # %% gene cluster
+knn=8
 if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Clustering genes..."
     for idx in ${idx_full[@]}; do
-        for n_gene_clusters in {8..12}; do
+        for n_gene_clusters in {2..12}; do
             if [ ! -d results/gene-cluster/${idx}-${n_gene_clusters} ]; then
                 mkdir results/gene-cluster/${idx}-${n_gene_clusters}
                 mkdir results/gene-cluster/${idx}-${n_gene_clusters}/tables
             fi
             (
                 ${PYTHON_PATH} src/py/run-gene-cluster.py \
-                    logcpm ${idx} ${n_gene_clusters} &>> log/pipeline-2.log
+                    logcpm ${idx} ${knn} ${n_gene_clusters} &>> log/pipeline-2.log
             )&
         done
         wait

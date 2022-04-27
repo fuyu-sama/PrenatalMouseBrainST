@@ -73,8 +73,10 @@ colors = [
 
 try:
     scale_method = sys.argv[1]
+    knn = sys.argv[2]
 except IndexError:
     scale_method = "logcpm"
+    knn = 6
 
 # %%
 sss = []  # set of selected genes' name, i.e., union of genes in all samples
@@ -84,7 +86,7 @@ for tp in tp_full:
         global_moran = pd.read_csv(
             Path.joinpath(
                 WORKDIR,
-                f"results/global_moran/{idx}-{scale_method}-6.csv",
+                f"results/global_moran/{idx}-{scale_method}-{knn}.csv",
             ),
             index_col=0,
             header=0,
@@ -97,7 +99,8 @@ for tp in tp_full:
         ax.figure.savefig(
             Path.joinpath(
                 WORKDIR,
-                f"results/I-gmm/pdf/{idx}-{scale_method}-3-pdf.jpg",
+                f"results/I-gmm/{scale_method}-{knn}/",
+                "pdf/{idx}-{scale_method}-{knn}-3-pdf.jpg",
             ))
     # end of for idx in tp_full[tp]
 
@@ -111,7 +114,8 @@ for tp in tp_full:
     fig.savefig(
         Path.joinpath(
             WORKDIR,
-            f"results/I-gmm/venn/{tp}-{scale_method}-3.jpg",
+            f"results/I-gmm/{scale_method}-{knn}/",
+            "venn/{tp}-{scale_method}-{knn}-3.jpg",
         ))
 
     # write intersection genes
@@ -124,7 +128,7 @@ for tp in tp_full:
     with open(
             Path.joinpath(
                 WORKDIR,
-                f"results/I-gmm/{tp}-{scale_method}-3.csv",
+                f"results/I-gmm/{scale_method}-{knn}/{tp}-{scale_method}-{knn}-3.csv",
             ), "w") as f:
         for i in ss:
             f.write(f"{i}\n")
@@ -134,7 +138,7 @@ for tp in tp_full:
 with open(
         Path.joinpath(
             WORKDIR,
-            f"results/I-gmm/full-{scale_method}-3.csv",
+            f"results/I-gmm/{scale_method}-{knn}/full-{scale_method}-{knn}-3.csv",
         ), "w") as f:
     for i in set(sss):
         f.write(f"{i}\n")
