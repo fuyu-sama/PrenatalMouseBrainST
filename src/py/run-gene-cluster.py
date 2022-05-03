@@ -100,7 +100,7 @@ except IndexError:
 count_path = Path.joinpath(
     WORKDIR,
     f"Data/scale_df/{scale_method}-hotspot-{knn}/",
-    "{idx}-{scale_method}-hotspot-{knn}.csv",
+    f"{idx}-{scale_method}-hotspot-{knn}.csv",
 )
 count_df = pd.read_csv(
     count_path,
@@ -120,7 +120,7 @@ with open(
         Path.joinpath(
             WORKDIR,
             f"results/I-gmm/{scale_method}-{knn}/",
-            "{idx_tp[idx]}-{scale_method}-{knn}-3.csv",
+            f"{idx_tp[idx]}-{scale_method}-{knn}-3.csv",
         )) as f:
     for line in f:
         line = line.strip()
