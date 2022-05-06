@@ -241,7 +241,7 @@ for i in range(1, n_gene_clusters + 1):
         c=count_sub_df[gene_result[gene_result == i].index].T.mean(),
         cmap="autumn_r",
         vmin=0,
-        vmax=0.8,
+        # vmax=0.8,
         s=16,
         alpha=0.7,
     )
