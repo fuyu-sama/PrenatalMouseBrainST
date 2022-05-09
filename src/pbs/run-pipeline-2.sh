@@ -1,5 +1,5 @@
 #PBS -N pipeline-2
-#PBS -l nodes=comput2:ppn=40
+#PBS -l nodes=1:ppn=40
 #PBS -l walltime=240:00:00
 
 # %% environment config
@@ -12,7 +12,12 @@ idx_full=(
     P0A1 P0A2
 )
 scale_methods=(
-    combat-gmm
+    combat-0_500
+    combat-500_1000
+    combat-1000_1500
+    combat-1500_2000
+    combat-2000_2500
+    #combat-gmm
     #combat
     #logcpm
     #cpm
@@ -28,14 +33,14 @@ for directory in ${scale_methods[@]}; do
     fi
 done
 
-if true; then
+if false; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Scaling data..."
     ${PYTHON_PATH} src/py/run-cpm.py &>> log/pipeline-2.log
     ${PYTHON_PATH} src/py/run-combat.py &>> log/pipeline-2.log
 fi
 
 # %% global moran
-if true; then
+if false; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Calculating global moran..."
     for idx in ${idx_full[@]}; do
         ${PYTHON_PATH} src/py/run-global_moran.py \
@@ -45,7 +50,7 @@ fi
 
 # %% subsample
 knn=8
-if true; then
+if false; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Subsampling data with I-value & GMM..."
     if [ ! -d results/I-gmm/logcpm-${knn} ]; then
         mkdir results/I-gmm/logcpm-${knn}
@@ -71,7 +76,7 @@ fi
 
 # %% gene cluster
 knn=8
-if true; then
+if false; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Clustering genes..."
     for idx in ${idx_full[@]}; do
         for n_gene_clusters in {6..12}; do

@@ -29,6 +29,7 @@
 #
 
 # %% environment config
+import os
 import sys
 from pathlib import Path
 
@@ -52,10 +53,8 @@ idx_full = {
 }
 try:
     scale_method = sys.argv[1]
-    n = int(sys.argv[2])
 except IndexError:
-    scale_method = "combat"
-    n = 1000
+    scale_method = "logcpm"
 
 # %% read data
 full_path = Path.joinpath(
@@ -65,29 +64,26 @@ full_path = Path.joinpath(
 full_df = pd.read_csv(full_path, index_col=0, header=0)
 
 # %%
-gene_list = []
-for idx in idx_full:
-    moran_df = pd.read_csv(
-        Path.joinpath(WORKDIR, f"results/global_moran/{idx}-logcpm-8.csv"),
-        header=0,
-        index_col=0,
-    ).sort_values(by="I_value", ascending=False)
-    [gene_list.append(i) for i in moran_df.index[:n]]
-gene_list = set(gene_list)
-
-# %% subset and save
-full_df = full_df.reindex(index=set(gene_list))
-full_df.to_csv(
-    Path.joinpath(
+for n in [0, 500, 1000, 1500, 2000]:
+    write_dir = Path.joinpath(
         WORKDIR,
-        f"Data/scale_df/{scale_method}-logcpm-{n}",
-        f"full-{scale_method}-logcpm-{n}.csv",
-    ))
-for idx in idx_full:
-    sub_df = full_df.reindex(columns=[i for i in full_df.columns if idx in i])
-    sub_df.to_csv(
-        Path.joinpath(
-            WORKDIR,
-            f"Data/scale_df/{scale_method}-logcpm-{n}",
-            f"{idx}-{scale_method}-logcpm-{n}.csv",
-        ))
+        f"Data/scale_df/{scale_method}-{n}_{n + 500}",
+    )
+    if not os.path.exists(write_dir):
+        os.mkdir(write_dir)
+
+    for idx in idx_full:
+        moran_df = pd.read_csv(
+            Path.joinpath(WORKDIR, f"results/global_moran/{idx}-logcpm-8.csv"),
+            header=0,
+            index_col=0,
+        ).sort_values(by="I_value", ascending=False)
+        sub_df = full_df.reindex(
+            index=moran_df.index[n:n + 500],
+            columns=[i for i in full_df.columns if idx in i],
+        )
+        sub_df.to_csv(
+            Path.joinpath(
+                write_dir,
+                f"{idx}-{scale_method}-{n}_{n + 500}.csv",
+            ), )
