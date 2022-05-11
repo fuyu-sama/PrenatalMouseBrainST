@@ -69,7 +69,7 @@ try:
 except IndexError:
     idx = "E165A"
     scale_method = "logcpm"
-    knn = 6
+    knn = 8
 
 # %% read counts
 count_path = Path.joinpath(

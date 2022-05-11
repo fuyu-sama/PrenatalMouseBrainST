@@ -1,5 +1,5 @@
 #PBS -N pipeline-2
-#PBS -l nodes=1:ppn=40
+#PBS -l nodes=comput2:ppn=40
 #PBS -l walltime=240:00:00
 
 # %% environment config
@@ -13,10 +13,10 @@ idx_full=(
 )
 scale_methods=(
     combat-0_500
-    combat-500_1000
-    combat-1000_1500
-    combat-1500_2000
-    combat-2000_2500
+    combat-0_1000
+    combat-0_1500
+    combat-0_2000
+    combat-0_2500
     #combat-gmm
     #combat
     #logcpm
@@ -63,14 +63,15 @@ fi
 
 # %% hotspot
 knn=8
+scale_method="logcpm-2000_2500"
 if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Running hotspot..."
-    if [ ! -d Data/scale_df/logcpm-hotspot-${knn} ]; then
-        mkdir Data/scale_df/logcpm-hotspot-${knn}
+    if [ ! -d Data/scale_df/${scale_method}-hotspot-${knn} ]; then
+        mkdir Data/scale_df/${scale_method}-hotspot-${knn}
     fi
     for idx in ${idx_full[@]}; do
         ${PYTHON_PATH} src/py/run-hotspot.py \
-            ${idx} logcpm ${knn} &>> log/pipeline-2.log
+            ${idx} ${scale_method} ${knn} &>> log/pipeline-2.log
     done
 fi
 
@@ -86,7 +87,7 @@ if false; then
             fi
             (
                 ${PYTHON_PATH} src/py/run-gene-cluster.py \
-                    logcpm ${idx} ${knn} ${n_gene_clusters} &>> log/pipeline-2.log
+                    logcpm ${idx} ${n_gene_clusters} &>> log/pipeline-2.log
             )&
         done
         wait

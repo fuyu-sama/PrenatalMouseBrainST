@@ -88,19 +88,16 @@ colors = [
 try:
     scale_method = sys.argv[1]
     idx = sys.argv[2]
-    knn = sys.argv[3]
-    n_gene_clusters = int(sys.argv[4])
+    n_gene_clusters = int(sys.argv[3])
 except IndexError:
     scale_method = "logcpm"
     idx = "E165A"
-    knn = 6
     n_gene_clusters = 9
 
 # %% read data
 count_path = Path.joinpath(
     WORKDIR,
-    f"Data/scale_df/{scale_method}-hotspot-{knn}/",
-    f"{idx}-{scale_method}-hotspot-{knn}.csv",
+    f"Data/scale_df/{scale_method}/{idx}-{scale_method}.csv",
 )
 count_df = pd.read_csv(
     count_path,
@@ -114,42 +111,29 @@ coor_df = pd.read_csv(coor_path, index_col=0, header=0)
 he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
 he_image = Image.open(he_path)
 
-# %% subset
-selected_genes = []
-with open(
-        Path.joinpath(
-            WORKDIR,
-            f"results/I-gmm/{scale_method}-{knn}/",
-            f"{idx_tp[idx]}-{scale_method}-{knn}-3.csv",
-        )) as f:
-    for line in f:
-        line = line.strip()
-        selected_genes.append(line)
-count_sub_df = count_df.reindex(columns=selected_genes)
-
 # %% calculate distmat
 n_spot_clusters = 9
 
-gene_distmat = sch.distance.pdist(count_sub_df.T, metric="jaccard")
-spot_distmat = sch.distance.pdist(count_sub_df, metric="jaccard")
+gene_distmat = sch.distance.pdist(count_df.T, metric="jaccard")
+spot_distmat = sch.distance.pdist(count_df, metric="jaccard")
 
 Z_gene = sch.linkage(gene_distmat, method="ward")
 gene_result = pd.Series(
     sch.fcluster(Z_gene, t=n_gene_clusters, criterion="maxclust"),
-    index=count_sub_df.columns,
+    index=count_df.columns,
 ).sort_values()
 
 Z_spot = sch.linkage(spot_distmat, method="ward")
 spot_result = pd.Series(
     sch.fcluster(Z_spot, t=n_spot_clusters, criterion="maxclust"),
-    index=count_sub_df.index,
+    index=count_df.index,
 ).sort_values()
 
 # %% draw heatmap version 1
 fig, ax_heatmap = plt.subplots(figsize=(10, 10))
 
 ax_heatmap.imshow(
-    count_sub_df.reindex(columns=gene_result.index, index=spot_result.index),
+    count_df.reindex(columns=gene_result.index, index=spot_result.index),
     cmap="Reds",
     aspect="auto",
 )
@@ -162,15 +146,16 @@ ax_heatmap.set_ylabel("Spots")
 flag = 0
 for i in range(1, n_gene_clusters):
     flag += len(gene_result[gene_result == i])
-    ax_heatmap.plot([flag, flag], [0, count_sub_df.shape[0] - 5])
+    ax_heatmap.plot([flag, flag], [0, count_df.shape[0] - 5])
 flag = 0
 for i in range(1, n_spot_clusters):
     flag += len(spot_result[spot_result == i])
-    ax_heatmap.plot([0, count_sub_df.shape[1] - 5], [flag, flag])
+    ax_heatmap.plot([0, count_df.shape[1] - 5], [flag, flag])
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        f"results/gene-cluster/{idx}-{n_gene_clusters}/{idx}-heatmap-1.jpg",
+        f"results/gene-cluster/{scale_method}",
+        f"{idx}-{n_gene_clusters}/{idx}-heatmap-1.jpg",
     ),
     bbox_inches="tight",
 )
@@ -191,7 +176,7 @@ ax_dend_right = fig.add_axes(rect_dend_right)
 R_top = sch.dendrogram(
     Z_gene,
     count_sort=True,
-    labels=count_sub_df.columns,
+    labels=count_df.columns,
     orientation="top",
     ax=ax_dend_top,
 )
@@ -202,7 +187,7 @@ ax_dend_top.set_title(f"{idx}")
 R_right = sch.dendrogram(
     Z_spot,
     count_sort=True,
-    labels=count_sub_df.index,
+    labels=count_df.index,
     orientation="right",
     ax=ax_dend_right,
 )
@@ -210,7 +195,7 @@ ax_dend_right.set_xticks([])
 ax_dend_right.set_yticks([])
 
 ax_heatmap.imshow(
-    count_sub_df.reindex(columns=R_top["ivl"], index=R_right["ivl"]),
+    count_df.reindex(columns=R_top["ivl"], index=R_right["ivl"]),
     cmap="Reds",
     aspect="auto",
 )
@@ -222,7 +207,8 @@ ax_heatmap.set_ylabel("Spots")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        f"results/gene-cluster/{idx}-{n_gene_clusters}/{idx}-heatmap-2.jpg",
+        f"results/gene-cluster/{scale_method}",
+        f"{idx}-{n_gene_clusters}/{idx}-heatmap-2.jpg",
     ),
     bbox_inches="tight",
 )
@@ -238,7 +224,7 @@ for i in range(1, n_gene_clusters + 1):
     sc = ax.scatter(
         coor_df["X"],
         coor_df["Y"],
-        c=count_sub_df[gene_result[gene_result == i].index].T.mean(),
+        c=count_df[gene_result[gene_result == i].index].T.mean(),
         cmap="autumn_r",
         vmin=0,
         # vmax=0.8,
@@ -250,7 +236,8 @@ for i in range(1, n_gene_clusters + 1):
     fig.savefig(
         Path.joinpath(
             WORKDIR,
-            f"results/gene-cluster/{idx}-{n_gene_clusters}/{idx}-{i}.jpg",
+            f"results/gene-cluster/{scale_method}",
+            f"{idx}-{n_gene_clusters}/{idx}-{i}.jpg",
         ),
         bbox_inches="tight",
     )
@@ -281,7 +268,7 @@ for i in range(n_gene_clusters):
     sc = ax_cluster.scatter(
         coor_df["X"],
         coor_df["Y"],
-        c=count_sub_df[gene_result[gene_result == i + 1].index].T.mean(),
+        c=count_df[gene_result[gene_result == i + 1].index].T.mean(),
         cmap="autumn_r",
         vmin=0,
         vmax=0.8,
@@ -300,7 +287,7 @@ ax_cb = fig.add_axes(rect_cb)
 fig.colorbar(sc, cax=ax_cb)
 
 ax_heatmap.imshow(
-    count_sub_df.reindex(columns=gene_result.index, index=spot_result.index),
+    count_df.reindex(columns=gene_result.index, index=spot_result.index),
     cmap="Reds",
     aspect="auto",
 )
@@ -308,11 +295,11 @@ ax_heatmap.imshow(
 flag = 0
 for i in range(1, n_gene_clusters):
     flag += len(gene_result[gene_result == i])
-    ax_heatmap.plot([flag, flag], [0, count_sub_df.shape[0] - 5])
+    ax_heatmap.plot([flag, flag], [0, count_df.shape[0] - 5])
 flag = 0
 for i in range(1, n_spot_clusters):
     flag += len(spot_result[spot_result == i])
-    ax_heatmap.plot([0, count_sub_df.shape[1] - 5], [flag, flag])
+    ax_heatmap.plot([0, count_df.shape[1] - 5], [flag, flag])
 
 ax_heatmap.set_title(f"{idx}")
 ax_heatmap.set_xticks([])
@@ -322,7 +309,8 @@ ax_heatmap.set_ylabel("Spots")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        f"results/gene-cluster/{idx}-{n_gene_clusters}/{idx}-full.jpg",
+        f"results/gene-cluster/{scale_method}",
+        f"{idx}-{n_gene_clusters}/{idx}-full.jpg",
     ),
     bbox_inches="tight",
 )
@@ -332,11 +320,13 @@ plt.close(fig)
 gene_result.to_csv(
     Path.joinpath(
         WORKDIR,
-        f"results/gene-cluster/{idx}-{n_gene_clusters}/{idx}-genes.csv",
+        f"results/gene-cluster/{scale_method}",
+        f"{idx}-{n_gene_clusters}/{idx}-genes.csv",
     ))
 for i in range(1, n_gene_clusters + 1):
     gene_result[gene_result == i].to_csv(
         Path.joinpath(
             WORKDIR,
-            f"results/gene-cluster/{idx}-{n_gene_clusters}/tables/{idx}-genes-{i}.csv",
+            f"results/gene-cluster/{scale_method}",
+            f"{idx}-{n_gene_clusters}/tables/{idx}-genes-{i}.csv",
         ))

@@ -54,7 +54,7 @@ idx_full = {
 try:
     scale_method = sys.argv[1]
 except IndexError:
-    scale_method = "logcpm"
+    scale_method = "combat"
 
 # %% read data
 full_path = Path.joinpath(
@@ -64,10 +64,10 @@ full_path = Path.joinpath(
 full_df = pd.read_csv(full_path, index_col=0, header=0)
 
 # %%
-for n in [0, 500, 1000, 1500, 2000]:
+for n in [500, 1000, 1500, 2000]:
     write_dir = Path.joinpath(
         WORKDIR,
-        f"Data/scale_df/{scale_method}-{n}_{n + 500}",
+        f"Data/scale_df/{scale_method}-{0}_{n + 500}",
     )
     if not os.path.exists(write_dir):
         os.mkdir(write_dir)
@@ -79,11 +79,11 @@ for n in [0, 500, 1000, 1500, 2000]:
             index_col=0,
         ).sort_values(by="I_value", ascending=False)
         sub_df = full_df.reindex(
-            index=moran_df.index[n:n + 500],
+            index=moran_df.index[0:n + 500],
             columns=[i for i in full_df.columns if idx in i],
         )
         sub_df.to_csv(
             Path.joinpath(
                 write_dir,
-                f"{idx}-{scale_method}-{n}_{n + 500}.csv",
+                f"{idx}-{scale_method}-{0}_{n + 500}.csv",
             ), )
