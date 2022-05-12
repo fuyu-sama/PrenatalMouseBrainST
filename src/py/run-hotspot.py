@@ -86,7 +86,7 @@ coor_df = pd.read_csv(coor_path, index_col=0, header=0)
 count_df = count_df.reindex(index=coor_df.index)
 points = np.array(coor_df[["X", "Y"]])
 weights = libpysal.weights.KNN(points, k=knn)
-hotspot_df = local_moran(
+moran_result = local_moran(
     selected_genes=count_df.columns,
     gene_expression_df=count_df,
     weights=weights,
@@ -94,9 +94,15 @@ hotspot_df = local_moran(
     permutation=999,
     cores=40,
 )
-hotspot_df.T.to_csv(
+moran_result["hotspot"].T.to_csv(
     Path.joinpath(
         WORKDIR,
         f"Data/scale_df/{scale_method}-hotspot-{knn}/",
         f"{idx}-{scale_method}-hotspot-{knn}.csv"
+    ))
+moran_result["i_value"].T.to_csv(
+    Path.joinpath(
+        WORKDIR,
+        f"Data/results/local_moran/",
+        f"{idx}-{scale_method}-{knn}.csv"
     ))
