@@ -77,17 +77,22 @@ fi
 
 # %% gene cluster
 knn=8
-if false; then
+scale_method="logcpm-2000_2500-hotspot-8"
+writedir=results/gene-cluster/${scale_method}
+if [ ! -d ${writedir} ]; then
+    mkdir ${writedir}
+fi
+if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Clustering genes..."
     for idx in ${idx_full[@]}; do
         for n_gene_clusters in {6..12}; do
-            if [ ! -d results/gene-cluster/${idx}-${n_gene_clusters} ]; then
-                mkdir results/gene-cluster/${idx}-${n_gene_clusters}
-                mkdir results/gene-cluster/${idx}-${n_gene_clusters}/tables
+            if [ ! -d ${writedir}/${idx}-${n_gene_clusters} ]; then
+                mkdir ${writedir}/${idx}-${n_gene_clusters}
+                mkdir ${writedir}/${idx}-${n_gene_clusters}/tables
             fi
             (
                 ${PYTHON_PATH} src/py/run-gene-cluster.py \
-                    logcpm ${idx} ${n_gene_clusters} &>> log/pipeline-2.log
+                    ${scale_method} ${idx} ${n_gene_clusters} &>> log/pipeline-2.log
             )&
         done
         wait
