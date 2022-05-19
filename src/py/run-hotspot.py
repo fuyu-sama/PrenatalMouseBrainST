@@ -104,5 +104,17 @@ moran_result["i_value"].T.to_csv(
     Path.joinpath(
         WORKDIR,
         f"Data/results/local_moran/",
-        f"{idx}-{scale_method}-{knn}.csv"
+        f"{idx}-{scale_method}-{knn}-I.csv"
+    ))
+moran_result["p_value"].T.to_csv(
+    Path.joinpath(
+        WORKDIR,
+        f"Data/results/local_moran/",
+        f"{idx}-{scale_method}-{knn}-p.csv"
+    ))
+moran_result["z_sim"].T.to_csv(
+    Path.joinpath(
+        WORKDIR,
+        f"Data/results/local_moran/",
+        f"{idx}-{scale_method}-{knn}-z.csv"
     ))

@@ -102,7 +102,8 @@ for tp in tp_full:
     cluster_dict[tp] = pd.read_csv(
         Path.joinpath(
             WORKDIR,
-            f"results/gene-cluster/{idx}-{ncs_dict[idx]}/{idx}-genes.csv",
+            f"results/gene-cluster/logcpm",
+            f"{idx}-{ncs_dict[idx]}/{idx}-genes.csv",
         ),
         index_col=0,
         header=0,
