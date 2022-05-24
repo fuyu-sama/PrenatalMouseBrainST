@@ -103,18 +103,18 @@ moran_result["hotspot"].T.to_csv(
 moran_result["i_value"].T.to_csv(
     Path.joinpath(
         WORKDIR,
-        f"Data/results/local_moran/",
+        f"results/local_moran/",
         f"{idx}-{scale_method}-{knn}-I.csv"
     ))
 moran_result["p_value"].T.to_csv(
     Path.joinpath(
         WORKDIR,
-        f"Data/results/local_moran/",
-        f"{idx}-{scale_method}-{knn}-p.csv"
+        f"results/local_moran/",
+        f"{idx}-{scale_method}-{knn}-P.csv"
     ))
 moran_result["z_sim"].T.to_csv(
     Path.joinpath(
         WORKDIR,
-        f"Data/results/local_moran/",
-        f"{idx}-{scale_method}-{knn}-z.csv"
+        f"results/local_moran/",
+        f"{idx}-{scale_method}-{knn}-Z.csv"
     ))

@@ -55,7 +55,7 @@ try:
     knn = sys.argv[2]
 except IndexError:
     scale_method = "combat"
-    knn = 6
+    knn = 8
 
 # %% read data
 full_path = Path.joinpath(

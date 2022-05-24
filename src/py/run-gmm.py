@@ -100,7 +100,7 @@ for tp in tp_full:
             Path.joinpath(
                 WORKDIR,
                 f"results/I-gmm/{scale_method}-{knn}/",
-                "pdf/{idx}-{scale_method}-{knn}-3-pdf.jpg",
+                f"pdf/{idx}-{scale_method}-{knn}-3-pdf.jpg",
             ))
     # end of for idx in tp_full[tp]
 
@@ -115,7 +115,7 @@ for tp in tp_full:
         Path.joinpath(
             WORKDIR,
             f"results/I-gmm/{scale_method}-{knn}/",
-            "venn/{tp}-{scale_method}-{knn}-3.jpg",
+            f"venn/{tp}-{scale_method}-{knn}-3.jpg",
         ))
 
     # write intersection genes

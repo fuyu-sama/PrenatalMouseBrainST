@@ -50,7 +50,7 @@ fi
 
 # %% subsample
 knn=8
-if false; then
+if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Subsampling data with I-value & GMM..."
     if [ ! -d results/I-gmm/logcpm-${knn} ]; then
         mkdir results/I-gmm/logcpm-${knn}
@@ -63,7 +63,7 @@ fi
 
 # %% hotspot
 knn=8
-scale_method="logcpm-2000_2500"
+scale_method="logcpm"
 if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Running hotspot..."
     if [ ! -d Data/scale_df/${scale_method}-hotspot-${knn} ]; then
@@ -77,7 +77,7 @@ fi
 
 # %% gene cluster
 knn=8
-scale_method="logcpm-2000_2500-hotspot-8"
+scale_method="logcpm"
 writedir=results/gene-cluster/${scale_method}
 if [ ! -d ${writedir} ]; then
     mkdir ${writedir}
