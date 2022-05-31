@@ -97,7 +97,7 @@ except IndexError:
 # %% read data
 count_path = Path.joinpath(
     WORKDIR,
-    f"Data/scale_df/{scale_method}-hotspot-8/{idx}-{scale_method}-hotspot-8.csv",
+    f"Data/scale_df/{scale_method}/{idx}-{scale_method}.csv",
 )
 count_df = pd.read_csv(
     count_path,
@@ -108,21 +108,16 @@ count_df = pd.read_csv(
 coor_path = Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv")
 coor_df = pd.read_csv(coor_path, index_col=0, header=0)
 
+moran_path = Path.joinpath(WORKDIR, f"results/global_moran/{idx}-logcpm-6.csv")
+moran_df = pd.read_csv(
+    moran_path,
+    index_col=0,
+    header=0,
+).sort_values(by="I_value", ascending=False)
+selected_genes = moran_df.index[:1000]
+
 he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
 he_image = Image.open(he_path)
-
-# %% subset
-selected_genes = []
-with open(
-        Path.joinpath(
-            WORKDIR,
-            f"results/I-gmm/{scale_method}-8/",
-            f"{idx_tp[idx]}-{scale_method}-8-3.csv",
-        )) as f:
-    for line in f:
-        line = line.strip()
-        selected_genes.append(line)
-    count_df = count_df.reindex(columns=selected_genes)
 
 # %% calculate distmat
 n_spot_clusters = 9

@@ -48,21 +48,8 @@ if false; then
     done
 fi
 
-# %% subsample
-knn=8
-if true; then
-    echo "[`date +%Y.%m.%d\ %H:%M:%S`] Subsampling data with I-value & GMM..."
-    if [ ! -d results/I-gmm/logcpm-${knn} ]; then
-        mkdir results/I-gmm/logcpm-${knn}
-        mkdir results/I-gmm/logcpm-${knn}/venn
-        mkdir results/I-gmm/logcpm-${knn}/pdf
-    fi
-    ${PYTHON_PATH} src/py/run-gmm.py logcpm ${knn}&>> log/pipeline-2.log
-    ${PYTHON_PATH} src/py/run-subsample-gmm.py combat ${knn} &>> log/pipeline-2.log
-fi
-
 # %% hotspot
-knn=8
+knn=6
 scale_method="logcpm"
 if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Running hotspot..."
@@ -77,7 +64,7 @@ fi
 
 # %% gene cluster
 knn=8
-scale_method="logcpm"
+scale_method="logcpm-hotspot-6-weighted"
 writedir=results/gene-cluster/${scale_method}
 if [ ! -d ${writedir} ]; then
     mkdir ${writedir}
