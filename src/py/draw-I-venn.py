@@ -103,13 +103,13 @@ len_inter = []
 venn_function = venn2 if len(moran_list) == 2 else venn3
 for i in range(0, 5000, 500):
     fig, ax = plt.subplots(figsize=(10, 10))
-    set_list = [set(j.iloc[i:i + 500, 0]) for j in moran_list]
+    set_list = [set(j.iloc[0:i + 500, 0]) for j in moran_list]
     venn_function(set_list, tp_full[tp], ax=ax)
-    ax.set_title(f"{tp} {i} - {i + 500}")
+    ax.set_title(f"{tp} 1 - {i + 500}")
     fig.savefig(
         Path.joinpath(
             WORKDIR,
-            f"results/global_moran/venn/{tp}-{i}_{i + 500}.jpg",
+            f"results/global_moran/venn/{tp}-1_{i + 500}.jpg",
         ))
     plt.close(fig)
 
@@ -118,13 +118,13 @@ for i in range(0, 5000, 500):
             inters = k
         else:
             inters = inters & k
-    len_inter.append(len(inters))
+    len_inter.append(len(inters) / i)
 
 fig, ax = plt.subplots(figsize=(10, 10))
 ax.plot(range(len(len_inter)), len_inter, "D-")
 ax.set_xticks(range(10))
 ax.set_xticklabels(
-    [f"{i} - {i + 500}" for i in range(0, 5000, 500)],
+    [f"1 - {i + 500}" for i in range(0, 5000, 500)],
     rotation=45,
 )
 ax.set_title(f"{tp} intersection genes")
