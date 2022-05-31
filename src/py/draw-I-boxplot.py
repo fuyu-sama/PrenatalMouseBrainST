@@ -104,7 +104,7 @@ global_moran_df = global_moran_df.sort_values(by="I_value", ascending=False)
 draw_list = []
 for i in range(0, 5000, 500):
     sub_series = global_moran_df.iloc[i: i + 500, 1]
-    sub_series.name = f"{i} - {i + 500}"
+    sub_series.name = f"{i + 1} - {i + 500}"
     draw_list.append(sub_series)
 fig, ax = plt.subplots(figsize=(10, 10))
 sns.boxplot(data=draw_list, ax=ax)
@@ -115,7 +115,7 @@ ax.set_ylabel("Global Moran's I")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        f"results/global_moran/{idx}-logcpm-8.jpg",
+        f"results/global_moran/{idx}-logcpm-6.jpg",
     ),
     bbox_inches="tight",
 )

@@ -118,7 +118,7 @@ for i in range(0, 5000, 500):
             inters = k
         else:
             inters = inters & k
-    len_inter.append(len(inters) / i)
+    len_inter.append(len(inters) / (i + 500))
 
 fig, ax = plt.subplots(figsize=(10, 10))
 ax.plot(range(len(len_inter)), len_inter, "D-")
