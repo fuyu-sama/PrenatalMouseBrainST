@@ -31,10 +31,9 @@
 # %% environment config
 from pathlib import Path
 
-from matplotlib import pyplot as plt
+import pandas as pd
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
-plt.rcParams.update({"font.size": 16})
 
 idx_full = {
     "E135A": "V10M17-100-E135A",
@@ -45,7 +44,7 @@ idx_full = {
     "E165B": "V10M17-085-E165B",
     "E175A1": "V10M17-101-E175A1",
     "E175A2": "V10M17-101-E175A2",
-    "E175B": "V10M17-085-E175B",
+    # "E175B": "V10M17-085-E175B",
     # "P0B": "V10M17-100-P0B",
     "P0A1": "V10M17-101-P0A1",
     "P0A2": "V10M17-101-P0A2",
@@ -59,31 +58,28 @@ colors = [
 ]
 
 # %%
-iii = {
-    "E165A": [11, 5],
-    "E165B": [11, 11],
-    "E175A1": [12, 10],
-    "E175A2": [12, 10],
-    "E175B": [12, 4],
-    "P0A1": [12, 5],
-    "P0A2": [12, 9],
-}
-
-ii = set()
-for _, idx in enumerate(iii):
-    gene_list_path = Path.joinpath(
+top_500_union = []
+top_1000_union = []
+for i, idx in enumerate(idx_full):
+    moran_path = Path.joinpath(
         WORKDIR,
-        f"results/gene-cluster/{idx}-{iii[idx][0]}/tables",
-        f"{idx}-genes-{iii[idx][1]}.csv",
+        f"results/global_moran/{idx}-logcpm-6.csv",
     )
-    gene_list = []
-    with open(gene_list_path) as f:
-        for line in f:
-            line = line.strip()
-            if line[0] == ",":
-                continue
-            gene_list.append(line.split(",")[0])
-    if _ == 0:
-        ii = set(gene_list)
-    else:
-        ii = set(gene_list) & ii
+    moran_df = pd.read_csv(
+        moran_path,
+        index_col=0,
+        header=0,
+    ).sort_values(by="I_value", ascending=False)
+
+    top_500 = moran_df.index[:500]
+    top_1000 = moran_df.index[:1000]
+
+    [top_500_union.append(i) for i in top_500]
+    [top_1000_union.append(i) for i in top_1000]
+
+with open("top_500_union.csv", "w") as f:
+    for i in set(top_500_union):
+        f.write(f"{i}\n")
+with open("top_1000_union.csv", "w") as f:
+    for i in set(top_1000_union):
+        f.write(f"{i}\n")

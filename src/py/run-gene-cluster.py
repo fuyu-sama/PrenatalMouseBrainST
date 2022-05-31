@@ -50,7 +50,7 @@ idx_full = {
     "E165B": "V10M17-085-E165B",
     "E175A1": "V10M17-101-E175A1",
     "E175A2": "V10M17-101-E175A2",
-    "E175B": "V10M17-085-E175B",
+    # "E175B": "V10M17-085-E175B",
     # "P0B": "V10M17-100-P0B",
     "P0A1": "V10M17-101-P0A1",
     "P0A2": "V10M17-101-P0A2",
@@ -115,6 +115,7 @@ moran_df = pd.read_csv(
     header=0,
 ).sort_values(by="I_value", ascending=False)
 selected_genes = moran_df.index[:1000]
+count_df = count_df.reindex(columns=selected_genes)
 
 he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
 he_image = Image.open(he_path)
