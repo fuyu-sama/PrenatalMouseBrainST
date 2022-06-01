@@ -108,17 +108,41 @@ count_df = pd.read_csv(
 coor_path = Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv")
 coor_df = pd.read_csv(coor_path, index_col=0, header=0)
 
-moran_path = Path.joinpath(WORKDIR, f"results/global_moran/{idx}-logcpm-6.csv")
-moran_df = pd.read_csv(
-    moran_path,
-    index_col=0,
-    header=0,
-).sort_values(by="I_value", ascending=False)
-selected_genes = moran_df.index[:1000]
-count_df = count_df.reindex(columns=selected_genes)
-
 he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
 he_image = Image.open(he_path)
+
+# %% subset
+# single sample global moran
+if False:
+    moran_path = Path.joinpath(
+        WORKDIR,
+        f"results/global_moran/{idx}-logcpm-6.csv",
+    )
+    moran_df = pd.read_csv(
+        moran_path,
+        index_col=0,
+        header=0,
+    ).sort_values(by="I_value", ascending=False)
+    selected_genes = moran_df.index[:1000]
+
+# multi sample global moran union
+if True:
+    selected_genes = []
+    for idxi in idx_full:
+        moran_path = Path.joinpath(
+            WORKDIR,
+            f"results/global_moran/{idxi}-logcpm-6.csv",
+        )
+        moran_df = pd.read_csv(
+            moran_path,
+            index_col=0,
+            header=0,
+        ).sort_values(by="I_value", ascending=False)
+
+        [selected_genes.append(i) for i in moran_df.index[:1000]]
+    selected_genes = list(set(selected_genes))
+
+count_df = count_df.reindex(columns=selected_genes)
 
 # %% calculate distmat
 n_spot_clusters = 9
