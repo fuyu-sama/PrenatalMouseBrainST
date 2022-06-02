@@ -12,16 +12,10 @@ idx_full=(
     P0A1 P0A2
 )
 scale_methods=(
-    combat-0_500
-    combat-0_1000
-    combat-0_1500
-    combat-0_2000
-    combat-0_2500
-    #combat-gmm
-    #combat
-    #logcpm
-    #cpm
-    #raw
+    combat
+    logcpm
+    cpm
+    raw
 )
 
 cd $HOME/workspace/mouse-brain-full
@@ -40,11 +34,11 @@ if false; then
 fi
 
 # %% global moran
-if false; then
+if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Calculating global moran..."
     for idx in ${idx_full[@]}; do
         ${PYTHON_PATH} src/py/run-global_moran.py \
-            ${idx} logcpm 8 &>> log/pipeline-2.log
+            ${idx} logcpm 6 &>> log/pipeline-2.log
     done
 fi
 
@@ -63,16 +57,15 @@ if true; then
 fi
 
 # %% gene cluster
-knn=8
-scale_method="logcpm-hotspot-6-weighted"
-writedir=results/gene-cluster/${scale_method}
+scale_method="logcpm-hotspot-8"
+writedir=results/gene-cluster/${scale_method}-500-union
 if [ ! -d ${writedir} ]; then
     mkdir ${writedir}
 fi
 if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Clustering genes..."
     for idx in ${idx_full[@]}; do
-        for n_gene_clusters in {6..12}; do
+        for n_gene_clusters in {6..20}; do
             if [ ! -d ${writedir}/${idx}-${n_gene_clusters} ]; then
                 mkdir ${writedir}/${idx}-${n_gene_clusters}
                 mkdir ${writedir}/${idx}-${n_gene_clusters}/tables

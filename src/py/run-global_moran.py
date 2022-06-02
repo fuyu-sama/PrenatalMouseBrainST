@@ -103,6 +103,7 @@ global_moran.to_csv(
     ))
 
 # %% draw boxplot
+global_moran = global_moran.sort_values(by="I_value", ascending=False)
 draw_list = []
 for i in range(0, 3500, 500):
     sub_series = global_moran.iloc[i:i + 500, 1]
