@@ -8,7 +8,7 @@ idx_full=(
     E135A E135B 
     E155A E155B 
     E165A E165B 
-    E175A1 E175A2 E175B 
+    E175A1 E175A2
     P0A1 P0A2
 )
 scale_methods=(
@@ -57,15 +57,15 @@ if true; then
 fi
 
 # %% gene cluster
-scale_method="logcpm-hotspot-8"
-writedir=results/gene-cluster/${scale_method}-500-union
+scale_method="logcpm-hotspot-6"
+writedir=results/gene-cluster/${scale_method}
 if [ ! -d ${writedir} ]; then
     mkdir ${writedir}
 fi
 if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Clustering genes..."
     for idx in ${idx_full[@]}; do
-        for n_gene_clusters in {6..20}; do
+        for n_gene_clusters in {1..10}; do
             if [ ! -d ${writedir}/${idx}-${n_gene_clusters} ]; then
                 mkdir ${writedir}/${idx}-${n_gene_clusters}
                 mkdir ${writedir}/${idx}-${n_gene_clusters}/tables

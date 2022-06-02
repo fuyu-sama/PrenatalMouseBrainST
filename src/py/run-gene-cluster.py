@@ -72,7 +72,7 @@ idx_tp = {
     "E165B": "E165",
     "E175A1": "E175",
     "E175A2": "E175",
-    "E175B": "E175",
+    # "E175B": "E175",
     # "P0B": "P0",
     "P0A1": "P0",
     "P0A2": "P0",
@@ -93,6 +93,11 @@ except IndexError:
     scale_method = "logcpm"
     idx = "E165A"
     n_gene_clusters = 9
+
+try:
+    gene_list = sys.argv[4]
+except IndexError:
+    gene_list = None
 
 # %% read data
 count_path = Path.joinpath(
@@ -126,12 +131,12 @@ if False:
     selected_genes = moran_df.index[:1000]
 
 # multi sample global moran union
-if True:
+if False:
     selected_genes = []
     for idxi in idx_full:
         moran_path = Path.joinpath(
             WORKDIR,
-            f"results/global_moran/{idxi}-logcpm-8.csv",
+            f"results/global_moran/{idxi}-logcpm-6.csv",
         )
         moran_df = pd.read_csv(
             moran_path,
@@ -143,7 +148,17 @@ if True:
     selected_genes = list(set(selected_genes))
     scale_method = f"{scale_method}-1000-union"
 
+# read gene list
+if True:
+    selected_genes = []
+    if gene_list is not None:
+        with open(gene_list) as f:
+            for line in f:
+                selected_genes.append(line.strip())
+        scale_method = f"{scale_method}-subset"
+
 count_df = count_df.reindex(columns=selected_genes)
+count_df = count_df.fillna(0)
 
 # %% calculate distmat
 n_spot_clusters = 9

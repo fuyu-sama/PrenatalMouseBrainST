@@ -133,7 +133,7 @@ for i, tp in enumerate(cluster_dict):
             last_df = cluster_dict[k.tp]
             last_genes = set(last_df["0"][last_df["0"] == k.cluster].index)
             covered_genes = list(last_genes & cluster_genes)
-            coverage = len(covered_genes) / len(cluster_genes)
+            coverage = len(covered_genes)
             if coverage > max_coverage:
                 max_coverage, max_node = coverage, k
         name = f"{idx}-{j}"

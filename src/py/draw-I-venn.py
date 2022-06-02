@@ -127,7 +127,7 @@ ax.set_xticklabels(
     [f"1 - {i + 500}" for i in range(0, 5000, 500)],
     rotation=45,
 )
-ax.set_ylim([0.5, 0.9])
+ax.set_ylim([0, 0.9])
 ax.set_title(f"{tp} intersection genes")
 ax.set_xlabel("Gene ranking")
 ax.set_ylabel("Intersection genes")
