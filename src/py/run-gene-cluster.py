@@ -96,8 +96,10 @@ except IndexError:
 
 try:
     gene_list = sys.argv[4]
+    suffix = sys.argv[5]
 except IndexError:
     gene_list = None
+    suffix = None
 
 # %% read data
 count_path = Path.joinpath(
@@ -144,18 +146,16 @@ if False:
             header=0,
         ).sort_values(by="I_value", ascending=False)
 
-        [selected_genes.append(i) for i in moran_df.index[:1000]]
+        [selected_genes.append(i) for i in moran_df.index[:500]]
     selected_genes = list(set(selected_genes))
-    scale_method = f"{scale_method}-1000-union"
+    scale_method = f"{scale_method}-500-union"
 
 # read gene list
 if True:
-    selected_genes = []
-    if gene_list is not None:
-        with open(gene_list) as f:
-            for line in f:
-                selected_genes.append(line.strip())
-        scale_method = f"{scale_method}-subset"
+    gene_list = Path(gene_list)
+    gene_list_df = pd.read_csv(gene_list, index_col=0, header=0)
+    selected_genes = gene_list_df.index
+    scale_method = f"{scale_method}-{suffix}"
 
 count_df = count_df.reindex(columns=selected_genes)
 count_df = count_df.fillna(0)

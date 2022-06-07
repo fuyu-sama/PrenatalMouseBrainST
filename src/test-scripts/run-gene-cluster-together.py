@@ -29,6 +29,8 @@
 #
 
 # %% environment config
+import sys
+from functools import partial
 from math import ceil
 from multiprocessing import Pool
 from pathlib import Path
@@ -37,7 +39,6 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from PIL import Image
 from scipy.cluster import hierarchy as sch
-from sklearn.cluster import KMeans
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 plt.rcParams.update({"font.size": 16})
@@ -51,7 +52,7 @@ idx_full = {
     "E165B": "V10M17-085-E165B",
     "E175A1": "V10M17-101-E175A1",
     "E175A2": "V10M17-101-E175A2",
-    "E175B": "V10M17-085-E175B",
+    # "E175B": "V10M17-085-E175B",
     # "P0B": "V10M17-100-P0B",
     "P0A1": "V10M17-101-P0A1",
     "P0A2": "V10M17-101-P0A2",
@@ -73,7 +74,7 @@ idx_tp = {
     "E165B": "E165",
     "E175A1": "E175",
     "E175A2": "E175",
-    "E175B": "E175",
+    # "E175B": "E175",
     # "P0B": "P0",
     "P0A1": "P0",
     "P0A2": "P0",
@@ -86,61 +87,98 @@ colors = [
     "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
 ]
 
+try:
+    scale_method = sys.argv[1]
+except IndexError:
+    scale_method = "logcpm-hotspot-6"
 
-# %%
-def main(idx):
-    scale_method = "logcpm"
-    count_path = Path.joinpath(
+
+# %% def worker function
+def worker(n_gene_clusters, count_df):
+    idx = count_df.index[0].split("_")[0]
+    result_dir = Path.joinpath(
         WORKDIR,
-        f"Data/scale_df/{scale_method}-hotspot/{idx}-{scale_method}-hotspot.csv",
+        f"results/gene-cluster-trajectory/{idx}-{n_gene_clusters}",
     )
-    count_df = pd.read_csv(
-        count_path,
-        index_col=0,
-        header=0,
-    ).T
+    if not Path.exists(result_dir):
+        Path.mkdir(result_dir)
 
     coor_path = Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv")
     coor_df = pd.read_csv(coor_path, index_col=0, header=0)
-
     he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
     he_image = Image.open(he_path)
 
-    selected_genes = []
-    with open(
-            Path.joinpath(
-                WORKDIR,
-                f"results/I-gmm/{idx_tp[idx]}-{scale_method}-3.csv",
-            )) as f:
-        for line in f:
-            line = line.strip()
-            selected_genes.append(line)
-    count_sub_df = count_df.reindex(columns=selected_genes)
+    # calculate distmat
+    n_spot_clusters = 8
 
-    n_spot_clusters = 9
+    gene_distmat = sch.distance.pdist(count_df.T, metric="jaccard")
+    spot_distmat = sch.distance.pdist(count_df, metric="jaccard")
 
-    gene_distmat = sch.distance.pdist(count_sub_df.T, metric="jaccard")
-    spot_distmat = sch.distance.pdist(count_sub_df, metric="jaccard")
     Z_gene = sch.linkage(gene_distmat, method="ward")
     gene_result = pd.Series(
         sch.fcluster(Z_gene, t=n_gene_clusters, criterion="maxclust"),
-        index=count_sub_df.columns,
+        index=count_df.columns,
     ).sort_values()
+
     Z_spot = sch.linkage(spot_distmat, method="ward")
     spot_result = pd.Series(
         sch.fcluster(Z_spot, t=n_spot_clusters, criterion="maxclust"),
-        index=count_sub_df.index,
+        index=count_df.index,
     ).sort_values()
 
-    # gene_result = pd.Series(
-    # KMeans(n_gene_clusters).fit_predict(count_sub_df.T),
-    # index=count_sub_df.columns,
-    # ).sort_values() + 1
-    # spot_result = pd.Series(
-    # KMeans(n_spot_clusters).fit_predict(count_sub_df),
-    # index=count_sub_df.index,
-    # ).sort_values() + 1
+    # draw heatmap
+    fig, ax_heatmap = plt.subplots(figsize=(10, 10))
 
+    ax_heatmap.imshow(
+        count_df.reindex(columns=gene_result.index, index=spot_result.index),
+        cmap="Reds",
+        aspect="auto",
+    )
+    ax_heatmap.set_title(f"{idx}")
+    ax_heatmap.set_xticks([])
+    ax_heatmap.set_yticks([])
+    ax_heatmap.set_xlabel("Genes")
+    ax_heatmap.set_ylabel("Spots")
+
+    flag = 0
+    for i in range(1, n_gene_clusters):
+        flag += len(gene_result[gene_result == i])
+        ax_heatmap.plot([flag, flag], [0, count_df.shape[0] - 5])
+    flag = 0
+    for i in range(1, n_spot_clusters):
+        flag += len(spot_result[spot_result == i])
+        ax_heatmap.plot([0, count_df.shape[1] - 5], [flag, flag])
+    fig.savefig(
+        Path.joinpath(result_dir, f"{idx}-heatmap-1.jpg"),
+        bbox_inches="tight",
+    )
+    plt.close(fig)
+
+    # draw distribution
+    for i in range(1, n_gene_clusters + 1):
+        fig, ax = plt.subplots(figsize=(10, 10))
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.imshow(he_image)
+        ax.axis("off")
+        sc = ax.scatter(
+            coor_df["X"],
+            coor_df["Y"],
+            c=count_df[gene_result[gene_result == i].index].T.mean(),
+            cmap="autumn_r",
+            vmin=0,
+            s=16,
+            alpha=0.7,
+        )
+        ax.set_title(f"Cluster {i} hotspot mean")
+        fig.colorbar(sc, ax=ax)
+        fig.savefig(
+            Path.joinpath(result_dir, f"{idx}-{i}.jpg"),
+            bbox_inches="tight",
+        )
+        plt.close(fig)
+
+    # draw together
     left, bottom = 0.1, 0.1
     width, height = 0.66, 0.66
     spacing, cluster_width = 0.03, 0.22
@@ -165,7 +203,7 @@ def main(idx):
         sc = ax_cluster.scatter(
             coor_df["X"],
             coor_df["Y"],
-            c=count_sub_df[gene_result[gene_result == i + 1].index].T.mean(),
+            c=count_df[gene_result[gene_result == i + 1].index].T.mean(),
             cmap="autumn_r",
             vmin=0,
             vmax=0.8,
@@ -184,10 +222,7 @@ def main(idx):
     fig.colorbar(sc, cax=ax_cb)
 
     ax_heatmap.imshow(
-        count_sub_df.reindex(
-            columns=gene_result.index,
-            index=spot_result.index,
-        ),
+        count_df.reindex(columns=gene_result.index, index=spot_result.index),
         cmap="Reds",
         aspect="auto",
     )
@@ -195,11 +230,11 @@ def main(idx):
     flag = 0
     for i in range(1, n_gene_clusters):
         flag += len(gene_result[gene_result == i])
-        ax_heatmap.plot([flag, flag], [0, count_sub_df.shape[0] - 5])
+        ax_heatmap.plot([flag, flag], [0, count_df.shape[0] - 5])
     flag = 0
     for i in range(1, n_spot_clusters):
         flag += len(spot_result[spot_result == i])
-        ax_heatmap.plot([0, count_sub_df.shape[1] - 5], [flag, flag])
+        ax_heatmap.plot([0, count_df.shape[1] - 5], [flag, flag])
 
     ax_heatmap.set_title(f"{idx}")
     ax_heatmap.set_xticks([])
@@ -207,24 +242,81 @@ def main(idx):
     ax_heatmap.set_xlabel("Genes")
     ax_heatmap.set_ylabel("Spots")
     fig.savefig(
-        Path.joinpath(
-            WORKDIR,
-            f"results/hierarchical/{idx}-{n_gene_clusters}.jpg",
-        ),
+        Path.joinpath(result_dir, f"{idx}-full.jpg"),
         bbox_inches="tight",
     )
     plt.close(fig)
 
-    gene_result.to_csv(
+    # save table
+    gene_result.to_csv(Path.joinpath(result_dir, f"{idx}-genes.csv"))
+    he_image.close()
+
+    return gene_result
+
+
+# %% E135: start cluster
+idx_start = "E135A"
+count_path = Path.joinpath(
+    WORKDIR,
+    f"Data/scale_df/{scale_method}/{idx_start}-{scale_method}.csv",
+)
+count_df = pd.read_csv(
+    count_path,
+    index_col=0,
+    header=0,
+).T
+
+read_from_prev = True
+if read_from_prev:
+    start_gene_result = pd.read_csv(
         Path.joinpath(
             WORKDIR,
-            f"results/hierarchical/{idx}-{n_gene_clusters}-genes.csv",
-        ))
+            f"results/gene-cluster/logcpm-hotspot-6-500-union",
+            f"E135A-11/E135A-genes.csv",
+        ),
+        index_col=0,
+        header=0,
+    )
+else:
+    selected_genes = []
+    for idxi in idx_full:
+        moran_path = Path.joinpath(
+            WORKDIR,
+            f"results/global_moran/{idxi}-logcpm-6.csv",
+        )
+        moran_df = pd.read_csv(
+            moran_path,
+            index_col=0,
+            header=0,
+        ).sort_values(by="I_value", ascending=False)
 
+        [selected_genes.append(i) for i in moran_df.index[:500]]
+    selected_genes = list(set(selected_genes))
 
-if __name__ == "__main__":
-    for n_gene_clusters in range(6, 15):
-        pool = Pool(6)
-        pool.map(main, idx_full.keys())
-        pool.close()
-        pool.join()
+    count_df = count_df.reindex(columns=selected_genes)
+    count_df = count_df.fillna(0)
+
+    start_gene_result = worker(count_df, 11)
+
+# %% terminal cluster
+idx_tip = "P0A2"
+start_cluster = 7
+count_path = Path.joinpath(
+    WORKDIR,
+    f"Data/scale_df/{scale_method}/{idx_tip}-{scale_method}.csv",
+)
+count_df = pd.read_csv(
+    count_path,
+    index_col=0,
+    header=0,
+).T
+
+selected_genes = start_gene_result[start_gene_result["0"] == start_cluster].index
+count_df = count_df.reindex(columns=selected_genes)
+count_df = count_df.fillna(0)
+
+partial_func = partial(worker, count_df=count_df)
+pool = Pool(10)
+pool.map(partial_func, range(1, 21))
+pool.close()
+pool.join()

@@ -58,7 +58,9 @@ fi
 
 # %% gene cluster
 scale_method="logcpm-hotspot-6"
-writedir=results/gene-cluster/${scale_method}
+gene_list=results/gene-cluster/logcpm-hotspot-6-500-union/E135B-11/tables/E135B-genes-11.csv
+gene_list_suffix=500-union-E135B-11-11
+writedir=results/gene-cluster/${scale_method}-${gene_list_suffix}
 if [ ! -d ${writedir} ]; then
     mkdir ${writedir}
 fi
@@ -72,7 +74,9 @@ if true; then
             fi
             (
                 ${PYTHON_PATH} src/py/run-gene-cluster.py \
-                    ${scale_method} ${idx} ${n_gene_clusters} &>> log/pipeline-2.log
+                    ${scale_method} ${idx} ${n_gene_clusters} \
+                    ${gene_list} ${gene_list_suffix} \
+                &>> log/pipeline-2.log
             )&
         done
         wait
