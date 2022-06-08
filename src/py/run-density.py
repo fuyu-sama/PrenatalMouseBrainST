@@ -92,7 +92,7 @@ except IndexError:
     idx = "E165A"
 
 
-def hotspot_density_single(gene, hotspot_df, knn_df, weight_df=None):
+def hotspot_Ai_single(gene, hotspot_df, knn_df, weight_df=None):
     gene_hotspot_df = hotspot_df[hotspot_df[gene] != 0]
     gene_hotspot_df = pd.DataFrame(gene_hotspot_df[gene], columns=[gene])
     n_hotspots = len(gene_hotspot_df)
@@ -113,16 +113,16 @@ def hotspot_density_single(gene, hotspot_df, knn_df, weight_df=None):
     dens = np.array([i[0] for i in hs.values()])
     dens_sum = dens.sum()
     dens_mean = dens_sum / n_hotspots
-    dens_df = pd.DataFrame([dens_mean], columns=['density'])
+    dens_df = pd.DataFrame([dens_mean], columns=['Ai'])
     dens_df.index = [gene]
     weighted_hotspot = pd.DataFrame.from_dict(hs).T
     weighted_hotspot.columns = [gene]
-    return {"density": dens_df, "weighted_hotspot": weighted_hotspot}
+    return {"Ai": dens_df, "weighted_hotspot": weighted_hotspot}
 
 
-def hotspot_density(gene_list, hotspot_df, knn_df, weight_df=None, cores=4):
+def hotspot_Ai(gene_list, hotspot_df, knn_df, weight_df=None, cores=4):
     partial_func = partial(
-        hotspot_density_single,
+        hotspot_Ai_single,
         hotspot_df=hotspot_df,
         knn_df=knn_df,
         weight_df=weight_df,
@@ -131,13 +131,13 @@ def hotspot_density(gene_list, hotspot_df, knn_df, weight_df=None, cores=4):
     result_lists = pool.map(partial_func, gene_list)
     pool.close()
     pool.join()
-    density_df = pd.concat([i["density"] for i in result_lists], axis=0)
+    Ai_df = pd.concat([i["Ai"] for i in result_lists], axis=0)
     weighted_hotspot_df = pd.concat(
         [i["weighted_hotspot"] for i in result_lists],
         axis=1,
     ).fillna(0)
 
-    return {"density": density_df, "weighted_hotspot": weighted_hotspot_df}
+    return {"Ai": Ai_df, "weighted_hotspot": weighted_hotspot_df}
 
 
 def acquire_knn_df(coor_df, n):
@@ -189,38 +189,33 @@ hotspot_df = hotspot_df.reindex(columns=remain_genes)
 weight_df = weight_df.reindex(columns=remain_genes)
 
 # %%
-results = hotspot_density(
+results = hotspot_Ai(
     gene_list=hotspot_df.columns,
     hotspot_df=hotspot_df,
     knn_df=acquire_knn_df(coor_df, 6),
     weight_df=-np.log(weight_df),
     cores=8,
 )
-density_df = results["density"]
-results["weighted_hotspot"].T.to_csv(
-    Path.joinpath(
-        WORKDIR,
-        f"Data/scale_df/logcpm-hotspot-6-weighted/{idx}-logcpm-hotspot-6-weighted.csv",
-    ))
+Ai_df = results["Ai"]
 
 # %%
 fig, ax = plt.subplots(figsize=(10, 10))
-ax.hist(density_df, bins=100)
-ax.set_title(f"{idx} -logP weighted density")
-fig.savefig(Path.joinpath(WORKDIR, f"results/density/{idx}-dist.jpg"))
+ax.hist(Ai_df, bins=100)
+ax.set_title(f"{idx} Ai")
+fig.savefig(Path.joinpath(WORKDIR, f"results/Ai/{idx}-dist.jpg"))
 plt.close()
 
 # %%
 draw_df = pd.concat(
-    [density_df, global_moran_df["I_value"].to_frame()],
+    [Ai_df, global_moran_df["I_value"].to_frame()],
     axis="columns",
 ).dropna(axis="index")
-draw_df.to_csv(Path.joinpath(WORKDIR, f"results/density/{idx}-density.csv"))
-r = np.corrcoef(draw_df["density"], draw_df["I_value"])[0, 1]
+draw_df.to_csv(Path.joinpath(WORKDIR, f"results/Ai/{idx}-Ai.csv"))
+r = np.corrcoef(draw_df["Ai"], draw_df["I_value"])[0, 1]
 fig, ax = plt.subplots(figsize=(10, 10))
-ax.scatter(draw_df["density"], draw_df["I_value"], s=8)
-ax.set_xlabel("density")
+ax.scatter(draw_df["Ai"], draw_df["I_value"], s=8)
+ax.set_xlabel("Ai")
 ax.set_ylabel("I_value")
 ax.set_title(f"{idx} pearson correlation: {r:.4f}")
-fig.savefig(Path.joinpath(WORKDIR, f"results/density/{idx}-corr.jpg"))
+fig.savefig(Path.joinpath(WORKDIR, f"results/Ai/{idx}-corr.jpg"))
 plt.close()
