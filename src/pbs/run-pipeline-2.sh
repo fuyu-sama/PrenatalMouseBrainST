@@ -13,9 +13,6 @@ idx_full=(
 )
 scale_methods=(
     combat
-    logcpm
-    cpm
-    raw
 )
 
 cd $HOME/workspace/mouse-brain-full
@@ -27,7 +24,7 @@ for directory in ${scale_methods[@]}; do
     fi
 done
 
-if false; then
+if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Scaling data..."
     ${PYTHON_PATH} src/py/run-cpm.py &>> log/pipeline-2.log
     ${PYTHON_PATH} src/py/run-combat.py &>> log/pipeline-2.log
@@ -64,7 +61,7 @@ writedir=results/gene-cluster/${scale_method}-${gene_list_suffix}
 if [ ! -d ${writedir} ]; then
     mkdir ${writedir}
 fi
-if true; then
+if false; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Clustering genes..."
     for idx in ${idx_full[@]}; do
         for n_gene_clusters in {1..10}; do

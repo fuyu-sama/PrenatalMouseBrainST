@@ -178,7 +178,7 @@ for idx in idx_full:
             all_genes = set(all_genes)
             draw_df = count_df.reindex(columns=all_genes).T.mean()
 
-            fig, ax = plt.subplots(figsize=(10, 10), dpi=50)
+            fig, ax = plt.subplots(figsize=(10, 13), dpi=50)
             ax.set_xticks([])
             ax.set_yticks([])
             ax.imshow(he_image)
@@ -196,7 +196,7 @@ for idx in idx_full:
             title = f"{idx}{''.join(cb)}"
             title = f"{idx}\nall" if len(cb) == len(gene_clusters) else title
             ax.set_title(title)
-            plt.colorbar(sc)
+            plt.colorbar(sc, orientation="horizontal")
             fig.savefig(
                 Path.joinpath(
                     WORKDIR,
