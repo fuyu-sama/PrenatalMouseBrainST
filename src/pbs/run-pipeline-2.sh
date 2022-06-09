@@ -8,10 +8,28 @@ idx_full=(
     E135A E135B 
     E155A E155B 
     E165A E165B 
-    E175A1 E175A2
+    E175A1 E175A2 E175B
     P0A1 P0A2
 )
 scale_methods=(
+    combat-Ai-0_500
+    combat-Ai-500_1000
+    combat-Ai-1000_1500
+    combat-Ai-1500_2000
+    combat-Ai-2000_2500
+    combat-Ai-0_1000
+    combat-Ai-0_1500
+    combat-Ai-0_2000
+    combat-Ai-0_2500
+    combat-I-0_500
+    combat-I-500_1000
+    combat-I-1000_1500
+    combat-I-1500_2000
+    combat-I-2000_2500
+    combat-I-0_1000
+    combat-I-0_1500
+    combat-I-0_2000
+    combat-I-0_2500
     combat
 )
 
@@ -24,14 +42,14 @@ for directory in ${scale_methods[@]}; do
     fi
 done
 
-if true; then
+if false; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Scaling data..."
     ${PYTHON_PATH} src/py/run-cpm.py &>> log/pipeline-2.log
     ${PYTHON_PATH} src/py/run-combat.py &>> log/pipeline-2.log
 fi
 
 # %% global moran
-if true; then
+if false; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Calculating global moran..."
     for idx in ${idx_full[@]}; do
         ${PYTHON_PATH} src/py/run-global_moran.py \
@@ -42,7 +60,7 @@ fi
 # %% hotspot
 knn=6
 scale_method="logcpm"
-if true; then
+if false; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Running hotspot..."
     if [ ! -d Data/scale_df/${scale_method}-hotspot-${knn} ]; then
         mkdir Data/scale_df/${scale_method}-hotspot-${knn}

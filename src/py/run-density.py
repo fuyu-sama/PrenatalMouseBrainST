@@ -110,14 +110,14 @@ def hotspot_Ai_single(gene, hotspot_df, knn_df, weight_df=None):
             hs[i] = [(weight_df[gene][inter_spots] /
                       weight_df[gene][knn_coors].sum()).sum()]
 
-    dens = np.array([i[0] for i in hs.values()])
-    dens_sum = dens.sum()
-    dens_mean = dens_sum / n_hotspots
-    dens_df = pd.DataFrame([dens_mean], columns=['Ai'])
-    dens_df.index = [gene]
-    weighted_hotspot = pd.DataFrame.from_dict(hs).T
-    weighted_hotspot.columns = [gene]
-    return {"Ai": dens_df, "weighted_hotspot": weighted_hotspot}
+    di_array = np.array([i[0] for i in hs.values()])
+    di_sum = di_array.sum()
+    di_mean = di_sum / n_hotspots
+    ai_df = pd.DataFrame([di_mean], columns=['Ai'])
+    ai_df.index = [gene]
+    Di_df = pd.DataFrame.from_dict(hs).T
+    Di_df.columns = [gene]
+    return {"Ai": ai_df, "Di": Di_df}
 
 
 def hotspot_Ai(gene_list, hotspot_df, knn_df, weight_df=None, cores=4):
@@ -132,12 +132,9 @@ def hotspot_Ai(gene_list, hotspot_df, knn_df, weight_df=None, cores=4):
     pool.close()
     pool.join()
     Ai_df = pd.concat([i["Ai"] for i in result_lists], axis=0)
-    weighted_hotspot_df = pd.concat(
-        [i["weighted_hotspot"] for i in result_lists],
-        axis=1,
-    ).fillna(0)
+    Di_df = pd.concat([i["Di"] for i in result_lists], axis=1).fillna(0)
 
-    return {"Ai": Ai_df, "weighted_hotspot": weighted_hotspot_df}
+    return {"Ai": Ai_df, "Di": Di_df}
 
 
 def acquire_knn_df(coor_df, n):
@@ -197,6 +194,7 @@ results = hotspot_Ai(
     cores=8,
 )
 Ai_df = results["Ai"]
+results["Di"].to_csv(Path.joinpath(WORKDIR, f"results/Ai/{idx}-Di.csv"))
 
 # %%
 fig, ax = plt.subplots(figsize=(10, 10))
