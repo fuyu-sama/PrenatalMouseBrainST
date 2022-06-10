@@ -185,6 +185,8 @@ remain_genes = hotspot_sum[hotspot_sum != 0].index
 hotspot_df = hotspot_df.reindex(columns=remain_genes)
 weight_df = weight_df.reindex(columns=remain_genes)
 
+assert all(weight_df.index == hotspot_df.index)
+
 # %%
 results = hotspot_Ai(
     gene_list=hotspot_df.columns,
@@ -194,7 +196,8 @@ results = hotspot_Ai(
     cores=8,
 )
 Ai_df = results["Ai"]
-results["Di"].to_csv(Path.joinpath(WORKDIR, f"results/Ai/{idx}-Di.csv"))
+results["Di"].reindex(index=hotspot_df.index).T.to_csv(
+    Path.joinpath(WORKDIR, f"results/Ai/{idx}-Di.csv"))
 
 # %%
 fig, ax = plt.subplots(figsize=(10, 10))
