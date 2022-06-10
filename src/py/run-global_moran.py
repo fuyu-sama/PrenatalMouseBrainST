@@ -51,7 +51,7 @@ idx_full = {
     "E165B": "V10M17-085-E165B",
     "E175A1": "V10M17-101-E175A1",
     "E175A2": "V10M17-101-E175A2",
-    "E175B": "V10M17-085-E175B",
+    # "E175B": "V10M17-085-E175B",
     # "P0B": "V10M17-100-P0B",
     "P0A1": "V10M17-101-P0A1",
     "P0A2": "V10M17-101-P0A2",
@@ -86,6 +86,8 @@ count_df = pd.read_csv(
 coor_path = Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv")
 coor_df = pd.read_csv(coor_path, index_col=0, header=0)
 count_df = count_df.reindex(index=coor_df.index)
+
+assert all(count_df.index == coor_df.index)
 
 weights = libpysal.weights.KNN(coor_df, k=knn)
 global_moran = SpaGene.moran.global_moran(

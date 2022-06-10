@@ -63,7 +63,8 @@ full_path = Path.joinpath(
 )
 full_df = pd.read_csv(full_path, index_col=0, header=0)
 
-# %%
+# %% subsample with Ai
+# n:(n + 500)
 for n in [0, 500, 1000, 1500, 2000]:
     write_dir = Path.joinpath(
         WORKDIR,
@@ -86,4 +87,182 @@ for n in [0, 500, 1000, 1500, 2000]:
             Path.joinpath(
                 write_dir,
                 f"{idx}-{scale_method}-Ai-{n}_{n + 500}.csv",
-            ), )
+            ))
+
+# 0:(n + 500)
+for n in [0, 500, 1000, 1500, 2000]:
+    write_dir = Path.joinpath(
+        WORKDIR,
+        f"Data/scale_df/{scale_method}-Ai-{0}_{n + 500}",
+    )
+    if not os.path.exists(write_dir):
+        os.mkdir(write_dir)
+
+    for idx in idx_full:
+        moran_df = pd.read_csv(
+            Path.joinpath(WORKDIR, f"results/Ai/{idx}-Ai.csv"),
+            header=0,
+            index_col=0,
+        ).sort_values(by="Ai", ascending=False)
+        sub_df = full_df.reindex(
+            index=moran_df.index[0:n + 500],
+            columns=[i for i in full_df.columns if idx in i],
+        )
+        sub_df.to_csv(
+            Path.joinpath(
+                write_dir,
+                f"{idx}-{scale_method}-Ai-{0}_{n + 500}.csv",
+            ))
+
+# union
+selected_genes_500 = []
+selected_genes_1000 = []
+for idx in idx_full:
+    moran_df = pd.read_csv(
+        Path.joinpath(WORKDIR, f"results/Ai/{idx}-Ai.csv"),
+        header=0,
+        index_col=0,
+    ).sort_values(by="Ai", ascending=False)
+    [selected_genes_500.append(i) for i in moran_df.index[:500]]
+    [selected_genes_1000.append(i) for i in moran_df.index[:1000]]
+selected_genes_500 = set(selected_genes_500)
+selected_genes_1000 = set(selected_genes_1000)
+
+for idx in idx_full:
+    sub_df = full_df.reindex(
+        index=selected_genes_500,
+        columns=[i for i in full_df.columns if idx in i],
+    )
+    sub_df.to_csv(
+        Path.joinpath(
+            WORKDIR,
+            f"Data/scale_df/{scale_method}-Ai-500union",
+            f"{idx}-{scale_method}-Ai-500union.csv",
+        ))
+    sub_df = full_df.reindex(
+        index=selected_genes_1000,
+        columns=[i for i in full_df.columns if idx in i],
+    )
+    sub_df.to_csv(
+        Path.joinpath(
+            WORKDIR,
+            f"Data/scale_df/{scale_method}-Ai-1000union",
+            f"{idx}-{scale_method}-Ai-1000union.csv",
+        ))
+
+sub_df = full_df.reindex(index=selected_genes_500)
+sub_df.to_csv(
+    Path.joinpath(
+        WORKDIR,
+        f"Data/scale_df/{scale_method}-Ai-500union",
+        f"full-{scale_method}-Ai-500union.csv",
+    ))
+sub_df = full_df.reindex(index=selected_genes_1000)
+sub_df.to_csv(
+    Path.joinpath(
+        WORKDIR,
+        f"Data/scale_df/{scale_method}-Ai-1000union",
+        f"full-{scale_method}-Ai-1000union.csv",
+    ))
+
+# %% subsample with I
+# n:(n + 500)
+for n in [0, 500, 1000, 1500, 2000]:
+    write_dir = Path.joinpath(
+        WORKDIR,
+        f"Data/scale_df/{scale_method}-I-{n}_{n + 500}",
+    )
+    if not os.path.exists(write_dir):
+        os.mkdir(write_dir)
+
+    for idx in idx_full:
+        moran_df = pd.read_csv(
+            Path.joinpath(WORKDIR, f"results/Ai/{idx}-Ai.csv"),
+            header=0,
+            index_col=0,
+        ).sort_values(by="I_value", ascending=False)
+        sub_df = full_df.reindex(
+            index=moran_df.index[n:n + 500],
+            columns=[i for i in full_df.columns if idx in i],
+        )
+        sub_df.to_csv(
+            Path.joinpath(
+                write_dir,
+                f"{idx}-{scale_method}-I-{n}_{n + 500}.csv",
+            ))
+
+# 0:(n + 500)
+for n in [0, 500, 1000, 1500, 2000]:
+    write_dir = Path.joinpath(
+        WORKDIR,
+        f"Data/scale_df/{scale_method}-I-{0}_{n + 500}",
+    )
+    if not os.path.exists(write_dir):
+        os.mkdir(write_dir)
+
+    for idx in idx_full:
+        moran_df = pd.read_csv(
+            Path.joinpath(WORKDIR, f"results/Ai/{idx}-Ai.csv"),
+            header=0,
+            index_col=0,
+        ).sort_values(by="I_value", ascending=False)
+        sub_df = full_df.reindex(
+            index=moran_df.index[0:n + 500],
+            columns=[i for i in full_df.columns if idx in i],
+        )
+        sub_df.to_csv(
+            Path.joinpath(
+                write_dir,
+                f"{idx}-{scale_method}-I-{0}_{n + 500}.csv",
+            ))
+
+# union
+selected_genes_500 = []
+selected_genes_1000 = []
+for idx in idx_full:
+    moran_df = pd.read_csv(
+        Path.joinpath(WORKDIR, f"results/Ai/{idx}-Ai.csv"),
+        header=0,
+        index_col=0,
+    ).sort_values(by="I_value", ascending=False)
+    [selected_genes_500.append(i) for i in moran_df.index[:500]]
+    [selected_genes_1000.append(i) for i in moran_df.index[:1000]]
+selected_genes_500 = set(selected_genes_500)
+selected_genes_1000 = set(selected_genes_1000)
+
+for idx in idx_full:
+    sub_df = full_df.reindex(
+        index=selected_genes_500,
+        columns=[i for i in full_df.columns if idx in i],
+    )
+    sub_df.to_csv(
+        Path.joinpath(
+            WORKDIR,
+            f"Data/scale_df/{scale_method}-I-500union",
+            f"{idx}-{scale_method}-I-500union.csv",
+        ))
+    sub_df = full_df.reindex(
+        index=selected_genes_1000,
+        columns=[i for i in full_df.columns if idx in i],
+    )
+    sub_df.to_csv(
+        Path.joinpath(
+            WORKDIR,
+            f"Data/scale_df/{scale_method}-I-1000union",
+            f"{idx}-{scale_method}-I-1000union.csv",
+        ))
+
+sub_df = full_df.reindex(index=selected_genes_500)
+sub_df.to_csv(
+    Path.joinpath(
+        WORKDIR,
+        f"Data/scale_df/{scale_method}-I-500union",
+        f"full-{scale_method}-I-500union.csv",
+    ))
+sub_df = full_df.reindex(index=selected_genes_1000)
+sub_df.to_csv(
+    Path.joinpath(
+        WORKDIR,
+        f"Data/scale_df/{scale_method}-I-1000union",
+        f"full-{scale_method}-I-1000union.csv",
+    ))

@@ -8,10 +8,12 @@ idx_full=(
     E135A E135B 
     E155A E155B 
     E165A E165B 
-    E175A1 E175A2 E175B
+    E175A1 E175A2
     P0A1 P0A2
 )
 scale_methods=(
+    combat-Ai-500union
+    combat-Ai-1000union
     combat-Ai-0_500
     combat-Ai-500_1000
     combat-Ai-1000_1500
@@ -21,6 +23,8 @@ scale_methods=(
     combat-Ai-0_1500
     combat-Ai-0_2000
     combat-Ai-0_2500
+    combat-I-500union
+    combat-I-1000union
     combat-I-0_500
     combat-I-500_1000
     combat-I-1000_1500
@@ -31,6 +35,9 @@ scale_methods=(
     combat-I-0_2000
     combat-I-0_2500
     combat
+    logcpm
+    cpm
+    raw
 )
 
 cd $HOME/workspace/mouse-brain-full
@@ -42,14 +49,14 @@ for directory in ${scale_methods[@]}; do
     fi
 done
 
-if false; then
+if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Scaling data..."
     ${PYTHON_PATH} src/py/run-cpm.py &>> log/pipeline-2.log
     ${PYTHON_PATH} src/py/run-combat.py &>> log/pipeline-2.log
 fi
 
 # %% global moran
-if false; then
+if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Calculating global moran..."
     for idx in ${idx_full[@]}; do
         ${PYTHON_PATH} src/py/run-global_moran.py \
@@ -58,44 +65,21 @@ if false; then
 fi
 
 # %% hotspot
-knn=6
-scale_method="logcpm"
-if false; then
+if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Running hotspot..."
     if [ ! -d Data/scale_df/${scale_method}-hotspot-${knn} ]; then
         mkdir Data/scale_df/${scale_method}-hotspot-${knn}
     fi
     for idx in ${idx_full[@]}; do
         ${PYTHON_PATH} src/py/run-hotspot.py \
-            ${idx} ${scale_method} ${knn} &>> log/pipeline-2.log
+            ${idx} logcpm 6 &>> log/pipeline-2.log
     done
 fi
 
-# %% gene cluster
-scale_method="logcpm-hotspot-6"
-gene_list=results/gene-cluster/logcpm-hotspot-6-500-union/E135B-11/tables/E135B-genes-11.csv
-gene_list_suffix=500-union-E135B-11-11
-writedir=results/gene-cluster/${scale_method}-${gene_list_suffix}
-if [ ! -d ${writedir} ]; then
-    mkdir ${writedir}
-fi
-if false; then
-    echo "[`date +%Y.%m.%d\ %H:%M:%S`] Clustering genes..."
-    for idx in ${idx_full[@]}; do
-        for n_gene_clusters in {1..10}; do
-            if [ ! -d ${writedir}/${idx}-${n_gene_clusters} ]; then
-                mkdir ${writedir}/${idx}-${n_gene_clusters}
-                mkdir ${writedir}/${idx}-${n_gene_clusters}/tables
-            fi
-            (
-                ${PYTHON_PATH} src/py/run-gene-cluster.py \
-                    ${scale_method} ${idx} ${n_gene_clusters} \
-                    ${gene_list} ${gene_list_suffix} \
-                &>> log/pipeline-2.log
-            )&
-        done
-        wait
-    done
+# %% subsample
+if true; then
+    echo "[`date +%Y.%m.%d\ %H:%M:%S`] Subsampling..."
+    ${PYTHON_PATH} src/py/run-subsample.py combat &>> log/pipeline-2.log
 fi
 
 # %% cluster

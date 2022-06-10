@@ -50,7 +50,7 @@ idx_full = {
     "E165B": "V10M17-085-E165B",
     "E175A1": "V10M17-101-E175A1",
     "E175A2": "V10M17-101-E175A2",
-    # "E175B": "V10M17-085-E175B",
+    "E175B": "V10M17-085-E175B",
     # "P0B": "V10M17-100-P0B",
     "P0A1": "V10M17-101-P0A1",
     "P0A2": "V10M17-101-P0A2",
@@ -115,6 +115,8 @@ count_df = pd.read_csv(
 coor_path = Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv")
 coor_df = pd.read_csv(coor_path, index_col=0, header=0)
 
+assert all(count_df.index == coor_df.index)
+
 he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
 he_image = Image.open(he_path)
 
@@ -153,15 +155,21 @@ if False:
 # read gene list
 if True:
     gene_list = Path(gene_list)
-    gene_list_df = pd.read_csv(gene_list, index_col=0, header=0)
-    selected_genes = gene_list_df.index
+    # gene_list_df = pd.read_csv(gene_list, index_col=0, header=0)
+    # selected_genes = gene_list_df.index
+    selected_genes = []
+    with open(gene_list) as f:
+        for line in f:
+            line = line.strip()
+            selected_genes.append(line)
+    selected_genes = set(selected_genes)
     scale_method = f"{scale_method}-{suffix}"
 
 count_df = count_df.reindex(columns=selected_genes)
 count_df = count_df.fillna(0)
 
 # %% calculate distmat
-n_spot_clusters = 9
+n_spot_clusters = 8
 
 gene_distmat = sch.distance.pdist(count_df.T, metric="jaccard")
 spot_distmat = sch.distance.pdist(count_df, metric="jaccard")
@@ -276,7 +284,6 @@ for i in range(1, n_gene_clusters + 1):
         c=count_df[gene_result[gene_result == i].index].T.mean(),
         cmap="autumn_r",
         vmin=0,
-        # vmax=0.8,
         s=16,
         alpha=0.7,
     )
