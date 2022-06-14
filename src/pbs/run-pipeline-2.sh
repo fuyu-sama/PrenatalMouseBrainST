@@ -67,12 +67,20 @@ fi
 # %% hotspot
 if true; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Running hotspot..."
-    if [ ! -d Data/scale_df/${scale_method}-hotspot-${knn} ]; then
-        mkdir Data/scale_df/${scale_method}-hotspot-${knn}
+    if [ ! -d Data/scale_df/logcpm-hotspot-6 ]; then
+        mkdir Data/scale_df/logcpm-hotspot-6
     fi
     for idx in ${idx_full[@]}; do
         ${PYTHON_PATH} src/py/run-hotspot.py \
             ${idx} logcpm 6 &>> log/pipeline-2.log
+    done
+fi
+
+# %% density
+if true; then
+    echo "[`date +%Y.%m.%d\ %H:%M:%S`] Running density..."
+    for idx in ${idx_full[@]}; do
+        ${PYTHON_PATH} src/py/run-density.py ${idx} &>> log/pipeline-2.log
     done
 fi
 

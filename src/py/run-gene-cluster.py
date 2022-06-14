@@ -218,59 +218,6 @@ fig.savefig(
 )
 plt.close(fig)
 
-# %% draw heatmap version 2
-left, bottom = 0.1, 0.1
-width, height = 0.65, 0.65
-spacing, dend_width = 0.02, 0.1
-rect_heatmap = [left, bottom, width, height]
-rect_dend_top = [left, bottom + height + spacing, width, dend_width]
-rect_dend_right = [left + width + spacing, bottom, dend_width, height]
-fig = plt.figure(figsize=(10, 10))
-ax_heatmap = fig.add_axes(rect_heatmap)
-ax_dend_top = fig.add_axes(rect_dend_top)
-ax_dend_right = fig.add_axes(rect_dend_right)
-
-R_top = sch.dendrogram(
-    Z_gene,
-    count_sort=True,
-    labels=count_df.columns,
-    orientation="top",
-    ax=ax_dend_top,
-)
-ax_dend_top.set_xticks([])
-ax_dend_top.set_yticks([])
-ax_dend_top.set_title(f"{idx}")
-
-R_right = sch.dendrogram(
-    Z_spot,
-    count_sort=True,
-    labels=count_df.index,
-    orientation="right",
-    ax=ax_dend_right,
-)
-ax_dend_right.set_xticks([])
-ax_dend_right.set_yticks([])
-
-ax_heatmap.imshow(
-    count_df.reindex(columns=R_top["ivl"], index=R_right["ivl"]),
-    cmap="Reds",
-    aspect="auto",
-)
-ax_heatmap.set_xticks([])
-ax_heatmap.set_yticks([])
-ax_heatmap.set_xlabel("Genes")
-ax_heatmap.set_ylabel("Spots")
-
-fig.savefig(
-    Path.joinpath(
-        WORKDIR,
-        f"results/gene-cluster/{scale_method}",
-        f"{idx}-{n_gene_clusters}/{idx}-heatmap-2.jpg",
-    ),
-    bbox_inches="tight",
-)
-plt.close(fig)
-
 # %% draw distribution
 for i in range(1, n_gene_clusters + 1):
     fig, ax = plt.subplots(figsize=(10, 10))
