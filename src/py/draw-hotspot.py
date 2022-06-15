@@ -56,8 +56,7 @@ idx_full = {
 }
 
 # %% read data
-# genes = ["Bop1", "Tprn", "Dlk1", "Foxp2", "Id2", "Pmch", "Sla", "Sox2", "Calb2"]
-genes = ["Satb2", "Nr4a2"]
+genes = ["9130024F11Rik", "Mef2c", "Satb2", "Sla", "Sox5"]
 for idx in idx_full:
     count_df = pd.read_csv(
         Path.joinpath(

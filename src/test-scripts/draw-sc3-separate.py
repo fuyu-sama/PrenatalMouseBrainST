@@ -29,13 +29,19 @@
 #
 
 # %% environment config
+import json
+import sys
 from pathlib import Path
 
 import pandas as pd
+import session_info
 from matplotlib import pyplot as plt
 from PIL import Image
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
+session_info.show()
+plt.rcParams.update({"font.size": 24})
+Image.MAX_IMAGE_PIXELS = None
 
 idx_full = {
     "E135A": "V10M17-100-E135A",
@@ -59,64 +65,50 @@ colors = [
     "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
 ]
 
-# %%
-idx = "E165A"
-hotspot_df = pd.read_csv(
-    Path.joinpath(
+try:
+    scale_method = sys.argv[1]
+except IndexError:
+    scale_method = "combat-Ai-500union"
+
+# %% read data
+with open(
+        Path.joinpath(
+            WORKDIR,
+            f"results/cluster/{scale_method}-sc3/color_swift.json",
+        )) as f:
+    color_swift = json.load(f)
+for idx, colors in color_swift.items():
+    ncs = len(colors)
+    he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
+    sc3_path = Path.joinpath(
         WORKDIR,
-        f"Data/scale_df/logcpm-hotspot-6/{idx}-logcpm-hotspot-6.csv",
-    ),
-    index_col=0,
-    header=0,
-).T
+        f"results/cluster/{scale_method}-sc3/pattern/{idx}-sc3.csv",
+    )
+    coor_path = Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv")
 
-coor_df = pd.read_csv(
-    Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv"),
-    index_col=0,
-    header=0,
-)
+    he_image = Image.open(he_path)
+    cluster_df = pd.read_csv(sc3_path, index_col=0, header=0)
+    coor_df = pd.read_csv(coor_path, index_col=0, header=0)
+    assert all(cluster_df.index == coor_df.index)
 
-di_df = pd.read_csv(
-    Path.joinpath(
-        WORKDIR,
-        f"results/Ai/{idx}-Di.csv"
-    ),
-    index_col=0,
-    header=0,
-).T.reindex(index=coor_df.index)
-he_image = Image.open(
-    Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif"))
+    draw_series = cluster_df[f"sc3_{ncs}_clusters"]
+    for i in colors:
+        draw_series.replace(int(i), colors[i], inplace=True)
 
-# %%
-gene = "Nap1l5" if idx == "E165A" else "Pmch"
-fig, ax = plt.subplots(figsize=(10, 10), dpi=50)
-ax.imshow(he_image)
-ax.axis("off")
-ax.set_title(f"{gene}")
-sc = ax.scatter(
-    coor_df["X"],
-    coor_df["Y"],
-    c=di_df[gene],
-    cmap='autumn_r',
-    alpha=0.7,
-    s=16,
-    vmin=0.9,
-)
-cb = fig.colorbar(sc, ax=ax)
-fig.savefig(Path.joinpath(WORKDIR, f"draw_genes/1.jpg"))
-
-hotspot_1 = hotspot_df[gene][hotspot_df[gene] == 1]
-di_1 = di_df[gene][di_df[gene] > 0.99]
-a = [i for i in hotspot_1.index if i in di_1.index]
-
-fig, ax = plt.subplots(figsize=(10, 10))
-ax.imshow(he_image)
-ax.axis("off")
-sc = ax.scatter(
-    coor_df["X"].reindex(index=a),
-    coor_df["Y"].reindex(index=a),
-    alpha=0.7,
-    c="r",
-    s=16,
-)
-fig.savefig(Path.joinpath(WORKDIR, f"draw_genes/2.jpg"))
+    fig, ax = plt.subplots(figsize=(10, 10), dpi=50)
+    ax.axis("off")
+    ax.imshow(he_image)
+    ax.set_title(f"{idx} ncs {ncs}")
+    ax.scatter(
+        coor_df["X"],
+        coor_df["Y"],
+        s=16,
+        c=cluster_df[f"sc3_{ncs}_clusters"],
+        alpha=0.7,
+    )
+    fig.savefig(
+        Path.joinpath(
+            WORKDIR,
+            f"results/cluster/{scale_method}-sc3/{idx}-final.jpg",
+        ))
+    plt.close(fig)
