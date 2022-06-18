@@ -92,7 +92,7 @@ except IndexError:
     scale_method = "logcpm-hotspot-6"
 
 # %% read data
-with open(Path.joinpath(WORKDIR, "Data/clusters.json")) as f:
+with open(Path.joinpath(WORKDIR, "Data/clusters-2.json")) as f:
     gene_clusters = json.load(f)
 
 for idx in idx_full:

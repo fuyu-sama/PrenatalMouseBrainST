@@ -12,17 +12,17 @@ idx_full=(
     P0A1 P0A2
 )
 scale_methods=(
-    combat-Ai-500union
-    combat-Ai-1000union
-    combat-Ai-0_500
-    combat-Ai-500_1000
-    combat-Ai-1000_1500
-    combat-Ai-1500_2000
-    combat-Ai-2000_2500
-    combat-Ai-0_1000
-    combat-Ai-0_1500
-    combat-Ai-0_2000
-    combat-Ai-0_2500
+    #combat-Ai-500union
+    #combat-Ai-1000union
+    #combat-Ai-0_500
+    #combat-Ai-500_1000
+    #combat-Ai-1000_1500
+    #combat-Ai-1500_2000
+    #combat-Ai-2000_2500
+    #combat-Ai-0_1000
+    #combat-Ai-0_1500
+    #combat-Ai-0_2000
+    #combat-Ai-0_2500
     combat-I-500union
     combat-I-1000union
     combat-I-0_500
@@ -49,14 +49,14 @@ for directory in ${scale_methods[@]}; do
     fi
 done
 
-if true; then
+if false; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Scaling data..."
     ${PYTHON_PATH} src/py/run-cpm.py &>> log/pipeline-2.log
     ${PYTHON_PATH} src/py/run-combat.py &>> log/pipeline-2.log
 fi
 
 # %% global moran
-if true; then
+if false; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Calculating global moran..."
     for idx in ${idx_full[@]}; do
         ${PYTHON_PATH} src/py/run-global_moran.py \
@@ -65,7 +65,7 @@ if true; then
 fi
 
 # %% hotspot
-if true; then
+if false; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Running hotspot..."
     if [ ! -d Data/scale_df/logcpm-hotspot-6 ]; then
         mkdir Data/scale_df/logcpm-hotspot-6
@@ -77,7 +77,7 @@ if true; then
 fi
 
 # %% density
-if true; then
+if false; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Running density..."
     for idx in ${idx_full[@]}; do
         ${PYTHON_PATH} src/py/run-density.py ${idx} &>> log/pipeline-2.log
@@ -85,7 +85,7 @@ if true; then
 fi
 
 # %% subsample
-if true; then
+if false; then
     echo "[`date +%Y.%m.%d\ %H:%M:%S`] Subsampling..."
     ${PYTHON_PATH} src/py/run-subsample.py combat &>> log/pipeline-2.log
 fi

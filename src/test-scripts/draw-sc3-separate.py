@@ -68,7 +68,7 @@ colors = [
 try:
     scale_method = sys.argv[1]
 except IndexError:
-    scale_method = "combat-Ai-500union"
+    scale_method = "combat-Ai-2000_2500"
 
 # %% read data
 with open(

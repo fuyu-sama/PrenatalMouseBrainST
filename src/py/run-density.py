@@ -36,6 +36,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
 from libpysal.weights import KNN
 
@@ -220,3 +221,24 @@ ax.set_ylabel("I_value")
 ax.set_title(f"{idx} pearson correlation: {r:.4f}")
 fig.savefig(Path.joinpath(WORKDIR, f"results/Ai/{idx}-corr.jpg"))
 plt.close()
+
+# %% draw boxplot
+global_moran = draw_df.sort_values(by="Ai", ascending=False)
+draw_list = []
+for i in range(0, 3500, 500):
+    sub_series = global_moran.iloc[i:i + 500, 1]
+    sub_series.name = f"{i} - {i + 500}"
+    draw_list.append(sub_series)
+fig, ax = plt.subplots(figsize=(10, 10))
+sns.boxplot(data=draw_list, ax=ax)
+ax.set_xticklabels([i.name for i in draw_list], rotation=45)
+ax.set_title(f"{idx} Ai")
+ax.set_xlabel("Gene ranking")
+ax.set_ylabel("Ai")
+fig.savefig(
+    Path.joinpath(
+        WORKDIR,
+        f"results/Ai/{idx}-boxplot.jpg",
+    ),
+    bbox_inches="tight",
+)
