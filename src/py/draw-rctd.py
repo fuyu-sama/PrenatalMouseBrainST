@@ -51,31 +51,34 @@ idx_full = {
     "E165B": "V10M17-085-E165B",
     "E175A1": "V10M17-101-E175A1",
     "E175A2": "V10M17-101-E175A2",
-    "E175B": "V10M17-085-E175B",
-    "P0B": "V10M17-100-P0B",
+    # "E175B": "V10M17-085-E175B",
+    # "P0B": "V10M17-100-P0B",
     "P0A1": "V10M17-101-P0A1",
     "P0A2": "V10M17-101-P0A2",
 }
-colors = [
-    "#FAEBD7", "#00FFFF", "#FFD700", "#0000FF", "#FF8C00", "#EE82EE",
-    "#9ACD32", "#5F9EA0", "#7FFF00", "#7FFFD4", "#6495ED", "#008B8B",
-    "#B8860B", "#C0C0C0", "#000080", "#D8BFD8", "#00CED1", "#9400D3",
-    "#8E804B", "#0089A7", "#CB1B45", "#FFB6C1", "#00FF00", "#800000",
-    "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
-]
 
 try:
     idx = sys.argv[1]
     region = sys.argv[2]
     scale_method = sys.argv[3]
-    cluster_method = sys.argv[4]
 except IndexError:
     idx = "E165A"
     region = "cortex"
-    scale_method = "combat-qq-logcpm"
-    cluster_method = "sc3"
+    scale_method = "combat-Ai-500union"
 
 # %% read data
+color_path = Path.joinpath(
+    WORKDIR, f"results/cluster/{scale_method}-sc3/color_swift.json")
+with open(color_path) as f:
+    color_swift = json.load(f)
+
+regions_color = {
+    "cortex": ["#CC163A", "#00FFFF"],
+    "hypothalamus": ["#EE82EE"],
+}
+if idx not in color_swift:
+    sys.exit()
+
 he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
 he_image = Image.open(he_path)
 coor_path = Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv")
@@ -83,7 +86,7 @@ coor_df = pd.read_csv(coor_path, index_col=0, header=0)
 
 cluster_path = Path.joinpath(
     WORKDIR,
-    f"results/cluster/{scale_method}-{cluster_method}/pattern/full-{cluster_method}.csv"
+    f"results/cluster/{scale_method}-sc3/pattern/{idx}-sc3.csv",
 )
 cluster_df = pd.read_csv(
     cluster_path,
@@ -91,13 +94,11 @@ cluster_df = pd.read_csv(
     header=0,
 )
 
-regions_path = Path.joinpath(
-    WORKDIR, f"results/cluster/{scale_method}-{cluster_method}/regions.json")
-with open(regions_path) as f:
-    regions = json.load(f)["regions"]
-in_region = [
-    i for i in cluster_df.index if (idx in i and cluster_df.loc[i, f"{cluster_method}_clusters"] in regions[region])
-]
+in_region = []
+for i in cluster_df.index:
+    cluster = str(cluster_df.loc[i, "sc3_12_clusters"])
+    if color_swift[idx][cluster] in regions_color[region]:
+        in_region.append(i)
 
 results_path = Path.joinpath(
     WORKDIR, f"results/RCTD/{region}/{idx}/results/results_df.csv")

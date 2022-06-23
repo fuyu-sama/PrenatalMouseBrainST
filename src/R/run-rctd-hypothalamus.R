@@ -52,13 +52,7 @@ sc_list <- list(
 
 args <- commandArgs(trailingOnly = TRUE)
 idx <- args[1]
-scale_method <- args[2]
-cluster_method <- args[3]
-if (is.na(idx) | is.na(scale_method) | is.na(cluster_method)) {
-    idx <- "E175B"
-    scale_method <- "combat"
-    cluster_method <- "sc3"
-}
+if (is.na(idx)) idx <- "E175A1"
 
 # %% read sc data and build reference
 if (!(idx %in% names(sc_list))) quit(save = "no", status = 404)

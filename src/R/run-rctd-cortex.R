@@ -66,13 +66,7 @@ timepoint_list <- list(
 
 args <- commandArgs(trailingOnly = TRUE)
 idx <- args[1]
-scale_method <- args[2]
-cluster_method <- args[3]
-if (is.na(idx) | is.na(scale_method) | is.na(cluster_method)) {
-    idx <- "E165A"
-    scale_method <- "combat"
-    cluster_method <- "sc3"
-}
+if (is.na(idx)) idx <- "E165A"
 
 # %% read sc data and build reference
 sc_df <- as.data.frame(
