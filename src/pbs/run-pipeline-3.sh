@@ -52,5 +52,6 @@ for scale_method in ${scale_methods[@]}; do
         ${scale_method} &>> log/pipeline-3.log)&
 done
 
+# %%
 wait
 echo "[`date +%Y.%m.%d\ %H:%M:%S`] Pipeline-3 finished."
