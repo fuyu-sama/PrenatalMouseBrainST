@@ -64,61 +64,75 @@ colors = [
     "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
 ]
 
-idx = sys.argv[1]
-
 # %% read data
-count_df = pd.read_csv(
-    Path.joinpath(
-        WORKDIR,
-        f"Data/scale_df/logcpm-hotspot-6/{idx}-logcpm-hotspot-6.csv",
-    ),
-    index_col=0,
-    header=0,
-).T
+count_dict = {}
+coor_dict = {}
+he_dict = {}
+for idx in idx_full:
+    count_dict[idx] = pd.read_csv(
+        Path.joinpath(
+            WORKDIR,
+            f"Data/scale_df/logcpm-hotspot-6/{idx}-logcpm-hotspot-6.csv",
+        ),
+        index_col=0,
+        header=0,
+    ).T
 
-coor_df = pd.read_csv(
-    Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv"),
-    index_col=0,
-    header=0,
-)
+    coor_dict[idx] = pd.read_csv(
+        Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv"),
+        index_col=0,
+        header=0,
+    )
 
-he_image = Image.open(Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif"))
+    he_dict[idx] = Image.open(Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif"))
 
 # %%
-fig, ax = plt.subplots(figsize=(10, 10), dpi=50)
-ax.imshow(he_image)
-ax.axis("off")
-hotspot_list = []
-for i, gene in enumerate(["Satb2", "Nr4a2"]):
-    draw_counts = count_df[gene].loc[count_df[gene] > 0]
-    ax.scatter(
-        coor_df["X"].reindex(index=draw_counts.index),
-        coor_df["Y"].reindex(index=draw_counts.index),
-        c=colors[i + 1],
-        alpha=0.7,
-        s=16,
-        label=f"{gene}",
-    )
-    hotspot_list.append(draw_counts.index)
+gene_1 = []
+with open(Path.joinpath(WORKDIR, "Data/1.csv")) as f:
+    for line in f:
+        line = line.strip()
+        gene_1.append(line)
+gene_1 = set(gene_1)
+gene_2 = ["Calb2", "Sox2"]
+for q in gene_1:
+    if q not in count_dict[idx].columns:
+        continue
+    for w in gene_2:
+        fig, axes = plt.subplots(2, 5, figsize=(65, 20))
+        for idx, ax in zip(idx_full.keys(), axes.flatten()):
+            ax.imshow(he_dict[idx])
+            ax.axis("off")
+            hotspot_list = []
+            for i, gene in enumerate([q, w]):
+                draw_counts = count_dict[idx][gene].loc[count_dict[idx][gene] > 0]
+                ax.scatter(
+                    coor_dict[idx]["X"].reindex(index=draw_counts.index),
+                    coor_dict[idx]["Y"].reindex(index=draw_counts.index),
+                    c=colors[i + 1],
+                    alpha=0.7,
+                    s=16,
+                    label=f"{gene}",
+                )
+                hotspot_list.append(draw_counts.index)
 
-inter_spots = set()
-for j, k in enumerate(hotspot_list):
-    if j == 0:
-        inter_spots = set(k)
-    else:
-        inter_spots = inter_spots & set(k)
-ax.scatter(
-    coor_df["X"].reindex(index=inter_spots),
-    coor_df["Y"].reindex(index=inter_spots),
-    c=colors[i + 2],
-    alpha=0.7,
-    s=16,
-    label=f"Both",
-)
-
-ax.legend(markerscale=5)
-fig.savefig(Path.joinpath(
-    WORKDIR,
-    f"draw_genes/{idx}.jpg",
-))
-plt.close(fig)
+            inter_spots = set()
+            for j, k in enumerate(hotspot_list):
+                if j == 0:
+                    inter_spots = set(k)
+                else:
+                    inter_spots = inter_spots & set(k)
+            ax.scatter(
+                coor_dict[idx]["X"].reindex(index=inter_spots),
+                coor_dict[idx]["Y"].reindex(index=inter_spots),
+                c=colors[i + 2],
+                alpha=0.7,
+                s=16,
+                label=f"Both",
+            )
+            ax.legend(markerscale=5)
+            ax.set_title(idx)
+        fig.savefig(Path.joinpath(
+            WORKDIR,
+            f"draw_genes/2/{w}-{q}.jpg",
+        ))
+        plt.close(fig)
