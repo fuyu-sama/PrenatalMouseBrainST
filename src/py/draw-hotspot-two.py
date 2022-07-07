@@ -84,7 +84,8 @@ for idx in idx_full:
         header=0,
     )
 
-    he_dict[idx] = Image.open(Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif"))
+    he_dict[idx] = Image.open(
+        Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif"))
 
 # %%
 gene_1 = []
@@ -104,7 +105,8 @@ for q in gene_1:
             ax.axis("off")
             hotspot_list = []
             for i, gene in enumerate([q, w]):
-                draw_counts = count_dict[idx][gene].loc[count_dict[idx][gene] > 0]
+                draw_counts = count_dict[idx][gene].loc[
+                    count_dict[idx][gene] > 0]
                 ax.scatter(
                     coor_dict[idx]["X"].reindex(index=draw_counts.index),
                     coor_dict[idx]["Y"].reindex(index=draw_counts.index),
@@ -129,7 +131,11 @@ for q in gene_1:
                 s=16,
                 label=f"Both",
             )
-            ax.legend(markerscale=5)
+            ax.legend(
+                markerscale=2,
+                bbox_to_anchor=(1.4, 1),
+                loc='upper right',
+            )
             ax.set_title(idx)
         fig.savefig(Path.joinpath(
             WORKDIR,
