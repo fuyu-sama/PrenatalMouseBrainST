@@ -50,7 +50,7 @@ idx_full = {
     "E165B": "V10M17-085-E165B",
     "E175A1": "V10M17-101-E175A1",
     "E175A2": "V10M17-101-E175A2",
-    "E175B": "V10M17-085-E175B",
+    # "E175B": "V10M17-085-E175B",
     # "P0B": "V10M17-100-P0B",
     "P0A1": "V10M17-101-P0A1",
     "P0A2": "V10M17-101-P0A2",
@@ -121,42 +121,23 @@ he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
 he_image = Image.open(he_path)
 
 # %% subset
-# single sample global moran
-if False:
-    moran_path = Path.joinpath(
+if True:
+    ai_path = Path.joinpath(
         WORKDIR,
-        f"results/global_moran/{idx}-logcpm-6.csv",
+        f"results/Ai/{idx}-Ai.csv",
+
     )
-    moran_df = pd.read_csv(
-        moran_path,
+    ai_df = pd.read_csv(
+        ai_path,
         index_col=0,
         header=0,
-    ).sort_values(by="I_value", ascending=False)
-    selected_genes = moran_df.index[:1000]
 
-# multi sample global moran union
-if False:
-    selected_genes = []
-    for idxi in idx_full:
-        moran_path = Path.joinpath(
-            WORKDIR,
-            f"results/global_moran/{idxi}-logcpm-6.csv",
-        )
-        moran_df = pd.read_csv(
-            moran_path,
-            index_col=0,
-            header=0,
-        ).sort_values(by="I_value", ascending=False)
-
-        [selected_genes.append(i) for i in moran_df.index[:500]]
-    selected_genes = list(set(selected_genes))
-    scale_method = f"{scale_method}-500-union"
+    ).sort_values(by="Ai", ascending=False)
+    selected_genes = ai_df.index[:1000]
 
 # read gene list
-if True:
+if gene_list is not None:
     gene_list = Path(gene_list)
-    # gene_list_df = pd.read_csv(gene_list, index_col=0, header=0)
-    # selected_genes = gene_list_df.index
     selected_genes = []
     with open(gene_list) as f:
         for line in f:
