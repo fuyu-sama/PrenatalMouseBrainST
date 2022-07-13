@@ -41,7 +41,7 @@ import matplotlib.pyplot as plt
 from libpysal.weights import KNN
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
-plt.rcParams.update({"font.size": 16})
+plt.rcParams.update({"font.size": 24})
 
 idx_full = {
     "E135A": "V10M17-100-E135A",
@@ -201,15 +201,14 @@ results["Di"].reindex(index=hotspot_df.index).T.to_csv(
     Path.joinpath(WORKDIR, f"results/Ai/{idx}-Di.csv"))
 
 # %%
-fig, ax = plt.subplots(figsize=(10, 10))
-ax.hist(Ai_df, bins=100)
-ax.set_title(f"{idx} Ai")
+fig, ax = plt.subplots(figsize=(13, 10))
+ax.hist(Ai_df["Ai"], bins=90)
 fig.savefig(Path.joinpath(WORKDIR, f"results/Ai/{idx}-dist.jpg"))
 plt.close()
 
 # %%
 draw_df = pd.concat(
-    [Ai_df, global_moran_df["I_value"].to_frame()],
+    [Ai_df, global_moran_df["i_value"].to_frame()],
     axis="columns",
 ).dropna(axis="index")
 draw_df.to_csv(Path.joinpath(WORKDIR, f"results/Ai/{idx}-Ai.csv"))
@@ -218,7 +217,6 @@ fig, ax = plt.subplots(figsize=(10, 10))
 ax.scatter(draw_df["Ai"], draw_df["I_value"], s=8)
 ax.set_xlabel("Ai")
 ax.set_ylabel("I_value")
-ax.set_title(f"{idx} pearson correlation: {r:.4f}")
 fig.savefig(Path.joinpath(WORKDIR, f"results/Ai/{idx}-corr.jpg"))
 plt.close()
 
@@ -232,7 +230,6 @@ for i in range(0, 3500, 500):
 fig, ax = plt.subplots(figsize=(10, 10))
 sns.boxplot(data=draw_list, ax=ax)
 ax.set_xticklabels([i.name for i in draw_list], rotation=45)
-ax.set_title(f"{idx} Ai")
 ax.set_xlabel("Gene ranking")
 ax.set_ylabel("Ai")
 fig.savefig(

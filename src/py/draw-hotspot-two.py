@@ -29,7 +29,6 @@
 #
 
 # %% environment config
-import sys
 from pathlib import Path
 
 import pandas as pd
@@ -94,12 +93,12 @@ with open(Path.joinpath(WORKDIR, "Data/1.csv")) as f:
         line = line.strip()
         gene_1.append(line)
 gene_1 = set(gene_1)
-gene_2 = ["Calb2", "Sox2"]
+gene_2 = ["Calb2", "Clybl", "Gbx2", "Prkch", "Slc18a2", "Lef1"]
 for q in gene_1:
     if q not in count_dict[idx].columns:
         continue
     for w in gene_2:
-        fig, axes = plt.subplots(2, 5, figsize=(65, 20))
+        fig, axes = plt.subplots(2, 5, figsize=(65, 20), dpi=100)
         for idx, ax in zip(idx_full.keys(), axes.flatten()):
             ax.imshow(he_dict[idx])
             ax.axis("off")
@@ -139,6 +138,6 @@ for q in gene_1:
             ax.set_title(idx)
         fig.savefig(Path.joinpath(
             WORKDIR,
-            f"draw_genes/2/{w}-{q}.jpg",
+            f"draw_genes/2/{q}-{w}-low.jpg",
         ))
         plt.close(fig)

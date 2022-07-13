@@ -58,6 +58,18 @@ idx_full = {
     "P0A1": "V10M17-101-P0A1",
     "P0A2": "V10M17-101-P0A2",
 }
+idx_tp = {
+    "E135A": "E13.5",
+    "E135B": "E13.5",
+    "E155A": "E15.5",
+    "E155B": "E15.5",
+    "E165A": "E16.5",
+    "E165B": "E16.5",
+    "E175A1": "E17.5",
+    "E175A2": "E17.5",
+    "P0A1": "P0",
+    "P0A2": "P0",
+}
 colors = [
     "#FAEBD7", "#00FFFF", "#FFD700", "#0000FF", "#FF8C00", "#EE82EE",
     "#9ACD32", "#5F9EA0", "#7FFF00", "#7FFFD4", "#6495ED", "#008B8B",
@@ -161,7 +173,7 @@ for i, idx in enumerate(color_swift):
     ax2.scatter(
         draw_df["X"],
         draw_df["Y"],
-        label=idx,
+        label=idx_tp[idx],
         c=colors[i],
         s=8,
     )
@@ -170,7 +182,6 @@ ax2.legend(
     loc='upper right',
     bbox_to_anchor=(1.3, 1),
 )
-fig.suptitle(f"tSNE {scale_method}")
 fig.savefig(
     Path.joinpath(
         WORKDIR,
@@ -230,7 +241,7 @@ for i, idx in enumerate(color_swift):
     ax2.scatter(
         draw_df["X"],
         draw_df["Y"],
-        label=idx,
+        label=idx_tp[idx],
         c=colors[i],
         s=8,
     )
@@ -239,7 +250,6 @@ ax2.legend(
     loc='upper right',
     bbox_to_anchor=(1.3, 1),
 )
-fig.suptitle(f"UMAP {scale_method}")
 fig.savefig(
     Path.joinpath(
         WORKDIR,

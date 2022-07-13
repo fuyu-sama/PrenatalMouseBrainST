@@ -77,7 +77,7 @@ for idx in idx_full:
         Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif"))
 
     for gene in genes:
-        fig, ax = plt.subplots(figsize=(13, 10), dpi=50)
+        fig, ax = plt.subplots(figsize=(13, 10), dpi=100)
         ax.imshow(he_image)
         ax.axis("off")
         ax.set_title(f"{gene}")
@@ -95,7 +95,7 @@ for idx in idx_full:
         fig.savefig(
             Path.joinpath(
                 WORKDIR,
-                f"draw_genes/logcpm-hotspot-6/{idx}-{gene}.jpg",
+                f"draw_genes/{idx}-{gene}.jpg",
             ))
         plt.close(fig)
     he_image.close()

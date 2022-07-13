@@ -31,6 +31,8 @@
 # %% envoronment config
 import json
 import sys
+from copy import deepcopy
+from math import ceil
 from pathlib import Path
 
 import numpy as np
@@ -41,7 +43,7 @@ from matplotlib.colors import ListedColormap
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 session_info.show()
-plt.rcParams.update({"font.size": 12})
+plt.rcParams.update({"font.size": 24})
 
 idx_full = {
     "E135A": "V10M17-100-E135A",
@@ -57,13 +59,19 @@ idx_full = {
     "P0A1": "V10M17-101-P0A1",
     "P0A2": "V10M17-101-P0A2",
 }
-colors = [
-    "#FAEBD7", "#00FFFF", "#FFD700", "#0000FF", "#FF8C00", "#EE82EE",
-    "#9ACD32", "#5F9EA0", "#7FFF00", "#7FFFD4", "#6495ED", "#008B8B",
-    "#B8860B", "#C0C0C0", "#000080", "#D8BFD8", "#00CED1", "#9400D3",
-    "#8E804B", "#0089A7", "#CB1B45", "#FFB6C1", "#00FF00", "#800000",
-    "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
-]
+idx_tp = {
+    "E135A": "E13.5",
+    "E135B": "E13.5",
+    "E155A": "E15.5",
+    "E155B": "E15.5",
+    "E165A": "E16.5",
+    "E165B": "E16.5",
+    "E175A1": "E17.5",
+    "E175A2": "E17.5",
+    "P0A1": "P0",
+    "P0A2": "P0",
+}
+
 try:
     scale_method = sys.argv[1]
 except IndexError:
@@ -135,7 +143,7 @@ with open(
         )) as f:
     gene_cluster_json = json.load(f)
 init_dict = {"cortex": 0, "thalamus": 0, "hypothalamus": 0}
-gene_dict = {i: init_dict.copy() for i in count_full_df.columns}
+gene_dict = {i: deepcopy(init_dict) for i in count_full_df.columns}
 for idx in color_swift:
     gene_path = Path.joinpath(
         WORKDIR,
@@ -152,10 +160,79 @@ for idx in color_swift:
 draw_genes = pd.Series(name="region")
 indel = {"cortex": 1, "thalamus": 2, "hypothalamus": 3}
 for gene in gene_dict:
-    for region in gene_dict[gene]:
-        if gene_dict[gene][region] >= len(color_swift) / 2:
-            draw_genes[gene] = indel[region]
+    max_region = max(gene_dict[gene], key=gene_dict[gene].get)
+    if gene_dict[gene][max_region] > 1:
+        draw_genes[gene] = indel[max_region]
 draw_genes.sort_values(inplace=True)
+
+# x axis genes
+wanted_genes = [
+    [
+        "Mef2c",
+        "Bcl11a",
+        "Sox5",
+        "Hivep2",
+        "Satb2",
+        "Fezf2",
+        "Neurod2",
+        "Neurod6",
+        "Zbtb18",
+        "Tbr1",
+    ],
+    [
+        "Zfp423",
+        "Tcf7l2",
+        "Zic1",
+        "Zic3",
+        "Zic4",
+        "Zic5",
+        "Gbx2",
+        "Id4",
+        "Slc18a2",
+        "Clybl",
+        "Lhx9",
+        "Foxp2",
+    ],
+    [
+        "Dlx1",
+        "Otp",
+        "Asb4",
+        "Trh",
+        "Ddc",
+        "Dlk1",
+        "Nkx2-2",
+        "Magel2",
+        "Nap1l5",
+        "Peg10",
+    ],
+]
+draw_genes_list = []
+for i, gene_set in enumerate(wanted_genes):
+    cluster_i_gene = list(draw_genes[draw_genes == i + 1].index)
+    [cluster_i_gene.remove(j) for j in gene_set]
+    space_len = ceil(len(cluster_i_gene) / (len(gene_set) + 1))
+    j = 0
+    k = 0
+    while j < len(cluster_i_gene):
+        draw_genes_list.append(cluster_i_gene[j])
+        if j % space_len == 0 and j != 0:
+            draw_genes_list.append(gene_set[k])
+            k += 1
+        j += 1
+    ll = k - len(gene_set)
+    if ll != 0:
+        for i in range(1, ll + 1):
+            draw_genes_list.append(gene_set[-ll])
+
+draw_genes = draw_genes.reindex(index=draw_genes_list)
+xticks = []
+xticklabels = []
+wanted_genes_flatten = [j for i in wanted_genes for j in i]
+for i, gene in enumerate(draw_genes.index):
+    if gene in wanted_genes_flatten:
+        xticks.append(i)
+        xticklabels.append(gene)
+draw_genes.to_csv(Path.joinpath(WORKDIR, f"results/heatmap-genes.csv"))
 
 # build draw_df
 draw_df = count_full_df.reindex(
@@ -191,21 +268,22 @@ rect_heatmap = [
 ]
 rect_idx_tip = [
     left + spacing * 2 + cluster_width,
-    bottom + height + spacing,
+    bottom + height + spacing * 4,
     tip_width,
     tip_height,
 ]
 
-fig = plt.figure(figsize=(20, 10))
+fig = plt.figure(figsize=(40, 10))
 ax_heatmap = fig.add_axes(rect_heatmap)
 ax_cluster = fig.add_axes(rect_cluster)
 ax_idx = fig.add_axes(rect_idx)
 ax_idx_tip = fig.add_axes(rect_idx_tip)
 
 hm = ax_heatmap.imshow(draw_df, cmap="bwr", aspect="auto", vmin=-2, vmax=2)
-plt.setp(ax_heatmap.get_xticklabels(), rotation=90, fontsize=10)
+plt.setp(ax_heatmap.get_xticklabels(), rotation=90)
 ax_heatmap.xaxis.set_label_position("top")
-ax_heatmap.set_xticks([])
+ax_heatmap.set_xticks(xticks)
+ax_heatmap.set_xticklabels(xticklabels)
 ax_heatmap.set_yticks([])
 cb = fig.colorbar(hm, ax=ax_heatmap)
 
@@ -233,7 +311,7 @@ ax_idx_tip.pcolor(
     cmap="Paired",
 )
 ax_idx_tip.set_xticks([i + 0.5 for i in range(len(color_swift))])
-ax_idx_tip.set_xticklabels(color_swift.keys())
+ax_idx_tip.set_xticklabels([idx_tp[i] for i in color_swift.keys()])
 ax_idx_tip.set_yticks([])
 ax_idx_tip.xaxis.tick_top()
 plt.setp(ax_idx_tip.get_xticklabels(), rotation=45)

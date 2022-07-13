@@ -36,7 +36,6 @@ import pandas as pd
 import session_info
 from matplotlib import pyplot as plt
 from PIL import Image
-from seaborn import color_palette
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 session_info.show()
@@ -91,10 +90,53 @@ colors = [
     "k",
 ]
 genes = [
-    "Sox2",
-    "Calb2",
-    "Nefm",
+    "Satb2", "Tbr1", "Eomes"
 ]
+
+fig, axes = plt.subplots(2, 5, figsize=(15 * 5, 20), dpi=500)
+for idx, ax in zip(idx_full.keys(), axes.flatten()):
+    ax.imshow(he_dict[idx])
+    ax.axis("off")
+    for i, gene in enumerate(genes):
+        draw_counts = count_dict[idx][gene].loc[count_dict[idx][gene] == 1]
+        ax.scatter(
+            coor_dict[idx]["X"].reindex(index=draw_counts.index),
+            coor_dict[idx]["Y"].reindex(index=draw_counts.index),
+            c=colors[i],
+            alpha=0.7,
+            s=16,
+            label=f"{gene}",
+        )
+
+    n_combinations = 2
+    while n_combinations <= len(genes):
+        for c in combinations(genes, n_combinations):
+            i += 1
+            draw_counts = pd.Series(index=coor_dict[idx].index, dtype=int)
+            draw_counts = draw_counts.fillna(0)
+            for gene in c:
+                draw_counts += count_dict[idx][gene]
+            draw_counts = draw_counts[draw_counts == n_combinations]
+            ax.scatter(
+                coor_dict[idx]["X"].reindex(index=draw_counts.index),
+                coor_dict[idx]["Y"].reindex(index=draw_counts.index),
+                c=colors[i],
+                s=16,
+                label=f"{' & '.join(c)}",
+            )
+        n_combinations += 1
+    ax.legend(
+        markerscale=2,
+        bbox_to_anchor=(1.75, 1),
+        loc='upper right',
+    )
+    ax.set_title(idx)
+
+fig.savefig(Path.joinpath(
+    WORKDIR,
+    f"draw_genes/{'-'.join(genes)}-high.jpg",
+), )
+plt.close(fig)
 
 fig, axes = plt.subplots(2, 5, figsize=(15 * 5, 20), dpi=200)
 for idx, ax in zip(idx_full.keys(), axes.flatten()):
@@ -137,6 +179,6 @@ for idx, ax in zip(idx_full.keys(), axes.flatten()):
 
 fig.savefig(Path.joinpath(
     WORKDIR,
-    f"draw_genes/{'-'.join(genes)}.jpg",
+    f"draw_genes/{'-'.join(genes)}-low.jpg",
 ), )
 plt.close(fig)
