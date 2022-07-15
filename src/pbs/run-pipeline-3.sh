@@ -13,11 +13,31 @@ idx_full=(
 )
 scale_methods=(
     combat-Ai-500union
+    combat-Ai-1000union
     combat-Ai-0_500
     combat-Ai-500_1000
     combat-Ai-1000_1500
     combat-Ai-1500_2000
     combat-Ai-2000_2500
+    combat-Ai-0_1000
+    combat-Ai-0_1500
+    combat-Ai-0_2000
+    combat-Ai-0_2500
+    combat-I-500union
+    combat-I-1000union
+    combat-I-0_500
+    combat-I-500_1000
+    combat-I-1000_1500
+    combat-I-1500_2000
+    combat-I-2000_2500
+    combat-I-0_1000
+    combat-I-0_1500
+    combat-I-0_2000
+    combat-I-0_2500
+    combat
+    logcpm
+    cpm
+    raw
 )
 
 cd $HOME/workspace/mouse-brain-full
@@ -50,7 +70,36 @@ for scale_method in ${scale_methods[@]}; do
     fi
     (${PYTHON_PATH} src/py/run-dim_redu.py \
         ${scale_method} &>> log/pipeline-3.log)&
+    (${PYTHON_PATH} src/py/run-dim_redu_full.py \
+        ${scale_method} &>> log/pipeline-3.log)&
 done
+
+# %% gene cluster
+scale_method="logcpm-hotspot-6"
+writedir=results/gene-cluster/${scale_method}
+
+# cluster genes with a list
+if false; then
+    gene_list=Data/group3.csv
+    gene_list_suffix=group3
+    writedir=results/gene-cluster/${scale_method}-${gene_list_suffix}
+fi
+if [ ! -d ${writedir}  ]; then
+    mkdir ${writedir}
+fi
+for idx in ${idx_full[@]}; do
+    for n_gene_clusters in {1..20}; do
+        if [ ! -d ${writedir}/${idx}-${n_gene_clusters}  ]; then
+            mkdir ${writedir}/${idx}-${n_gene_clusters}
+            mkdir ${writedir}/${idx}-${n_gene_clusters}/tables
+        fi
+        (${PYTHON_PATH} src/py/run-gene-cluster.py \
+                ${scale_method} ${idx} ${n_gene_clusters} \
+                #${gene_list} ${gene_list_suffix} \
+        )&
+        done
+        wait
+    done
 
 # %%
 wait
