@@ -38,7 +38,6 @@ set.seed(16)
 idx <- args[1]
 
 # %% read path
-print(idx)
 count_path <- paste0(WORKDIR, "Data/scale_df/raw/", idx, "-raw.csv")
 coor_path <- paste0(WORKDIR, "Data/coor_df/", idx, "-coor.csv")
 
