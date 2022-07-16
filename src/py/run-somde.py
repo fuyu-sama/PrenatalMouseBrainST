@@ -81,4 +81,4 @@ ndf, ninfo = som.mtx(count_df.T)
 nres = som.norm()
 result, SVnum = som.run()
 result.sort_values(by="qval").to_csv(
-    Path.joinpath(WORKDIR, f"results/somde/{idx}-smode.csv"), )
+    Path.joinpath(WORKDIR, f"results/somde/{idx}-somde.csv"), )
