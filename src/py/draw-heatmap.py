@@ -43,7 +43,7 @@ from matplotlib.colors import ListedColormap
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 session_info.show()
-plt.rcParams.update({"font.size": 24})
+plt.rcParams.update({"font.size": 26})
 
 idx_full = {
     "E135A": "V10M17-100-E135A",
@@ -283,7 +283,7 @@ hm = ax_heatmap.imshow(draw_df, cmap="bwr", aspect="auto", vmin=-2, vmax=2)
 plt.setp(ax_heatmap.get_xticklabels(), rotation=90)
 ax_heatmap.xaxis.set_label_position("top")
 ax_heatmap.set_xticks(xticks)
-ax_heatmap.set_xticklabels(xticklabels)
+ax_heatmap.set_xticklabels(xticklabels, fontstyle="italic")
 ax_heatmap.set_yticks([])
 cb = fig.colorbar(hm, ax=ax_heatmap)
 
