@@ -29,19 +29,14 @@
 #
 
 # %% environment config
-import os
 import sys
 from pathlib import Path
 
 import pandas as pd
-import psutil
-from matplotlib import pyplot as plt
-from PIL import Image
 
 import svgbit
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
-plt.rcParams.update({"font.size": 16})
 
 idx_full = {
     "E135A": "V10M17-100-E135A",
@@ -63,11 +58,6 @@ try:
 except IndexError:
     idx = "E165A"
 
-
-def printmen():
-    print(psutil.Process(os.getpid()).memory_info().rss / 1024**2)
-
-
 # %% read data
 count_path = Path.joinpath(WORKDIR, f"Data/scale_df/raw/{idx}-raw.csv")
 count_df = pd.read_csv(
@@ -80,33 +70,32 @@ coor_path = Path.joinpath(WORKDIR, f"Data/coor_df/{idx}-coor.csv")
 coor_df = pd.read_csv(coor_path, index_col=0, header=0)
 
 he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
-he_image = Image.open(he_path)
 
 write_dir = Path.joinpath(WORKDIR, f"results/svgbit/{idx}")
 if not write_dir.exists():
     write_dir.mkdir()
 
 # %%
-# for var in [0, 1, 2, 3, 4, 5]:
-for var in [3, 4, 5]:
-    for exp in [0.95, 0.9, 0.85, 0.8]:
-        print(f"var: {var}, exp: {exp}")
-        printmen()
+var = 0
+for exp in [0.95, 0.9, 0.85, 0.8, 0.7]:
+    for q in [0.95, 0.9, 0.85, 0.8]:
         dataset = svgbit.STDataset(count_df, coor_df)
         dataset = svgbit.filters.low_variance_filter(dataset, var)
         dataset = svgbit.filters.high_expression_filter(dataset, exp)
+        dataset = svgbit.filters.quantile_filter(dataset, q)
         dataset = svgbit.normalizers.logcpm_normalizer(dataset)
-        svgbit.run(dataset, cores=10)
+        print(f"{idx}, exp: {exp}, quantile: {q}, genes: {dataset.n_genes}")
+        svgbit.run(dataset, cores=20, n_svg_clusters=9)
         svgbit.svg_heatmap(
             dataset,
             Path.joinpath(
                 WORKDIR,
-                f"results/svgbit/{idx}/{idx}-{var}-{exp}.jpg",
+                f"results/svgbit/{idx}/{idx}-{exp}-{q}.jpg",
             ),
-            he_image,
+            he_path,
         )
         dataset.svg_cluster.to_csv(
             Path.joinpath(
                 WORKDIR,
-                f"results/svgbit/{idx}/{idx}-{var}-{exp}.csv",
+                f"results/svgbit/{idx}/{idx}-{exp}-{q}.csv",
             ))
