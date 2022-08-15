@@ -58,20 +58,12 @@ rowData(sce)$feature_symbol <- rownames(sce)
 sce <- sce[!duplicated(rowData(sce)$feature_symbol), ]
 
 # %% sc3
-start.time <- Sys.time()
 sce <- sc3(
     sce,
     ks = 5:28,
     biology = FALSE,
     gene_filter = FALSE,
     n_cores = 5
-)
-end.time <- Sys.time()
-time.taken <- end.time - start.time
-writeLines(
-    c(idx, scale_method, start.time, end.time, time.taken),
-    paste0(WORKDIR, "log/", idx, "-", scale_method, "-sc3.log"),
-    "\t"
 )
 
 col_data <- colData(sce)

@@ -71,31 +71,30 @@ coor_df = pd.read_csv(coor_path, index_col=0, header=0)
 
 he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
 
-write_dir = Path.joinpath(WORKDIR, f"results/svgbit/{idx}")
-if not write_dir.exists():
-    write_dir.mkdir()
-
 # %%
-var = 0
-for exp in [0.95, 0.9, 0.85, 0.8, 0.7]:
-    for q in [0.95, 0.9, 0.85, 0.8]:
-        dataset = svgbit.STDataset(count_df, coor_df)
-        dataset = svgbit.filters.low_variance_filter(dataset, var)
-        dataset = svgbit.filters.high_expression_filter(dataset, exp)
-        dataset = svgbit.filters.quantile_filter(dataset, q)
-        dataset = svgbit.normalizers.logcpm_normalizer(dataset)
-        print(f"{idx}, exp: {exp}, quantile: {q}, genes: {dataset.n_genes}")
-        svgbit.run(dataset, cores=20, n_svg_clusters=9)
-        svgbit.svg_heatmap(
-            dataset,
-            Path.joinpath(
-                WORKDIR,
-                f"results/svgbit/{idx}/{idx}-{exp}-{q}.jpg",
-            ),
-            he_path,
-        )
-        dataset.svg_cluster.to_csv(
-            Path.joinpath(
-                WORKDIR,
-                f"results/svgbit/{idx}/{idx}-{exp}-{q}.csv",
-            ))
+for q in [0.95, 0.99]:
+    dataset = svgbit.STDataset(count_df, coor_df)
+    dataset = svgbit.filters.low_variance_filter(dataset, 0)
+    dataset_new = svgbit.filters.quantile_filter(dataset, q)
+    dataset_new = svgbit.normalizers.logcpm_normalizer(dataset_new)
+    svgbit.run(dataset_new, cores=5, n_svg_clusters=9)
+    dataset_new.AI.sort_values(ascending=False).to_csv(
+        Path.joinpath(
+            WORKDIR,
+            f"results/svgbit/{idx}-{q}-AI.csv",
+        ))
+    dataset_new.svg_cluster.to_csv(
+        Path.joinpath(
+            WORKDIR,
+            f"results/svgbit/{idx}-{q}-cluster.csv",
+        ))
+    svgbit.svg_heatmap(
+        dataset_new,
+        Path.joinpath(WORKDIR, f"results/svgbit/{idx}-{q}.jpg"),
+        he_path,
+    )
+    with open(Path.joinpath(WORKDIR, f"results/svgbit/{idx}-{q}-drop.csv"),
+              "w") as f:
+        for i in dataset.genes:
+            if i not in dataset_new.genes:
+                f.write(f"{i}\n")

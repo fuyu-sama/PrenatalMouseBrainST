@@ -57,13 +57,6 @@ idx_full = {
     "P0A1": "V10M17-101-P0A1",
     "P0A2": "V10M17-101-P0A2",
 }
-colors = [
-    "#FAEBD7", "#00FFFF", "#FFD700", "#0000FF", "#FF8C00", "#EE82EE",
-    "#9ACD32", "#5F9EA0", "#7FFF00", "#7FFFD4", "#6495ED", "#008B8B",
-    "#B8860B", "#C0C0C0", "#000080", "#D8BFD8", "#00CED1", "#9400D3",
-    "#8E804B", "#0089A7", "#CB1B45", "#FFB6C1", "#00FF00", "#800000",
-    "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
-]
 
 try:
     scale_method = sys.argv[1]
@@ -74,11 +67,13 @@ except IndexError:
 with open(
         Path.joinpath(
             WORKDIR,
-            f"results/cluster/{scale_method}-sc3/color_swift.json",
+            f"results/cluster/{scale_method}-sc3/regions.json",
         )) as f:
-    color_swift = json.load(f)
-for idx, colors in color_swift.items():
-    ncs = len(colors)
+    cluster_regions = json.load(f)
+with open(Path.joinpath(WORKDIR, f"results/cluster/colors.json")) as f:
+    colors = json.load(f)
+for idx, regions in cluster_regions.items():
+    ncs = len(regions)
     he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
     sc3_path = Path.joinpath(
         WORKDIR,
@@ -92,10 +87,14 @@ for idx, colors in color_swift.items():
     assert all(cluster_df.index == coor_df.index)
 
     draw_series = cluster_df[f"sc3_{ncs}_clusters"]
-    for i in colors:
-        draw_series.replace(int(i), colors[i], inplace=True)
+    for i in regions:
+        if regions[i] in colors:
+            flag = colors[regions[i]]
+        else:
+            flag = regions[i]
+        draw_series.replace(int(i), flag, inplace=True)
 
-    fig, ax = plt.subplots(figsize=(10, 10), dpi=50)
+    fig, ax = plt.subplots(figsize=(10, 10), dpi=200)
     ax.axis("off")
     ax.imshow(he_image)
     ax.set_title(f"{idx} ncs {ncs}")
