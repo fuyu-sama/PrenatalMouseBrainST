@@ -91,16 +91,26 @@ count_full_df = pd.read_csv(
 with open(
         Path.joinpath(
             WORKDIR,
-            f"results/cluster/{scale_method}-sc3/color_swift.json",
+            f"results/cluster/{scale_method}-sc3/regions.json",
         )) as f:
-    color_swift = json.load(f)
-color_swift.pop("E135A", None)
-chosen_colors = ["#CC163A", "#FFD700", "#EE82EE"]
+    regions = json.load(f)
+with open(
+        Path.joinpath(
+            WORKDIR,
+            f"results/cluster/colors.json",
+        )) as f:
+    colors = json.load(f)
+chosen_regions = {
+    "cortex": "#CC163A",
+    "thalamus": "#6495ED",
+    "hypothalamus": "#D2691E"
+}
 
 # %% draw
 # draw_spots
 draw_spots = pd.DataFrame()
-for idx in color_swift:
+for idx in regions:
+    ncs = len(regions[idx])
     cluster_df = pd.read_csv(
         Path.joinpath(
             WORKDIR,
@@ -108,23 +118,22 @@ for idx in color_swift:
         ),
         index_col=0,
         header=0,
-    )["sc3_12_clusters"]
+    )[f"sc3_{ncs}_clusters"]
     cluster_df.name = "region_tip"
-    chosen_clusters = []
-    for i in chosen_colors:
-        for j in color_swift[idx]:
-            if color_swift[idx][j] == i:
-                chosen_clusters.append(j)
-    for i, j in zip(chosen_clusters, chosen_colors):
-        i = int(i)
-        temp_df = cluster_df[cluster_df == i]
-        temp_df = temp_df.replace(i, j).to_frame()
+    chosen_clusters = {}
+    for i in chosen_regions:
+        for j in regions[idx]:
+            if i in regions[idx][j]:
+                chosen_clusters[j] = i
+    for i in chosen_clusters:
+        temp_df = cluster_df[cluster_df == int(i)]
+        temp_df = temp_df.replace(int(i), chosen_clusters[i]).to_frame()
         temp_df["idx"] = [idx] * len(temp_df)
         draw_spots = pd.concat([draw_spots, temp_df])
 
-for j, i in enumerate(chosen_colors):
+for j, i in enumerate(chosen_regions):
     draw_spots = draw_spots.replace(i, j)
-for j, i in enumerate(color_swift):
+for j, i in enumerate(regions):
     draw_spots = draw_spots.replace(i, j)
 draw_spots.sort_values(by=["region_tip", "idx"], inplace=True)
 
@@ -144,7 +153,7 @@ with open(
     gene_cluster_json = json.load(f)
 init_dict = {"cortex": 0, "thalamus": 0, "hypothalamus": 0}
 gene_dict = {i: deepcopy(init_dict) for i in count_full_df.columns}
-for idx in color_swift:
+for idx in regions:
     gene_path = Path.joinpath(
         WORKDIR,
         f"results/gene-cluster/logcpm-hotspot-6-Ai-500union",
@@ -289,13 +298,12 @@ cb = fig.colorbar(hm, ax=ax_heatmap)
 
 ax_cluster.pcolor(
     draw_spots["region_tip"].to_numpy().reshape([len(draw_spots), 1]),
-    cmap=ListedColormap(chosen_colors),
+    cmap=ListedColormap(chosen_regions.values()),
 )
 ax_cluster.invert_yaxis()
 ax_cluster.set_xticks([])
 ax_cluster.set_yticks(region_ticks)
-# ax_cluster.set_yticklabels(["cortex", "ventricle", "thalamus", "hypothalamus"])
-ax_cluster.set_yticklabels(["cortex", "thalamus", "hypothalamus"])
+ax_cluster.set_yticklabels(["cortex\n+\nhippocampus", "thalamus", "hypothalamus"])
 
 ax_idx.pcolor(
     draw_spots["idx"].to_numpy().reshape([len(draw_spots), 1]),
@@ -305,16 +313,15 @@ ax_idx.invert_yaxis()
 ax_idx.set_xticks([])
 ax_idx.set_yticks([])
 
-idx_tip = np.array([i for i in range(len(color_swift))])
+idx_tip = np.array([i for i in range(len(regions))])
 ax_idx_tip.pcolor(
     idx_tip.reshape([1, len(idx_tip)]),
     cmap="Paired",
 )
-ax_idx_tip.set_xticks([i + 0.5 for i in range(len(color_swift))])
-ax_idx_tip.set_xticklabels([idx_tp[i] for i in color_swift.keys()])
+ax_idx_tip.set_xticks([i + 0.5 for i in range(len(regions))])
+ax_idx_tip.set_xticklabels([idx_tp[i] for i in regions.keys()])
 ax_idx_tip.set_yticks([])
 ax_idx_tip.xaxis.tick_top()
-plt.setp(ax_idx_tip.get_xticklabels(), rotation=45)
 
 [axis.set_visible(False) for axis in ax_heatmap.spines.values()]
 [axis.set_visible(False) for axis in ax_cluster.spines.values()]
@@ -322,7 +329,7 @@ plt.setp(ax_idx_tip.get_xticklabels(), rotation=45)
 [axis.set_visible(False) for axis in ax_idx_tip.spines.values()]
 
 fig.savefig(
-    Path.joinpath(WORKDIR, f"results/heatmap.jpg"),
+    Path.joinpath(WORKDIR, f"results/heatmap.1.jpg"),
     bbox_inches="tight",
 )
 plt.close(fig)

@@ -95,11 +95,24 @@ except IndexError:
     n_gene_clusters = 9
 
 try:
-    gene_list = sys.argv[4]
-    suffix = sys.argv[5]
-except IndexError:
+    rank_begin = int(sys.argv[4])
+    step_len = int(sys.argv[5])
     gene_list = None
     suffix = None
+except IndexError:
+    rank_begin = None
+    step_len = None
+    gene_list = None
+    suffix = None
+except ValueError:
+    rank_begin = None
+    step_len = None
+    try:
+        gene_list = sys.argv[4]
+        suffix = sys.argv[5]
+    except IndexError:
+        gene_list = None
+        suffix = None
 
 # %% read data
 count_path = Path.joinpath(
@@ -121,7 +134,7 @@ he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
 he_image = Image.open(he_path)
 
 # %% subset
-if True:
+if rank_begin is not None:
     ai_path = Path.joinpath(
         WORKDIR,
         f"results/Ai/{idx}-Ai.csv",
@@ -133,7 +146,9 @@ if True:
         header=0,
 
     ).sort_values(by="Ai", ascending=False)
-    selected_genes = ai_df.index[:1000]
+    selected_genes = ai_df.index[rank_begin: rank_begin + step_len]
+    scale_method = f"{scale_method}-Ai-{rank_begin}_{rank_begin + step_len}"
+    save_dir_root = Path.joinpath(WORKDIR, f"results/gene-cluster/{scale_method}")
 
 # read gene list
 if gene_list is not None:
