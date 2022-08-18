@@ -107,12 +107,8 @@ except IndexError:
 except ValueError:
     rank_begin = None
     step_len = None
-    try:
-        gene_list = sys.argv[4]
-        suffix = sys.argv[5]
-    except IndexError:
-        gene_list = None
-        suffix = None
+    gene_list = sys.argv[4]
+    suffix = sys.argv[5]
 
 # %% read data
 count_path = Path.joinpath(

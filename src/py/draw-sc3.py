@@ -73,7 +73,14 @@ except IndexError:
     idx = "E165A"
     scale_method = "combat"
 
+try:
+    suffix = sys.argv[3]
+except IndexError:
+    suffix = None
+
 # %% read data
+if suffix is not None:
+    scale_method = "-".join([scale_method, suffix])
 he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
 sc3_path = Path.joinpath(
     WORKDIR,

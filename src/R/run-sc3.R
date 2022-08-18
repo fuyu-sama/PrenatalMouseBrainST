@@ -39,19 +39,33 @@ sessionInfo()
 
 idx <- args[1]
 scale_method <- args[2]
+gene_list <- args[3]
+suffix <- args[4]
+
+if (is.na(idx)) idx <- "E165A"
+if (is.na(scale_method)) scale_method <- "combat"
 
 # %% read data and create sce
 count_path <- paste0(WORKDIR, "Data/scale_df/raw/", idx, "-raw.csv")
-sct_path <- paste0(
+scale_path <- paste0(
     WORKDIR, "Data/scale_df/", scale_method, "/", idx, "-", scale_method, ".csv")
-save_path <- paste0(WORKDIR, "results/cluster/", scale_method, "-sc3/pattern/", idx, "-sc3.csv")
+
 count_df <- read.csv(count_path, check.names = FALSE, row.names = 1)
-sct_df <- read.csv(sct_path, check.names = FALSE, row.names = 1)
-count_df <- count_df[rownames(sct_df), ]
+scale_df <- read.csv(scale_path, check.names = FALSE, row.names = 1)
+count_df <- count_df[rownames(scale_df), ]
+
+if (! is.na(gene_list)) {
+    conn <- file(gene_list, open = "rt")
+    gene_list <- readLines(conn)
+    close(conn)
+    count_df <- count_df[gene_list, ]
+    scale_df <- scale_df[gene_list, ]
+    scale_method <- paste(scale_method, suffix, sep = "-")
+}
 sce <- SingleCellExperiment(
     assays = list(
         counts = as.matrix(count_df),
-        logcounts = as.matrix(sct_df)
+        logcounts = as.matrix(scale_df)
     )
 )
 rowData(sce)$feature_symbol <- rownames(sce)
@@ -68,4 +82,6 @@ sce <- sc3(
 
 col_data <- colData(sce)
 col_data <- data.frame(col_data[, grep("sc3_", colnames(col_data))])
+save_path <- paste0(
+    WORKDIR, "results/cluster/", scale_method, "-sc3/pattern/", idx, "-sc3.csv")
 write.csv(col_data, save_path)
