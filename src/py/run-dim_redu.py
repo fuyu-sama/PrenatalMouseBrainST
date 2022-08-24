@@ -66,27 +66,34 @@ except IndexError:
     scale_method = "combat-Ai-0_500"
 
 # %% read cluster result
-color_path = Path.joinpath(
-    WORKDIR, f"results/cluster/{scale_method}-sc3/color_swift.json")
-with open(color_path) as f:
-    color_swift = json.load(f)
+region_path = Path.joinpath(
+    WORKDIR, f"results/gene-cluster/{scale_method}/regions.json")
+with open(region_path) as f:
+    regions = json.load(f)
+with open(Path.joinpath(WORKDIR, f"results/cluster/colors.json")) as f:
+    colors = json.load(f)
 
-for idx in color_swift:
+for idx in regions:
+    ncs = len(regions[idx])
     cluster_path = Path.joinpath(
         WORKDIR,
-        f"results/cluster/{scale_method}-sc3/pattern/{idx}-sc3.csv",
+        f"results/gene-cluster/{scale_method}/{idx}-{ncs}/{idx}-spots.csv",
     )
     cluster_series = pd.read_csv(
         cluster_path,
         index_col=0,
         header=0,
-    )[f"sc3_12_clusters"].astype(str)
-    for i in color_swift[idx]:
-        cluster_series.replace(i, color_swift[idx][i], inplace=True)
+    )[f"1_type"].astype(str)
+    for i in regions[idx]:
+        if regions[idx][i] in colors:
+            flag = colors[regions[idx][i]]
+        else:
+            flag = regions[idx][i]
+        cluster_series.replace(i, flag, inplace=True)
 
     count_path = Path.joinpath(
         WORKDIR,
-        f"Data/scale_df/{scale_method}/{idx}-{scale_method}.csv",
+        f"Data/scale_df/combat/{idx}-combat.csv",
     )
     count_df = pd.read_csv(
         count_path,
@@ -102,6 +109,13 @@ for idx in color_swift:
     he_path = Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif")
     he_image = Image.open(he_path)
 
+    write_dir = Path.joinpath(
+        WORKDIR,
+        f"results/dimension_reduction/{scale_method}",
+    )
+    if not write_dir.exists():
+        write_dir.mkdir()
+
     # tSNE
     result_tsne = TSNE().fit_transform(
         PCA(n_components=40).fit_transform(count_df))
@@ -113,7 +127,7 @@ for idx in color_swift:
     result_df.to_csv(
         Path.joinpath(
             WORKDIR,
-            f"results/dimension_reduction/{scale_method}-sc3/{idx}-tsne.csv",
+            f"results/dimension_reduction/{scale_method}/{idx}-tsne.csv",
         ))
 
     fig, ax = plt.subplots(figsize=(10, 10))
@@ -129,7 +143,7 @@ for idx in color_swift:
     fig.savefig(
         Path.joinpath(
             WORKDIR,
-            f"results/dimension_reduction/{scale_method}-sc3/{idx}-tsne-1.jpg",
+            f"results/dimension_reduction/{scale_method}/{idx}-tsne-1.jpg",
         ))
     plt.close(fig)
 
@@ -156,7 +170,7 @@ for idx in color_swift:
     fig.savefig(
         Path.joinpath(
             WORKDIR,
-            f"results/dimension_reduction/{scale_method}-sc3/{idx}-tsne-2.jpg",
+            f"results/dimension_reduction/{scale_method}/{idx}-tsne-2.jpg",
         ))
     plt.close(fig)
 
@@ -171,7 +185,7 @@ for idx in color_swift:
     result_df.to_csv(
         Path.joinpath(
             WORKDIR,
-            f"results/dimension_reduction/{scale_method}-sc3/{idx}-umap.csv",
+            f"results/dimension_reduction/{scale_method}/{idx}-umap.csv",
         ))
 
     fig, ax = plt.subplots(figsize=(10, 10))
@@ -187,7 +201,7 @@ for idx in color_swift:
     fig.savefig(
         Path.joinpath(
             WORKDIR,
-            f"results/dimension_reduction/{scale_method}-sc3/{idx}-umap-1.jpg",
+            f"results/dimension_reduction/{scale_method}/{idx}-umap-1.jpg",
         ))
     plt.close(fig)
 
@@ -214,7 +228,7 @@ for idx in color_swift:
     fig.savefig(
         Path.joinpath(
             WORKDIR,
-            f"results/dimension_reduction/{scale_method}-sc3/{idx}-umap-2.jpg",
+            f"results/dimension_reduction/{scale_method}/{idx}-umap-2.jpg",
         ))
     plt.close(fig)
 

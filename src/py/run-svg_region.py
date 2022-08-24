@@ -30,8 +30,10 @@
 
 # %%
 import sys
+from multiprocessing import Pool
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
@@ -70,6 +72,25 @@ except IndexError:
     scale_method = "logcpm-hotspot-6"
     suffix = "Ai-500union"
 
+
+def draw_separate(j):
+    fig, ax = plt.subplots(figsize=(10, 10))
+    in_spots = sort_df[sort_df[f"{i}_type"] == j].index
+    ax.scatter(
+        coor_df["X"].reindex(index=in_spots),
+        coor_df["Y"].reindex(index=in_spots),
+        s=16,
+        alpha=0.7,
+    )
+    ax.imshow(he_image)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_title(f"{idx} ncs {ncs} cluster {j}")
+    ax.axis("off")
+    fig.savefig(Path.joinpath(write_dir, f"{idx}-spots-{j}.jpg"))
+    plt.close(fig)
+
+
 # %%
 wanted_genes = [
     "Mef2c", "Bcl11a", "Sox5", "Hivep2", "Satb2", "Fezf2", "Neurod2",
@@ -99,7 +120,6 @@ for idx in idx_full:
         header=0,
     ).sort_values(by="Ai", ascending=False)
 
-    mean_df = pd.DataFrame(index=count_df.index)
     for ncs in range(2, 21):
         gene_result = pd.read_csv(
             Path.joinpath(
@@ -111,6 +131,7 @@ for idx in idx_full:
             header=0,
         )["0"]
         ai_rank_df = pd.DataFrame()
+        mean_df = pd.DataFrame(index=count_df.index)
         for i in range(1, ncs + 1):
             genes = gene_result[gene_result == i].index
             mean_df[i] = count_df[genes].T.mean()
@@ -129,6 +150,14 @@ for idx in idx_full:
                 ]
                 write_df = write_df.sort_values(by="rank")
                 ai_rank_df = pd.concat([ai_rank_df, write_df])
+        sort_df = pd.DataFrame(
+            columns=mean_df.index,
+            index=[f"{n}_type" for n in mean_df.columns],
+        )
+        for i in mean_df.index:
+            sort_df[i] = list(mean_df.columns[np.argsort(
+                mean_df.loc[i, :].to_numpy())])[::-1]
+        sort_df = sort_df.T
         ai_rank_df.index = [i for i in range(ai_rank_df.shape[0])]
         ai_rank_df.to_csv(
             Path.joinpath(
@@ -142,31 +171,44 @@ for idx in idx_full:
                 f"results/gene-cluster/{scale_method}-{suffix}/",
                 f"{idx}-{ncs}/{idx}-mean.csv",
             ))
-        mean_df.T.idxmax().to_csv(
+        sort_df.to_csv(
             Path.joinpath(
                 WORKDIR,
                 f"results/gene-cluster/{scale_method}-{suffix}/",
                 f"{idx}-{ncs}/{idx}-spots.csv",
             ))
-        fig, ax = plt.subplots(figsize=(10, 10))
-        ax.scatter(
-            coor_df["X"],
-            coor_df["Y"],
-            s=16,
-            c=mean_df.T.idxmax(),
-            cmap=ListedColormap(colors[:ncs]),
-            alpha=0.7,
-        )
-        ax.imshow(he_image)
-        ax.set_xticks([])
-        ax.set_yticks([])
-        ax.set_title(f"{idx} {ncs} clusters")
-        ax.axis("off")
-        fig.savefig(
-            Path.joinpath(
+        for i in [1, 2]:
+            fig, ax = plt.subplots(figsize=(10, 10))
+            ax.scatter(
+                coor_df["X"],
+                coor_df["Y"],
+                s=16,
+                c=sort_df[f"{i}_type"],
+                cmap=ListedColormap(colors),
+                alpha=0.7,
+            )
+            ax.imshow(he_image)
+            ax.set_xticks([])
+            ax.set_yticks([])
+            ax.set_title(f"{idx} {ncs} clusters")
+            ax.axis("off")
+            fig.savefig(
+                Path.joinpath(
+                    WORKDIR,
+                    f"results/gene-cluster/{scale_method}-{suffix}/",
+                    f"{idx}-{ncs}/{idx}-spots.{i}.jpg",
+                ))
+            plt.close(fig)
+
+            write_dir = Path.joinpath(
                 WORKDIR,
                 f"results/gene-cluster/{scale_method}-{suffix}/",
-                f"{idx}-{ncs}/{idx}-spots.jpg",
-            ))
-        plt.close(fig)
+                f"{idx}-{ncs}/separate.{i}",
+            )
+            if not write_dir.exists():
+                write_dir.mkdir()
+            pool = Pool(ncs)
+            pool.map(draw_separate, range(1, ncs + 1))
+            pool.close()
+            pool.join()
     he_image.close()

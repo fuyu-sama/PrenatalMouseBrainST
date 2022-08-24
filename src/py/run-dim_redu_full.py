@@ -84,24 +84,31 @@ except IndexError:
     scale_method = "combat-Ai-500union"
 
 # %% read cluster result
-color_path = Path.joinpath(
-    WORKDIR, f"results/cluster/{scale_method}-sc3/color_swift.json")
-with open(color_path) as f:
-    color_swift = json.load(f)
-color_swift.pop("E135A", None)
+region_path = Path.joinpath(
+    WORKDIR, f"results/cluster/{scale_method}-sc3/regions.json")
+with open(region_path) as f:
+    regions = json.load(f)
+with open(Path.joinpath(WORKDIR, f"results/cluster/colors.json")) as f:
+    colors = json.load(f)
 
 count_path = Path.joinpath(
     WORKDIR,
-    f"Data/scale_df/{scale_method}/full-{scale_method}.csv",
+    f"Data/scale_df/combat/full-combat.csv",
 )
 count_df = pd.read_csv(
     count_path,
     index_col=0,
     header=0,
 ).T
+chosen_genes = []
+with open(Path.joinpath(WORKDIR, f"Data/gene-lists/{scale_method}.csv")) as f:
+    for line in f:
+        line = line.strip(line)
+        chosen_genes.append(line)
 
 clusters = pd.Series()
-for idx in color_swift:
+for idx in regions:
+    ncs = len(regions[idx])
     cluster_path = Path.joinpath(
         WORKDIR,
         f"results/cluster/{scale_method}-sc3/pattern/{idx}-sc3.csv",
@@ -110,18 +117,19 @@ for idx in color_swift:
         cluster_path,
         index_col=0,
         header=0,
-    )[f"sc3_12_clusters"].astype(str)
-    for i in color_swift[idx]:
-        cluster_series.replace(i, color_swift[idx][i], inplace=True)
+    )[f"sc3_{ncs}_clusters"].astype(str)
+    for i in regions[idx]:
+        if regions[idx][i] in colors:
+            flag = colors[regions[idx][i]]
+        else:
+            flag = regions[idx][i]
+        cluster_series.replace(i, flag, inplace=True)
     clusters = pd.concat([clusters, cluster_series])
 
-count_df = count_df.reindex(index=clusters.index)
-chosen_colors = {
-    "#CC163A": "cortex",
-    "#00FFFF": "ventricle",
-    "#FFD700": "thalamus",
-    "#EE82EE": "hypothalamus",
-}
+count_df = count_df.reindex(index=clusters.index, columns=chosen_genes)
+chosen_regions = [
+    "cortex", "hippocampus", "hypothalamus", "thalamus"
+]
 
 # %% tSNE
 result_tsne = TSNE().fit_transform(
@@ -140,18 +148,20 @@ result_df.to_csv(
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
 ax1.set_xticks([])
 ax1.set_yticks([])
-for i in chosen_colors:
-    draw_df = clusters[clusters == i]
+chosen_spots = []
+for i in chosen_regions:
+    draw_df = clusters[clusters == colors[i]]
     draw_df = result_df.reindex(index=draw_df.index)
     ax1.scatter(
         draw_df["X"],
         draw_df["Y"],
-        label=chosen_colors[i],
+        label=i,
         c=i,
         s=8,
     )
+    [chosen_spots.append(i) for i in draw_df.index]
 unchosen_spots = [
-    i for i in clusters.index if clusters[i] not in chosen_colors
+    i for i in clusters.index if clusters[i] not in chosen_spots
 ]
 draw_df = result_df.reindex(unchosen_spots)
 ax1.scatter(
@@ -168,7 +178,7 @@ ax1.legend(
 
 ax2.set_xticks([])
 ax2.set_yticks([])
-for i, idx in enumerate(color_swift):
+for i, idx in enumerate(regions):
     draw_df = result_df.reindex(index=[j for j in result_df.index if idx in j])
     ax2.scatter(
         draw_df["X"],
@@ -208,18 +218,20 @@ result_df.to_csv(
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
 ax1.set_xticks([])
 ax1.set_yticks([])
-for i in chosen_colors:
-    draw_df = clusters[clusters == i]
+chosen_spots = []
+for i in chosen_regions:
+    draw_df = clusters[clusters == colors[i]]
     draw_df = result_df.reindex(index=draw_df.index)
     ax1.scatter(
         draw_df["X"],
         draw_df["Y"],
-        label=chosen_colors[i],
+        label=i,
         c=i,
         s=8,
     )
+    [chosen_spots.append(i) for i in draw_df.index]
 unchosen_spots = [
-    i for i in clusters.index if clusters[i] not in chosen_colors
+    i for i in clusters.index if clusters[i] not in chosen_spots
 ]
 draw_df = result_df.reindex(unchosen_spots)
 ax1.scatter(
@@ -236,7 +248,7 @@ ax1.legend(
 
 ax2.set_xticks([])
 ax2.set_yticks([])
-for i, idx in enumerate(color_swift):
+for i, idx in enumerate(regions):
     draw_df = result_df.reindex(index=[j for j in result_df.index if idx in j])
     ax2.scatter(
         draw_df["X"],
