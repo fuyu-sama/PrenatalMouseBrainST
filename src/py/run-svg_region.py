@@ -29,11 +29,12 @@
 #
 
 # %%
+import math
 import sys
+from itertools import combinations
 from multiprocessing import Pool
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
@@ -64,41 +65,23 @@ colors = [
     "#8E804B", "#0089A7", "#CB1B45", "#FFB6C1", "#00FF00", "#800000",
     "#376B6D", "#D8BFD8", "#F5F5F5", "#D2691E"
 ]
+colors_short = [
+    "tab:red", "tab:green", "tab:blue", "tab:orange", "tab:pink", "tab:cyan",
+    "k"
+]
 
 try:
     scale_method = sys.argv[1]
     suffix = sys.argv[2]
+    threshold = float(sys.argv[3])
 except IndexError:
     scale_method = "logcpm-hotspot-6"
-    suffix = "Ai-500union"
-
-
-def draw_separate(j):
-    fig, ax = plt.subplots(figsize=(10, 10))
-    in_spots = sort_df[sort_df[f"{i}_type"] == j].index
-    ax.scatter(
-        coor_df["X"].reindex(index=in_spots),
-        coor_df["Y"].reindex(index=in_spots),
-        s=16,
-        alpha=0.7,
-    )
-    ax.imshow(he_image)
-    ax.set_xticks([])
-    ax.set_yticks([])
-    ax.set_title(f"{idx} ncs {ncs} cluster {j}")
-    ax.axis("off")
-    fig.savefig(Path.joinpath(write_dir, f"{idx}-spots-{j}.jpg"))
-    plt.close(fig)
+    suffix = "logcpm-0.99-Ai-0_500"
+    threshold = 0.4
 
 
 # %%
-wanted_genes = [
-    "Mef2c", "Bcl11a", "Sox5", "Hivep2", "Satb2", "Fezf2", "Neurod2",
-    "Neurod6", "Zbtb18", "Tbr1", "Zfp423", "Tcf7l2", "Zic1", "Zic3", "Zic4",
-    "Zic5", "Gbx2", "Id4", "Slc18a2", "Clybl", "Lhx9", "Foxp2", "Dlx1", "Otp",
-    "Asb4", "Trh", "Ddc", "Dlk1", "Nkx2-2", "Magel2", "Nap1l5", "Peg10"
-]
-for idx in idx_full:
+def main(idx):
     count_df = pd.read_csv(
         Path.joinpath(
             WORKDIR,
@@ -150,14 +133,23 @@ for idx in idx_full:
                 ]
                 write_df = write_df.sort_values(by="rank")
                 ai_rank_df = pd.concat([ai_rank_df, write_df])
-        sort_df = pd.DataFrame(
-            columns=mean_df.index,
-            index=[f"{n}_type" for n in mean_df.columns],
-        )
-        for i in mean_df.index:
-            sort_df[i] = list(mean_df.columns[np.argsort(
-                mean_df.loc[i, :].to_numpy())])[::-1]
-        sort_df = sort_df.T
+
+        columns = ["spot_type"]
+        [columns.append(f"type_{i}") for i in range(1, 1 + ncs)]
+        type_df = pd.DataFrame(columns=columns)
+        for spot in mean_df.index:
+            temp_df = pd.DataFrame(index=[spot], columns=columns)
+            sort_series = mean_df.loc[spot, :].sort_values(ascending=False)
+            n_multi = len(sort_series[sort_series > threshold])
+            spot_type = "singlet"
+            if sort_series.iloc[0] < 0.2:
+                spot_type = "uncertain"
+            if n_multi > 1:
+                spot_type = f"{n_multi}_multi_types"
+            temp_df.loc[spot, "spot_type"] = spot_type
+            temp_df.loc[spot, columns[1:]] = sort_series.index
+            type_df = pd.concat([type_df, temp_df])
+
         ai_rank_df.index = [i for i in range(ai_rank_df.shape[0])]
         ai_rank_df.to_csv(
             Path.joinpath(
@@ -171,44 +163,126 @@ for idx in idx_full:
                 f"results/gene-cluster/{scale_method}-{suffix}/",
                 f"{idx}-{ncs}/{idx}-mean.csv",
             ))
-        sort_df.to_csv(
+        type_df.to_csv(
             Path.joinpath(
                 WORKDIR,
                 f"results/gene-cluster/{scale_method}-{suffix}/",
                 f"{idx}-{ncs}/{idx}-spots.csv",
             ))
-        for i in [1, 2]:
-            fig, ax = plt.subplots(figsize=(10, 10))
+
+        certain_spots = type_df[type_df["spot_type"] != "uncertain"].index
+        fig, ax = plt.subplots(figsize=(10, 10))
+        ax.scatter(
+            coor_df["X"].reindex(index=certain_spots),
+            coor_df["Y"].reindex(index=certain_spots),
+            s=16,
+            c=type_df[f"type_1"].reindex(index=certain_spots),
+            cmap=ListedColormap(colors),
+            alpha=0.7,
+        )
+        ax.imshow(he_image)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title(f"{idx} {ncs} clusters")
+        ax.axis("off")
+        fig.savefig(
+            Path.joinpath(
+                WORKDIR,
+                f"results/gene-cluster/{scale_method}-{suffix}/",
+                f"{idx}-{ncs}/{idx}-spots.jpg",
+            ))
+        plt.close(fig)
+
+        nrows = math.ceil(ncs / 5)
+        fig, axes = plt.subplots(nrows, 5, figsize=(50, nrows * 10))
+        [ax.axis("off") for ax in axes.flatten()]
+        for n, ax in zip(range(1, ncs + 1), axes.flatten()):
+            in_spots = type_df[type_df[f"type_1"] == n].index
             ax.scatter(
-                coor_df["X"],
-                coor_df["Y"],
+                coor_df["X"].reindex(index=certain_spots).reindex(
+                    index=in_spots),
+                coor_df["Y"].reindex(index=certain_spots).reindex(
+                    index=in_spots),
                 s=16,
-                c=sort_df[f"{i}_type"],
-                cmap=ListedColormap(colors),
                 alpha=0.7,
             )
             ax.imshow(he_image)
             ax.set_xticks([])
             ax.set_yticks([])
-            ax.set_title(f"{idx} {ncs} clusters")
-            ax.axis("off")
-            fig.savefig(
-                Path.joinpath(
-                    WORKDIR,
-                    f"results/gene-cluster/{scale_method}-{suffix}/",
-                    f"{idx}-{ncs}/{idx}-spots.{i}.jpg",
-                ))
-            plt.close(fig)
-
-            write_dir = Path.joinpath(
+            ax.set_title(f"{idx} ncs {ncs} cluster {n}")
+        fig.savefig(
+            Path.joinpath(
                 WORKDIR,
                 f"results/gene-cluster/{scale_method}-{suffix}/",
-                f"{idx}-{ncs}/separate.{i}",
-            )
-            if not write_dir.exists():
-                write_dir.mkdir()
-            pool = Pool(ncs)
-            pool.map(draw_separate, range(1, ncs + 1))
-            pool.close()
-            pool.join()
+                f"{idx}-{ncs}/{idx}-spots-separate.jpg",
+            ))
+        plt.close(fig)
+
+        singlet_df = type_df[type_df["spot_type"] == "singlet"]
+        for n in [2, 3]:
+            spot_type_dict = {}
+            for i in range(2, n + 1):
+                multi_spots = type_df[type_df["spot_type"] ==
+                                      f"{i}_multi_types"]
+                for spot in multi_spots.index:
+                    spot_type_dict[spot] = frozenset([
+                        multi_spots.loc[spot, f"type_{i}"]
+                        for i in range(1, i + 1)
+                    ])
+            for sets in frozenset(spot_type_dict.values()):
+                if len(sets) < n:
+                    continue
+                fig, ax = plt.subplots(figsize=(10, 10))
+                ax.imshow(he_image)
+                ax.axis("off")
+                for i, type_ in enumerate(sets):
+                    type_spots = singlet_df[singlet_df["type_1"] ==
+                                            type_].index
+                    ax.scatter(
+                        coor_df["X"].reindex(index=type_spots),
+                        coor_df["Y"].reindex(index=type_spots),
+                        s=16,
+                        c=colors_short[i],
+                        label=type_,
+                    )
+
+                n_combinations = 2
+                while n_combinations <= n:
+                    for c in combinations(sets, n_combinations):
+                        i += 1
+                        c = frozenset(c)
+                        combination_spots = []
+                        for spot in spot_type_dict:
+                            if spot_type_dict[spot] == c:
+                                combination_spots.append(spot)
+                        ax.scatter(
+                            coor_df["X"].reindex(index=combination_spots),
+                            coor_df["Y"].reindex(index=combination_spots),
+                            s=16,
+                            c=colors_short[i],
+                            label=" & ".join([str(i) for i in c]),
+                        )
+                    n_combinations += 1
+
+                fig.legend()
+                fig.savefig(
+                    Path.joinpath(
+                        WORKDIR,
+                        f"results/gene-cluster/{scale_method}-{suffix}/{idx}-{ncs}",
+                        f"{idx}-spots-{threshold}-{'_'.join(str(i) for i in sets)}.jpg",
+                    ))
+                plt.close(fig)
     he_image.close()
+
+
+# %%
+wanted_genes = [
+    "Mef2c", "Bcl11a", "Sox5", "Hivep2", "Satb2", "Fezf2", "Neurod2",
+    "Neurod6", "Zbtb18", "Tbr1", "Zfp423", "Tcf7l2", "Zic1", "Zic3", "Zic4",
+    "Zic5", "Gbx2", "Id4", "Slc18a2", "Clybl", "Lhx9", "Foxp2", "Dlx1", "Otp",
+    "Asb4", "Trh", "Ddc", "Dlk1", "Nkx2-2", "Magel2", "Nap1l5", "Peg10"
+]
+pool = Pool(10)
+pool.map(main, idx_full)
+pool.close()
+pool.join()
