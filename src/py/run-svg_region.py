@@ -103,7 +103,7 @@ def main(idx):
         header=0,
     ).sort_values(by="Ai", ascending=False)
 
-    for ncs in range(2, 21):
+    for ncs in range(8, 21):
         gene_result = pd.read_csv(
             Path.joinpath(
                 WORKDIR,
@@ -113,6 +113,8 @@ def main(idx):
             index_col=0,
             header=0,
         )["0"]
+
+        # build mean_df and ai_rank_df
         ai_rank_df = pd.DataFrame()
         mean_df = pd.DataFrame(index=count_df.index)
         for i in range(1, ncs + 1):
@@ -133,7 +135,22 @@ def main(idx):
                 ]
                 write_df = write_df.sort_values(by="rank")
                 ai_rank_df = pd.concat([ai_rank_df, write_df])
+        # END: for i in range(1, ncs + 1):
+        ai_rank_df.index = [i for i in range(ai_rank_df.shape[0])]
+        ai_rank_df.to_csv(
+            Path.joinpath(
+                WORKDIR,
+                f"results/gene-cluster/{scale_method}-{suffix}/",
+                f"{idx}-{ncs}/{idx}-rank.csv",
+            ))
+        mean_df.to_csv(
+            Path.joinpath(
+                WORKDIR,
+                f"results/gene-cluster/{scale_method}-{suffix}/",
+                f"{idx}-{ncs}/{idx}-mean.csv",
+            ))
 
+        # build type_df
         columns = ["spot_type"]
         [columns.append(f"type_{i}") for i in range(1, 1 + ncs)]
         type_df = pd.DataFrame(columns=columns)
@@ -149,20 +166,7 @@ def main(idx):
             temp_df.loc[spot, "spot_type"] = spot_type
             temp_df.loc[spot, columns[1:]] = sort_series.index
             type_df = pd.concat([type_df, temp_df])
-
-        ai_rank_df.index = [i for i in range(ai_rank_df.shape[0])]
-        ai_rank_df.to_csv(
-            Path.joinpath(
-                WORKDIR,
-                f"results/gene-cluster/{scale_method}-{suffix}/",
-                f"{idx}-{ncs}/{idx}-rank.csv",
-            ))
-        mean_df.to_csv(
-            Path.joinpath(
-                WORKDIR,
-                f"results/gene-cluster/{scale_method}-{suffix}/",
-                f"{idx}-{ncs}/{idx}-mean.csv",
-            ))
+        # END: for spot in mean_df.index:
         type_df.to_csv(
             Path.joinpath(
                 WORKDIR,
@@ -170,7 +174,12 @@ def main(idx):
                 f"{idx}-{ncs}/{idx}-spots.csv",
             ))
 
-        certain_spots = type_df[type_df["spot_type"] != "uncertain"].index
+        # draw spots without multi-clusters
+        draw_certain = False
+        if draw_certain:
+            certain_spots = type_df[type_df["spot_type"] != "uncertain"].index
+        else:
+            certain_spots = type_df.index
         fig, ax = plt.subplots(figsize=(10, 10))
         ax.scatter(
             coor_df["X"].reindex(index=certain_spots),
@@ -189,10 +198,11 @@ def main(idx):
             Path.joinpath(
                 WORKDIR,
                 f"results/gene-cluster/{scale_method}-{suffix}/",
-                f"{idx}-{ncs}/{idx}-spots.jpg",
+                f"{idx}-{ncs}/{idx}-spots-1.jpg",
             ))
         plt.close(fig)
 
+        # draw spots separate
         nrows = math.ceil(ncs / 5)
         fig, axes = plt.subplots(nrows, 5, figsize=(50, nrows * 10))
         [ax.axis("off") for ax in axes.flatten()]
@@ -210,6 +220,7 @@ def main(idx):
             ax.set_xticks([])
             ax.set_yticks([])
             ax.set_title(f"{idx} ncs {ncs} cluster {n}")
+        # END: for n, ax in zip(range(1, ncs + 1), axes.flatten()):
         fig.savefig(
             Path.joinpath(
                 WORKDIR,
@@ -218,26 +229,45 @@ def main(idx):
             ))
         plt.close(fig)
 
+        # render type_df to dict
+        # key: spot, value: set of clusters
         singlet_df = type_df[type_df["spot_type"] == "singlet"]
+        spot_type_dict = {}
+        for n in range(2, ncs + 1):
+            multi_spots = type_df[type_df["spot_type"] == f"{n}_multi_types"]
+            for spot in multi_spots.index:
+                spot_type_dict[spot] = frozenset([
+                    multi_spots.loc[spot, f"type_{i}"]
+                    for i in range(1, n + 1)
+                ])
+        # END: for n in range(2, ncs + 1):
+
         for n in [2, 3]:
-            spot_type_dict = {}
-            for i in range(2, n + 1):
-                multi_spots = type_df[type_df["spot_type"] ==
-                                      f"{i}_multi_types"]
-                for spot in multi_spots.index:
-                    spot_type_dict[spot] = frozenset([
-                        multi_spots.loc[spot, f"type_{i}"]
-                        for i in range(1, i + 1)
-                    ])
             for sets in frozenset(spot_type_dict.values()):
-                if len(sets) < n:
+                if len(sets) != n:
                     continue
+
+                # draw multi-cluster map
                 fig, ax = plt.subplots(figsize=(10, 10))
                 ax.imshow(he_image)
                 ax.axis("off")
+
+                all_combinations = []
+                n_combinations = 2
+                while n_combinations <= n:
+                    for c in combinations(sets, n_combinations):
+                        c = frozenset(c)
+                        all_combinations.append(c)
+                    n_combinations += 1
+
+                # single cluster spots
                 for i, type_ in enumerate(sets):
-                    type_spots = singlet_df[singlet_df["type_1"] ==
-                                            type_].index
+                    type_spots = list(
+                        singlet_df[singlet_df["type_1"] == type_].index)
+                    for spot in spot_type_dict:
+                        if type_ in spot_type_dict[spot]:
+                            if spot_type_dict[spot] not in all_combinations:
+                                type_spots.append(spot)
                     ax.scatter(
                         coor_df["X"].reindex(index=type_spots),
                         coor_df["Y"].reindex(index=type_spots),
@@ -245,24 +275,22 @@ def main(idx):
                         c=colors_short[i],
                         label=type_,
                     )
+                # END: for i, type_ in enumerate(sets):
 
-                n_combinations = 2
-                while n_combinations <= n:
-                    for c in combinations(sets, n_combinations):
-                        i += 1
-                        c = frozenset(c)
-                        combination_spots = []
-                        for spot in spot_type_dict:
-                            if spot_type_dict[spot] == c:
-                                combination_spots.append(spot)
-                        ax.scatter(
-                            coor_df["X"].reindex(index=combination_spots),
-                            coor_df["Y"].reindex(index=combination_spots),
-                            s=16,
-                            c=colors_short[i],
-                            label=" & ".join([str(i) for i in c]),
-                        )
-                    n_combinations += 1
+                for c in all_combinations:
+                    i += 1
+                    combination_spots = []
+                    for spot in spot_type_dict:
+                        if spot_type_dict[spot].issuperset(c):
+                            combination_spots.append(spot)
+                    ax.scatter(
+                        coor_df["X"].reindex(index=combination_spots),
+                        coor_df["Y"].reindex(index=combination_spots),
+                        s=16,
+                        c=colors_short[i],
+                        label=" & ".join([str(i) for i in c]),
+                    )
+                # END: for c in all_combinations:
 
                 fig.legend()
                 fig.savefig(
@@ -272,7 +300,51 @@ def main(idx):
                         f"{idx}-spots-{threshold}-{'_'.join(str(i) for i in sets)}.jpg",
                     ))
                 plt.close(fig)
+
+                # draw spots with multi-clusters
+                fig, ax = plt.subplots(figsize=(10, 10))
+                ax.imshow(he_image)
+                ax.axis("off")
+                for i, cluster in enumerate(range(1, ncs + 1)):
+                    region_spots = type_df[type_df["type_1"] == cluster].index
+                    ax.scatter(
+                        coor_df["X"].reindex(index=region_spots),
+                        coor_df["Y"].reindex(index=region_spots),
+                        s=16,
+                        c=colors[i],
+                        label=cluster,
+                        alpha=0.7,
+                    )
+                # END: for i, cluster in enumerate(range(1, ncs + 1)):
+                for c in all_combinations:
+                    combination_spots = []
+                    for spot in spot_type_dict:
+                        if spot_type_dict[spot].issuperset(c):
+                            combination_spots.append(spot)
+                    if len(combination_spots) < 5:
+                        continue
+                    i += 1
+                    ax.scatter(
+                        coor_df["X"].reindex(index=combination_spots),
+                        coor_df["Y"].reindex(index=combination_spots),
+                        s=16,
+                        c=colors[i],
+                        label=" & ".join([str(i) for i in c]),
+                    )
+                # END: for c in all_combinations:
+                fig.legend()
+                fig.savefig(
+                    Path.joinpath(
+                        WORKDIR,
+                        f"results/gene-cluster/{scale_method}-{suffix}/",
+                        f"{idx}-{ncs}/{idx}-spots-{threshold}-{n}_combinations.jpg",
+                    ))
+                plt.close(fig)
+            # END: for sets in frozenset(spot_type_dict.values()):
+        # END: for n in [2, 3]:
     he_image.close()
+    # END: for ncs in range(8, 21):
+# END: def main():
 
 
 # %%

@@ -77,8 +77,8 @@ for idx in idx_full:
         index_col=0,
     ).sort_values(by="Ai", ascending=False)
 
-    for step in [100, 500]:
-        for n in range(0, 2500 + step, step):
+    for step in [100, 500, 1000]:
+        for n in range(0, 5000 + step, step):
             selected_genes = ai_df.index[n:n + step]
             with open(
                     Path.joinpath(
@@ -93,8 +93,8 @@ for idx in idx_full:
     [union_1000.append(i) for i in ai_df.index[:1000]]
 
     ai_df = ai_df.reindex(index=[i for i in ai_df.index if i in remain_genes])
-    for step in [100, 500]:
-        for n in range(0, 2500 + step, step):
+    for step in [100, 500, 1000]:
+        for n in range(0, 5000 + step, step):
             selected_genes = ai_df.index[n:n + step]
             with open(
                     Path.joinpath(
