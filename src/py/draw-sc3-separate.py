@@ -94,7 +94,7 @@ for idx, regions in cluster_regions.items():
             flag = regions[i]
         draw_series.replace(int(i), flag, inplace=True)
 
-    fig, ax = plt.subplots(figsize=(10, 10), dpi=200)
+    fig, ax = plt.subplots(figsize=(10, 10), dpi=300)
     ax.axis("off")
     ax.imshow(he_image)
     ax.set_title(f"{idx} ncs {ncs}")

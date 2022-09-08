@@ -16,10 +16,10 @@ cd $HOME/workspace/mouse-brain-full
 
 # %%
 scale_method="combat"
-if true; then
+if false; then
     for idx in ${idx_full[@]}; do
         gene_list=Data/gene-lists/${idx}-logcpm-0.99.csv
-        suffix=${idx}-logcpm-0.99
+        suffix=logcpm-0.99
         if [ ! -d results/cluster/${scale_method}-${suffix}-sc3 ]; then
             mkdir results/cluster/${scale_method}-${suffix}-sc3
             mkdir results/cluster/${scale_method}-${suffix}-sc3/pattern
@@ -38,12 +38,11 @@ fi
 
 # %%
 step_len=500
-end_point=`expr 2000 + $step_len`
+end_point=`expr $step_len + 2000`
 scale_method=combat
-if false; then
+if true; then
     for n in `seq 0 ${step_len} ${end_point}`; do
         gene_list=logcpm-0.99-Ai-${n}_`expr ${n} + ${step_len}`
-        gene_list=logcpm-hotspot-6-logcpm-0.99-Ai-${n}_`expr ${n} + ${step_len}`
         if [ ! -d results/cluster/${scale_method}-${gene_list}-sc3 ]; then
             mkdir results/cluster/${scale_method}-${gene_list}-sc3
             mkdir results/cluster/${scale_method}-${gene_list}-sc3/pattern
@@ -61,7 +60,5 @@ if false; then
             )&
         done
         wait
-        (${PYTHON_PATH} src/py/run-dim_redu.py ${gene_list})&
     done
-    wait
 fi

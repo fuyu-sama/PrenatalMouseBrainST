@@ -61,7 +61,7 @@ idx_full = {
 try:
     scale_method = sys.argv[1]
 except IndexError:
-    scale_method = "logcpm-hotspot-6-logcpm-0.99-Ai-0_500"
+    scale_method = "logcpm-hotspot-6-logcpm-0.99-Ai-2000_2500"
 
 # %% read data
 with open(
@@ -86,7 +86,7 @@ for idx, regions in cluster_regions.items():
     coor_df = pd.read_csv(coor_path, index_col=0, header=0)
     assert all(cluster_df.index == coor_df.index)
 
-    draw_series = cluster_df[f"1_type"]
+    draw_series = cluster_df[f"type_1"]
     for i in regions:
         if regions[i] in colors:
             flag = colors[regions[i]]
@@ -102,7 +102,7 @@ for idx, regions in cluster_regions.items():
         coor_df["X"],
         coor_df["Y"],
         s=16,
-        c=cluster_df[f"1_type"],
+        c=cluster_df[f"type_1"],
         alpha=0.7,
     )
     fig.savefig(
