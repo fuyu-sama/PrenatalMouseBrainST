@@ -31,6 +31,7 @@
 # %%
 import math
 import sys
+from copy import deepcopy
 from itertools import combinations
 from multiprocessing import Pool
 from pathlib import Path
@@ -39,6 +40,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from PIL import Image
+from seaborn import color_palette
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 plt.rcParams.update({"font.size": 16})
@@ -180,14 +182,13 @@ def main(idx):
             certain_spots = type_df[type_df["spot_type"] != "uncertain"].index
         else:
             certain_spots = type_df.index
-        fig, ax = plt.subplots(figsize=(10, 10))
+        fig, ax = plt.subplots(figsize=(10, 10), dpi=300)
         ax.scatter(
             coor_df["X"].reindex(index=certain_spots),
             coor_df["Y"].reindex(index=certain_spots),
             s=16,
             c=type_df[f"type_1"].reindex(index=certain_spots),
             cmap=ListedColormap(colors),
-            alpha=0.7,
         )
         ax.imshow(he_image)
         ax.set_xticks([])
@@ -214,7 +215,6 @@ def main(idx):
                 coor_df["Y"].reindex(index=certain_spots).reindex(
                     index=in_spots),
                 s=16,
-                alpha=0.7,
             )
             ax.imshow(he_image)
             ax.set_xticks([])
@@ -243,6 +243,7 @@ def main(idx):
         # END: for n in range(2, ncs + 1):
 
         for n in [2, 3]:
+            all_n_combinations = []
             for sets in frozenset(spot_type_dict.values()):
                 if len(sets) != n:
                     continue
@@ -258,6 +259,7 @@ def main(idx):
                     for c in combinations(sets, n_combinations):
                         c = frozenset(c)
                         all_combinations.append(c)
+                        all_n_combinations.append(c)
                     n_combinations += 1
 
                 # single cluster spots
@@ -276,7 +278,6 @@ def main(idx):
                         label=type_,
                     )
                 # END: for i, type_ in enumerate(sets):
-
                 for c in all_combinations:
                     i += 1
                     combination_spots = []
@@ -291,7 +292,6 @@ def main(idx):
                         label=" & ".join([str(i) for i in c]),
                     )
                 # END: for c in all_combinations:
-
                 fig.legend()
                 fig.savefig(
                     Path.joinpath(
@@ -300,52 +300,58 @@ def main(idx):
                         f"{idx}-spots-{threshold}-{'_'.join(str(i) for i in sets)}.jpg",
                     ))
                 plt.close(fig)
-
-                # draw spots with multi-clusters
-                fig, ax = plt.subplots(figsize=(10, 10))
-                ax.imshow(he_image)
-                ax.axis("off")
-                for i, cluster in enumerate(range(1, ncs + 1)):
-                    region_spots = type_df[type_df["type_1"] == cluster].index
-                    ax.scatter(
-                        coor_df["X"].reindex(index=region_spots),
-                        coor_df["Y"].reindex(index=region_spots),
-                        s=16,
-                        c=colors[i],
-                        label=cluster,
-                        alpha=0.7,
-                    )
-                # END: for i, cluster in enumerate(range(1, ncs + 1)):
-                for c in all_combinations:
-                    combination_spots = []
-                    for spot in spot_type_dict:
-                        if spot_type_dict[spot].issuperset(c):
-                            combination_spots.append(spot)
-                    if len(combination_spots) < 5:
-                        continue
-                    i += 1
-                    ax.scatter(
-                        coor_df["X"].reindex(index=combination_spots),
-                        coor_df["Y"].reindex(index=combination_spots),
-                        s=16,
-                        c=colors[i],
-                        label=" & ".join([str(i) for i in c]),
-                    )
-                # END: for c in all_combinations:
-                fig.legend()
-                fig.savefig(
-                    Path.joinpath(
-                        WORKDIR,
-                        f"results/gene-cluster/{scale_method}-{suffix}/",
-                        f"{idx}-{ncs}/{idx}-spots-{threshold}-{n}_combinations.jpg",
-                    ))
-                plt.close(fig)
             # END: for sets in frozenset(spot_type_dict.values()):
+
+            # draw spots with multi-clusters
+            all_n_combinations = frozenset(all_n_combinations)
+            label_spot_dict = {}
+            for c in all_n_combinations:
+                combination_spots = []
+                for spot in spot_type_dict:
+                    if spot_type_dict[spot].issuperset(c):
+                        combination_spots.append(spot)
+                if len(combination_spots) > 10:
+                    label = " & ".join([str(i) for i in c])
+                    label_spot_dict[label] = deepcopy(combination_spots)
+            fig, ax = plt.subplots(figsize=(12, 10), dpi=300)
+            ax.imshow(he_image)
+            ax.axis("off")
+            for i, cluster in enumerate(range(1, ncs + 1)):
+                region_spots = type_df[type_df["type_1"] == cluster].index
+                ax.scatter(
+                    coor_df["X"].reindex(index=region_spots),
+                    coor_df["Y"].reindex(index=region_spots),
+                    s=16,
+                    color=colors[i],
+                    label=cluster,
+                )
+            # END: for i, cluster in enumerate(range(1, ncs + 1)):
+            auto_colors = color_palette("hls", len(label_spot_dict))
+            for i, (label, combination_spots) in enumerate(
+                    label_spot_dict.items()):
+                ax.scatter(
+                    coor_df["X"].reindex(index=combination_spots),
+                    coor_df["Y"].reindex(index=combination_spots),
+                    s=16,
+                    color=auto_colors[i],
+                    label=label,
+                )
+            # END: for i, (label, combination_spots) in enumerate(
+            #              label_spot_dict.items()):
+            fig.legend(ncol=7)
+            fig.savefig(
+                Path.joinpath(
+                    WORKDIR,
+                    f"results/gene-cluster/{scale_method}-{suffix}/",
+                    f"{idx}-{ncs}/{idx}-spots-{threshold}-{n}_combinations.jpg",
+                ))
+            plt.close(fig)
         # END: for n in [2, 3]:
     he_image.close()
     # END: for ncs in range(8, 21):
-# END: def main():
 
+
+# END: def main():
 
 # %%
 wanted_genes = [
