@@ -103,7 +103,7 @@ chosen_regions = {
     "cortex": "#CC163A",
     "hippocampus": "#4DFF4D",
     "thalamus": "#6495ED",
-    "hypothalamus": "#EE82EE"
+    "hypothalamus-mid": "#EE82EE"
 }
 
 # %% draw
@@ -123,9 +123,11 @@ chosen_clusters = {}
 for i in chosen_regions:
     for j in regions[idx]:
         if regions[idx][j] == "hypothalamus-top":
-            chosen_clusters[j] = "thalamus"
+            # chosen_clusters[j] = "thalamus"
+            pass
         else:
-            if regions[idx][j].startswith(i):
+            # if regions[idx][j].startswith(i):
+            if regions[idx][j] == i:
                 chosen_clusters[j] = i
 for i in chosen_clusters:
     temp_df = cluster_df[cluster_df == int(i)]
@@ -164,18 +166,23 @@ draw_genes = draw_genes.sort_values(by="0")
 # x axis genes
 wanted_genes = [
     [
-        "Mef2c",
-        "Bcl11a",
-        "Sox5",
-        "Hivep2",
-        "Satb2",
-        "Fezf2",
-        "Neurod2",
+        "Foxg1",
         "Neurod6",
+        "Bhlhe22",
+        "Id2",
+        "Zeb2",
         "Zbtb18",
-        "Tbr1",
+        "Satb2",
+        "Mef2c",
     ],
-    [],
+    [
+        "Zbtb20",
+        "Sema3c",
+        "Eomes",
+        "Fbln2",
+        "Insm1",
+        "Sstr2",
+    ],
     [
         "Zfp423",
         "Tcf7l2",
@@ -201,12 +208,16 @@ wanted_genes = [
         "Magel2",
         "Nap1l5",
         "Peg10",
+        "Pmch",
+        "Slc16a13",
+        "Dcn",
     ],
 ]
 draw_genes_list = []
+wanted_genes = [[j for j in i if j in draw_genes.index] for i in wanted_genes]
 for i, gene_set in enumerate(wanted_genes):
     cluster_i_gene = list(draw_genes[draw_genes["0"] == i].index)
-    [cluster_i_gene.remove(j) for j in gene_set if j in cluster_i_gene]
+    cluster_i_gene = [j for j in cluster_i_gene if j not in gene_set]
     space_len = ceil(len(cluster_i_gene) / (len(gene_set) + 1))
     j = 0
     k = 0
@@ -276,7 +287,8 @@ ax_cluster.pcolor(
 ax_cluster.invert_yaxis()
 ax_cluster.set_xticks([])
 ax_cluster.set_yticks(region_ticks)
-ax_cluster.set_yticklabels(chosen_regions.keys())
+ax_cluster.set_yticklabels(
+    ["neocortex", "hippocampus", "thalamus", "hypothalamus"])
 
 [axis.set_visible(False) for axis in ax_heatmap.spines.values()]
 [axis.set_visible(False) for axis in ax_cluster.spines.values()]
