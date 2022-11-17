@@ -87,13 +87,8 @@ for idx in idx_full:
         Path.joinpath(WORKDIR, f"Data/HE/{idx_full[idx]}.tif"))
 
 # %%
-gene_1 = []
-with open(Path.joinpath(WORKDIR, "Data/1.csv")) as f:
-    for line in f:
-        line = line.strip()
-        gene_1.append(line)
-gene_1 = set(gene_1)
-gene_2 = ["Calb2", "Clybl", "Gbx2", "Prkch", "Slc18a2", "Lef1"]
+gene_1 = ["Sox2"]
+gene_2 = ["Satb2"]
 for q in gene_1:
     if q not in count_dict[idx].columns:
         continue
