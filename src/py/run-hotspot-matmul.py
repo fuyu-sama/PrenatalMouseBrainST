@@ -184,7 +184,7 @@ for center_cluster in set(spot_cluster_df["type_1"]):
     plt.close(fig)
 
 # %%
-center_cluster = 1
+center_cluster = 10
 use_neighbor = True
 if use_neighbor:
     selected_spots = [
@@ -206,6 +206,34 @@ con_matrix = count_sub.T @ count_sub
 con_matrix = con_matrix - np.diag(np.diag(con_matrix.to_numpy()))
 men_matrix = (1 - count_sub.T) @ count_sub
 
-con_matrix_bi = con_matrix.where(con_matrix > (len(selected_spots) * 0.05), 0)
+con_threshold = len(
+    spot_cluster_df[spot_cluster_df["type_1"] == center_cluster]) * 0.03
+con_matrix_bi = con_matrix.where(con_matrix > con_threshold, 0)
 con_matrix_bi = con_matrix_bi.where(con_matrix_bi < 1, 1)
 mul_matrix = con_matrix_bi * men_matrix
+
+# %%
+gene_series_dict = {}
+for gene in mul_matrix.columns:
+    gene_series = mul_matrix[gene].sort_values(ascending=False)
+    gene_series = gene_series[gene_series > gene_series.mean()]
+    gene_series_dict[gene] = gene_series / gene_series.max()
+
+gene_pairs_dict = {}
+for gene_1 in gene_series_dict:
+    for gene_2 in gene_series_dict[gene_1].index:
+        if gene_1 in gene_series_dict[gene_2].index:
+            power = (gene_series_dict[gene_1][gene_2] +
+                     gene_series_dict[gene_2][gene_1]) / 2
+            gene_pair_set = frozenset((gene_1, gene_2))
+            if gene_pair_set not in gene_pairs_dict:
+                gene_pairs_dict[gene_pair_set] = power
+
+gene_pairs_df = pd.DataFrame(columns=["gene_1", "gene_2", "power"])
+for i in gene_pairs_dict:
+    temp_series = pd.Series({
+        "gene_1": list(i)[0],
+        "gene_2": list(i)[1],
+        "power": gene_pairs_dict[i],
+    })
+    gene_pairs_df = pd.concat([gene_pairs_df, temp_series.to_frame().T])
