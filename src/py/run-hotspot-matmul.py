@@ -131,7 +131,7 @@ neighbor_clusters = {}
 for i in neighbor_clusters_:
     counter = Counter(neighbor_clusters_[i])
     coverage_ratio = len(certain_series[certain_series == i])
-    coverage_ratio = coverage_ratio * 0.05
+    coverage_ratio = coverage_ratio * 0.03
     neighbor_clusters[i] = [
         j[0] for j in counter.most_common()[:3] if j[1] >= coverage_ratio
     ]
@@ -184,9 +184,7 @@ for center_cluster in set(spot_cluster_df["type_1"]):
     plt.close(fig)
 
 # %%
-center_cluster = 10
-use_neighbor = True
-if use_neighbor:
+for center_cluster in range(1, 1 + ncs):
     selected_spots = [
         j for i in neighbor_clusters[center_cluster]
         for j in spot_cluster_df[spot_cluster_df["type_1"] == i].index
@@ -195,45 +193,53 @@ if use_neighbor:
         j for i in neighbor_clusters[center_cluster]
         for j in gene_cluster_series[gene_cluster_series == i].index
     ]
-else:
-    selected_spots = spot_cluster_df[spot_cluster_df["type_1"] ==
-                                     center_cluster].index
-    selected_genes = gene_cluster_series[gene_cluster_series ==
-                                         center_cluster].index
 
-count_sub = count_df.reindex(index=selected_spots, columns=selected_genes)
-con_matrix = count_sub.T @ count_sub
-con_matrix = con_matrix - np.diag(np.diag(con_matrix.to_numpy()))
-men_matrix = (1 - count_sub.T) @ count_sub
+    count_sub = count_df.reindex(index=selected_spots, columns=selected_genes)
+    con_matrix = count_sub.T @ count_sub
+    con_matrix = con_matrix - np.diag(np.diag(con_matrix.to_numpy()))
+    men_matrix = (1 - count_sub.T) @ count_sub
 
-con_threshold = len(
-    spot_cluster_df[spot_cluster_df["type_1"] == center_cluster]) * 0.03
-con_matrix_bi = con_matrix.where(con_matrix > con_threshold, 0)
-con_matrix_bi = con_matrix_bi.where(con_matrix_bi < 1, 1)
-mul_matrix = con_matrix_bi * men_matrix
+    con_threshold = len(
+        spot_cluster_df[spot_cluster_df["type_1"] == center_cluster]) * 0.03
+    con_matrix_bi = con_matrix.where(con_matrix > con_threshold, 0)
+    con_matrix_bi = con_matrix_bi.where(con_matrix_bi < 1, 1)
+    mul_matrix = con_matrix_bi * men_matrix
 
-# %%
-gene_series_dict = {}
-for gene in mul_matrix.columns:
-    gene_series = mul_matrix[gene].sort_values(ascending=False)
-    gene_series = gene_series[gene_series > gene_series.mean()]
-    gene_series_dict[gene] = gene_series / gene_series.max()
+    gene_series_dict = {}
+    for gene in mul_matrix.columns:
+        gene_series = mul_matrix[gene].sort_values(ascending=False)
+        gene_series = gene_series[gene_series > gene_series.mean()]
+        gene_series_dict[gene] = gene_series / gene_series.max()
 
-gene_pairs_dict = {}
-for gene_1 in gene_series_dict:
-    for gene_2 in gene_series_dict[gene_1].index:
-        if gene_1 in gene_series_dict[gene_2].index:
-            power = (gene_series_dict[gene_1][gene_2] +
-                     gene_series_dict[gene_2][gene_1]) / 2
-            gene_pair_set = frozenset((gene_1, gene_2))
-            if gene_pair_set not in gene_pairs_dict:
-                gene_pairs_dict[gene_pair_set] = power
+    gene_pairs_dict = {}
+    for gene_1 in gene_series_dict:
+        for gene_2 in gene_series_dict[gene_1].index:
+            if gene_1 in gene_series_dict[gene_2].index:
+                power = (gene_series_dict[gene_1][gene_2] +
+                         gene_series_dict[gene_2][gene_1]) / 2
+                gene_pair_set = frozenset((gene_1, gene_2))
+                if gene_pair_set not in gene_pairs_dict:
+                    gene_pairs_dict[gene_pair_set] = power
 
-gene_pairs_df = pd.DataFrame(columns=["gene_1", "gene_2", "power"])
-for i in gene_pairs_dict:
-    temp_series = pd.Series({
-        "gene_1": list(i)[0],
-        "gene_2": list(i)[1],
-        "power": gene_pairs_dict[i],
-    })
-    gene_pairs_df = pd.concat([gene_pairs_df, temp_series.to_frame().T])
+    gene_pairs_df = pd.DataFrame(columns=["gene_1", "gene_2", "power"])
+    gene_1_list = []
+    for i in gene_pairs_dict:
+        gene_pair_list = list(i)
+        gene_1 = gene_pair_list[0]
+        gene_2 = gene_pair_list[1]
+        if (gene_1 not in gene_1_list) and (gene_2 in gene_1_list):
+            gene_1, gene_2 = gene_2, gene_1
+        if gene_1 not in gene_1_list:
+            gene_1_list.append(gene_1)
+        temp_series = pd.Series({
+            "gene_1": list(i)[0],
+            "gene_2": list(i)[1],
+            "power": gene_pairs_dict[i],
+        })
+        gene_pairs_df = pd.concat([gene_pairs_df, temp_series.to_frame().T])
+    gene_pairs_df = gene_pairs_df.sort_values(by="gene_1")
+    gene_pairs_df.to_csv(
+        Path.joinpath(
+            WORKDIR,
+            f"results/matmul/{idx}-{center_cluster}.csv",
+        ))
