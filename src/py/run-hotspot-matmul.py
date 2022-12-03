@@ -38,8 +38,11 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.neighbors import NearestNeighbors
+from sklearn.mixture import GaussianMixture, BayesianGaussianMixture
+from scipy.stats import norm
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
+plt.rcParams.update({"font.size": 18})
 
 idx_full = {
     "E135A": "V10M17-100-E135A",
@@ -149,7 +152,7 @@ ax.scatter(
     cmap='tab20',
 )
 ax.imshow(he_image)
-fig.savefig(Path.joinpath(WORKDIR, f"results/matmul/{idx}-spots.jpg"))
+fig.savefig(Path.joinpath(WORKDIR, f"results/matmul.2/{idx}-spots.svg"))
 
 for center_cluster in set(spot_cluster_df["type_1"]):
     draw_clusters = list(neighbor_clusters[center_cluster])
@@ -179,11 +182,12 @@ for center_cluster in set(spot_cluster_df["type_1"]):
     fig.savefig(
         Path.joinpath(
             WORKDIR,
-            f"results/matmul/{idx}-{center_cluster}-neighbors.jpg",
+            f"results/matmul.2/{idx}-{center_cluster}-neighbors.svg",
         ))
     plt.close(fig)
 
 # %%
+gene_pairs = {}
 for center_cluster in range(1, 1 + ncs):
     selected_spots = [
         j for i in neighbor_clusters[center_cluster]
@@ -224,3 +228,225 @@ for center_cluster in range(1, 1 + ncs):
             ).to_frame().T
             line += 1
             gene_pairs_df = pd.concat([gene_pairs_df, write_series])
+    gene_pairs[center_cluster] = gene_pairs_df
+
+# %%
+gmm_result = {}
+gmm_model = {}
+n_components = 3
+for center_cluster in range(1, 1 + ncs):
+    gmm_result[center_cluster] = {}
+    co_df = gene_pairs[center_cluster][
+        gene_pairs[center_cluster]["colocalization_score"] > 0].drop(
+            columns=["exclusive_score"])
+    ex_df = gene_pairs[center_cluster][
+        gene_pairs[center_cluster]["exclusive_score"] > 0].drop(
+            columns=["colocalization_score"])
+    co_em_df = co_df.copy()
+    ex_em_df = ex_df.copy()
+    co_bayesian_df = co_df.copy()
+    ex_bayesian_df = ex_df.copy()
+    fig, (
+        (ax_co_1, ax_ex_1),
+        (ax_co_2, ax_ex_2),
+    ) = plt.subplots(2, 2, figsize=(20, 20))
+
+    # colocalization Gaussian mixture with EM
+    ax_co_1.hist(
+        co_df["colocalization_score"],
+        bins=100,
+        density=True,
+        color="#f0a1a8",
+    )
+    ax_co_1.set_title(
+        f"Cluster {center_cluster} colocalization score distribution, EM")
+    gmm_co = GaussianMixture(
+        n_components=n_components,
+        max_iter=1000,
+        n_init=10,
+    )
+    co_em_df["co_em"] = gmm_co.fit_predict(
+        co_df["colocalization_score"].to_numpy().reshape(-1, 1))
+    # co_em_df = co_em_df[co_em_df["co_em"] == gmm_co.means_.argmax()]
+
+    x = np.linspace(
+        co_df["colocalization_score"].min(),
+        co_df["colocalization_score"].max(),
+        5000,
+    )
+    ax_co_1.plot(
+        x,
+        np.exp(gmm_co.score_samples(x.reshape(-1, 1))),
+        lw=4,
+        label="GMM, EM",
+    )
+    for i in range(n_components):
+        ax_co_1.plot(
+            x,
+            norm.pdf(
+                x,
+                gmm_co.means_[i, 0],
+                gmm_co.covariances_[i, 0]**(1 / 2),
+            ) * gmm_co.weights_[i],
+            lw=4,
+            ls="--",
+            label=f"Gaussian {i}, weight {gmm_co.weights_[i]:.3f}",
+        )
+    ax_co_1.legend()
+
+    # exclusive with EM
+    ax_ex_1.hist(
+        ex_df["exclusive_score"],
+        bins=100,
+        density=True,
+        color="#f0a1a8",
+    )
+    ax_ex_1.set_title(
+        f"Cluster {center_cluster} exclusive score distribution, EM")
+    gmm_ex = GaussianMixture(
+        n_components=n_components,
+        max_iter=1000,
+        n_init=10,
+    )
+    ex_em_df["ex_em"] = gmm_ex.fit_predict(
+        ex_df["exclusive_score"].to_numpy().reshape(-1, 1))
+    # ex_em_df = ex_em_df[ex_em_df["ex_em"] == gmm_ex.means_.argmax()]
+
+    x = np.linspace(
+        ex_df["exclusive_score"].min(),
+        ex_df["exclusive_score"].max(),
+        5000,
+    )
+    ax_ex_1.plot(
+        x,
+        np.exp(gmm_ex.score_samples(x.reshape(-1, 1))),
+        lw=4,
+        label="GMM, EM",
+    )
+    for i in range(n_components):
+        ax_ex_1.plot(
+            x,
+            norm.pdf(
+                x,
+                gmm_ex.means_[i, 0],
+                gmm_ex.covariances_[i, 0]**(1 / 2),
+            ) * gmm_ex.weights_[i],
+            lw=4,
+            ls="--",
+            label=f"Gaussian {i}, weight {gmm_ex.weights_[i]:.3f}",
+        )
+    ax_ex_1.legend()
+
+    # colocalizaton Bayesian
+    ax_co_2.hist(
+        co_df["colocalization_score"],
+        bins=100,
+        density=True,
+        color="#f0a1a8",
+    )
+    ax_co_2.set_title(
+        f"Cluster {center_cluster} colocalization score distribution, Bayesian"
+    )
+    gmm_co_b = BayesianGaussianMixture(
+        n_components=n_components,
+        max_iter=1000,
+        n_init=10,
+    )
+    co_bayesian_df["co_bayesian"] = gmm_co_b.fit_predict(
+        co_df["colocalization_score"].to_numpy().reshape(-1, 1))
+    # co_bayesian_df = co_bayesian_df[co_bayesian_df["co_bayesian"] ==
+    # gmm_co_b.means_.argmax()]
+
+    x = np.linspace(
+        co_df["colocalization_score"].min(),
+        co_df["colocalization_score"].max(),
+        5000,
+    )
+    ax_co_2.plot(
+        x,
+        np.exp(gmm_co_b.score_samples(x.reshape(-1, 1))),
+        lw=4,
+        label="GMM, Bayesian",
+    )
+    for i in range(n_components):
+        ax_co_2.plot(
+            x,
+            norm.pdf(
+                x,
+                gmm_co_b.means_[i, 0],
+                gmm_co_b.covariances_[i, 0]**(1 / 2),
+            ) * gmm_co_b.weights_[i],
+            lw=4,
+            ls="--",
+            label=f"Gaussian {i}, weight {gmm_co_b.weights_[i]:.3f}",
+        )
+    ax_co_2.legend()
+
+    # exclusive Bayesian
+    ax_ex_2.hist(
+        ex_df["exclusive_score"],
+        bins=100,
+        density=True,
+        color="#f0a1a8",
+    )
+    ax_ex_2.set_title(
+        f"Cluster {center_cluster} exclusive score distribution, Bayesian")
+    gmm_ex_b = BayesianGaussianMixture(
+        n_components=n_components,
+        max_iter=1000,
+        n_init=10,
+    )
+    ex_bayesian_df["ex_bayesian"] = gmm_ex_b.fit_predict(
+        ex_df["exclusive_score"].to_numpy().reshape(-1, 1))
+    # ex_bayesian_df = ex_bayesian_df[ex_bayesian_df["ex_bayesian"] ==
+    # gmm_ex_b.means_.argmax()]
+
+    x = np.linspace(
+        ex_df["exclusive_score"].min(),
+        ex_df["exclusive_score"].max(),
+        5000,
+    )
+    ax_ex_2.plot(
+        x,
+        np.exp(gmm_ex_b.score_samples(x.reshape(-1, 1))),
+        lw=4,
+        label="GMM, Bayesian",
+    )
+    for i in range(n_components):
+        ax_ex_2.plot(
+            x,
+            norm.pdf(
+                x,
+                gmm_ex_b.means_[i, 0],
+                gmm_ex_b.covariances_[i, 0]**(1 / 2),
+            ) * gmm_ex_b.weights_[i],
+            lw=4,
+            ls="--",
+            label=f"Gaussian {i}, weight {gmm_ex_b.weights_[i]:.3f}",
+        )
+    ax_ex_2.legend()
+
+    fig.savefig(
+        Path.joinpath(
+            WORKDIR,
+            f"results/matmul.2/{idx}-{center_cluster}-dist.svg",
+        ))
+    plt.close(fig)
+
+    gmm_result[center_cluster] = [
+        [co_em_df, ex_em_df],
+        [co_bayesian_df, ex_bayesian_df],
+    ]
+    gmm_model[center_cluster] = [
+        [gmm_co, gmm_ex],
+        [gmm_co_b, gmm_ex_b],
+    ]
+
+# %%
+for center_cluster in range(1, 1 + ncs):
+    gmm_result[center_cluster][1][0].to_csv(
+        Path.joinpath(WORKDIR,
+                      f"results/matmul.2/{idx}-{center_cluster}-co.csv"))
+    gmm_result[center_cluster][1][1].to_csv(
+        Path.joinpath(WORKDIR,
+                      f"results/matmul.2/{idx}-{center_cluster}-ex.csv"))
