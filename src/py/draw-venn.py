@@ -134,3 +134,21 @@ fig.savefig(
     ),
     bbox_inches="tight",
 )
+
+# %%
+fig, ax = plt.subplots(figsize=(10, 10))
+ax.scatter(
+    moran_list[0]["Ai"],
+    moran_list[1]["Ai"].reindex(index=moran_list[0].index).fillna(0),
+    s=4,
+)
+ax.set_xlabel("Replicate 1")
+ax.set_ylabel("Replicate 2")
+ax.set_title(f"{idx} AI scatter")
+fig.savefig(
+    Path.joinpath(
+        WORKDIR,
+        f"results/Ai/venn/{tp}-AI-scatter.jpg",
+    ),
+    bbox_inches="tight",
+)
