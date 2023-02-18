@@ -170,7 +170,7 @@ draw_genes = pd.Series(name="region")
 indel = {"cortex": 1, "thalamus": 2, "hypothalamus": 3}
 for gene in gene_dict:
     max_region = max(gene_dict[gene], key=gene_dict[gene].get)
-    if gene_dict[gene][max_region] > 1:
+    if gene_dict[gene][max_region] >= 1:
         draw_genes[gene] = indel[max_region]
 draw_genes.sort_values(inplace=True)
 
@@ -201,6 +201,8 @@ wanted_genes = [
         "Clybl",
         "Lhx9",
         "Foxp2",
+        "Sox2",
+        "Calb2",
     ],
     [
         "Dlx1",
@@ -218,7 +220,7 @@ wanted_genes = [
 draw_genes_list = []
 for i, gene_set in enumerate(wanted_genes):
     cluster_i_gene = list(draw_genes[draw_genes == i + 1].index)
-    [cluster_i_gene.remove(j) for j in gene_set]
+    [cluster_i_gene.remove(j) for j in gene_set if j in draw_genes.index]
     space_len = ceil(len(cluster_i_gene) / (len(gene_set) + 1))
     j = 0
     k = 0
@@ -329,7 +331,7 @@ ax_idx_tip.xaxis.tick_top()
 [axis.set_visible(False) for axis in ax_idx_tip.spines.values()]
 
 fig.savefig(
-    Path.joinpath(WORKDIR, f"results/heatmap.1.jpg"),
+    Path.joinpath(WORKDIR, f"results/heatmap-{draw_df.shape[1]}_genes.svg"),
     bbox_inches="tight",
 )
 plt.close(fig)
