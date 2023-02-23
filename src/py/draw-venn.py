@@ -32,6 +32,7 @@
 import sys
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib_venn import venn2, venn3
@@ -74,6 +75,13 @@ idx_tp = {
     # "P0B": "P0",
     "P0A1": "P0",
     "P0A2": "P0",
+}
+tp_name = {
+    "E135": "E13.5",
+    "E155": "E15.5",
+    "E165": "E16.5",
+    "E175": "E17.5",
+    "P0": "P0"
 }
 colors = [
     "#FAEBD7", "#00FFFF", "#FFD700", "#0000FF", "#FF8C00", "#EE82EE",
@@ -142,13 +150,25 @@ ax.scatter(
     moran_list[1]["Ai"].reindex(index=moran_list[0].index).fillna(0),
     s=4,
 )
+ax.plot(
+    [i / 100 for i in range(100)],
+    [i / 100 for i in range(100)],
+    "r--",
+    linewidth=2,
+)
+pearson = np.corrcoef(
+    moran_list[0]["Ai"],
+    moran_list[1]["Ai"].reindex(index=moran_list[0].index).fillna(0),
+)[0, 1]
+ax.text(0.95, 1, "y = x", c="r")
+ax.text(0, 0.98, f"Pearson correlation: {pearson:.2f}")
 ax.set_xlabel("Replicate 1")
 ax.set_ylabel("Replicate 2")
-ax.set_title(f"{idx} AI scatter")
+ax.set_title(tp_name[tp])
 fig.savefig(
     Path.joinpath(
         WORKDIR,
-        f"results/Ai/venn/{tp}-AI-scatter.jpg",
+        f"results/Ai/venn/{tp}-AI-scatter.svg",
     ),
     bbox_inches="tight",
 )
