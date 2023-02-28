@@ -36,6 +36,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib_venn import venn2, venn3
+from sklearn.linear_model import LinearRegression
 
 WORKDIR = Path.joinpath(Path.home(), "workspace/mouse-brain-full/")
 plt.rcParams.update({"font.size": 24})
@@ -94,7 +95,7 @@ colors = [
 try:
     tp = sys.argv[1]
 except IndexError:
-    tp = "E135"
+    tp = "P0"
 
 # %%
 moran_list = []
@@ -145,14 +146,13 @@ fig.savefig(
 
 # %%
 fig, ax = plt.subplots(figsize=(10, 10))
-ax.scatter(
-    moran_list[0]["Ai"],
-    moran_list[1]["Ai"].reindex(index=moran_list[0].index).fillna(0),
-    s=4,
-)
+x = moran_list[0]["Ai"].to_numpy()
+y = moran_list[1]["Ai"].reindex(index=moran_list[0].index).fillna(0).to_numpy()
+ax.scatter(x, y, s=4)
+reg = LinearRegression().fit(x.reshape(-1, 1), y.reshape(-1, 1))
 ax.plot(
     [i / 100 for i in range(100)],
-    [i / 100 for i in range(100)],
+    [(i * reg.coef_[0, 0] + reg.intercept_[0]) / 100 for i in range(100)],
     "r--",
     linewidth=2,
 )
@@ -160,8 +160,9 @@ pearson = np.corrcoef(
     moran_list[0]["Ai"],
     moran_list[1]["Ai"].reindex(index=moran_list[0].index).fillna(0),
 )[0, 1]
-ax.text(0.95, 1, "y = x", c="r")
-ax.text(0, 0.98, f"Pearson correlation: {pearson:.2f}")
+reg_func = f"y = {reg.coef_[0, 0]: .4f} * x + {reg.intercept_[0]: .4f}"
+ax.text(0.95, 1, reg_func, c="r")
+ax.text(0, 0.98, f"PCC: {pearson:.2f}")
 ax.set_xlabel("Replicate 1")
 ax.set_ylabel("Replicate 2")
 ax.set_title(tp_name[tp])
